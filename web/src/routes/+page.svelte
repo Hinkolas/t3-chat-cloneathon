@@ -10,11 +10,7 @@
 		Brain
 	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
-	import FeatureTag from './FeatureTag.svelte';
-	import googleIcon from '$lib/assets/modelIcons/googleai.svg';
-	import chatgptIcon from '$lib/assets/modelIcons/chatgpt.svg';
-	import anthropicIcon from '$lib/assets/modelIcons/anthropic.svg';
-	import metaIcon from '$lib/assets/modelIcons/meta.svg';
+	import ModelRow from './ModelRow.svelte';
 
 	interface ModelSelections {
 		icon: string;
@@ -24,32 +20,32 @@
 
 	const models: ModelSelections[] = [
 		{
-			icon: googleIcon,
+			icon: 'gemini',
 			modelName: 'Gemini 2.5 Flash',
 			features: ['vision', 'think']
 		},
 		{
-			icon: chatgptIcon,
+			icon: 'openai',
 			modelName: 'GPT 4o-mini',
 			features: ['vision']
 		},
 		{
-			icon: metaIcon,
+			icon: 'meta',
 			modelName: 'Llama 4 Scout',
 			features: ['search']
 		},
 		{
-			icon: metaIcon,
+			icon: 'meta',
 			modelName: 'Llama 3.3 70b',
 			features: ['think']
 		},
 		{
-			icon: anthropicIcon,
+			icon: 'anthropic',
 			modelName: 'Claude 4 Sonnet (Resonning)',
 			features: ['vision', 'search', 'think']
 		},
 		{
-			icon: anthropicIcon,
+			icon: 'anthropic',
 			modelName: 'Claude 4 Sonnet',
 			features: ['search']
 		}
@@ -61,6 +57,47 @@
 	let message = $state('');
 	let sidebarCollapsed = $state(true);
 	let modelSelectionOpen = $state(false);
+	let modelSearchTerm: string = $state('');
+	let filteredModels: ModelSelections[] = $state(models);
+
+	function sendMessage() {
+		console.log('do something');
+	}
+
+	function toggleModelSelection() {
+		if (modelSelectionOpen) {
+			closeModelSelection();
+		} else {
+			modelSelectionOpen = true;
+		}
+	}
+
+	function closeModelSelection() {
+		modelSelectionOpen = false;
+
+		setTimeout(() => {
+			modelSearchTerm = '';
+			filteredModels = models;
+		}, 150);
+	}
+
+	function toggleSidebar() {
+		sidebarCollapsed = !sidebarCollapsed;
+	}
+
+	function modelSearchFilter() {
+		filteredModels = models.filter((model) =>
+			model.modelName.toLowerCase().includes(modelSearchTerm.toLowerCase())
+		);
+	}
+
+	function changeModel() {
+		closeModelSelection();
+	}
+
+	onMount(() => {
+		autoResize();
+	});
 
 	function autoResize() {
 		if (textarea) {
@@ -68,26 +105,6 @@
 			textarea.style.height = textarea.scrollHeight + 'px';
 		}
 	}
-
-	function sendMessage() {
-		console.log('do something');
-	}
-
-	function toggleModelSelection() {
-		modelSelectionOpen = !modelSelectionOpen;
-	}
-
-	function closeModelSelection() {
-		modelSelectionOpen = false;
-	}
-
-	function toggleSidebar() {
-		sidebarCollapsed = !sidebarCollapsed;
-	}
-
-	onMount(() => {
-		autoResize();
-	});
 
 	function clickOutside(node: Element) {
 		const handleClick = (event: Event) => {
@@ -129,21 +146,16 @@
 							<div class="selection-box {modelSelectionOpen ? 'visible' : ''}">
 								<div class="search-container">
 									<Search size={iconSize} />
-									<input placeholder="Search Models..." type="text" />
+									<input
+										oninput={modelSearchFilter}
+										bind:value={modelSearchTerm}
+										placeholder="Search Models..."
+										type="text"
+									/>
 								</div>
 								<div class="model-container">
-									{#each models as model}
-										<div class="model">
-											<div class="details">
-												<img src={model.icon} alt={model.modelName} />
-												<div class="title">{model.modelName}</div>
-											</div>
-											<div class="feature-container">
-												{#each model.features as featureName}
-													<FeatureTag tag={featureName} />
-												{/each}
-											</div>
-										</div>
+									{#each filteredModels as model}
+										<ModelRow {model} {changeModel}/>
 									{/each}
 								</div>
 							</div>
@@ -337,45 +349,6 @@
 		flex-direction: column;
 		padding-inline: 8px;
 		padding-bottom: 16px;
-	}
-	.model {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		align-items: center;
-		gap: 32px;
-		padding-inline: 8px;
-		border-radius: 4px;
-		cursor: pointer;
-		transition: background-color 0.15s ease;
-	}
-	.model:hover {
-		background-color: var(--button-hover);
-	}
-	.details {
-		display: flex;
-		flex-direction: row;
-		justify-content: flex-start;
-		align-items: center;
-		gap: 8px;
-		padding-block: 8px;
-	}
-
-	.model img {
-		width: 20px;
-		height: 20px;
-	}
-
-	.model .title {
-		font-size: 14px;
-		white-space: nowrap;
-		color: hsl(var(--secondary-foreground));
-	}
-
-	.feature-container {
-		display: flex;
-		align-items: center;
-		gap: 8px;
 	}
 
 	.search-container {
