@@ -3,14 +3,7 @@
 
 	console.log(data);
 
-	import {
-		ArrowUp,
-		ChevronDown,
-		Globe,
-		Paperclip,
-		PanelLeft,
-		Search,
-	} from '@lucide/svelte';
+	import { ArrowUp, ChevronDown, Globe, Paperclip, PanelLeft, Search } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from './ModelRow.svelte';
 	import Sidebar from './Sidebar.svelte';
@@ -101,9 +94,7 @@
 		closeModelSelection();
 	}
 
-	function newChat() {
-
-	}
+	function newChat() {}
 
 	onMount(() => {
 		autoResize();
@@ -137,7 +128,7 @@
 	<button onclick={toggleSidebar} class="sidebar-button">
 		<PanelLeft size={iconSize} />
 	</button>
-	<Sidebar {sidebarCollapsed} {newChat}/>
+	<Sidebar {sidebarCollapsed} {newChat} />
 	<div class="content">
 		<div class="chat"></div>
 		<div class="input-wrapper">
@@ -154,7 +145,11 @@
 					<div class="button-group">
 						<div class="selection-container" use:clickOutside onoutsideclick={closeModelSelection}>
 							<div class="selection-box {modelSelectionOpen ? 'visible' : ''}">
-								<SearchInput bind:value={modelSearchTerm} onInputFunction={modelSearchFilter} placeholder="Search Models..."/>
+								<SearchInput
+									bind:value={modelSearchTerm}
+									onInputFunction={modelSearchFilter}
+									placeholder="Search Models..."
+								/>
 								<div class="model-container">
 									{#each filteredModels as model}
 										<ModelRow {model} {changeModel} />
@@ -213,7 +208,7 @@
 		padding: 8px;
 		cursor: pointer;
 		color: hsl(var(--secondary-foreground));
-		transition: background-color .15s ease-out;
+		transition: background-color 0.15s ease-out;
 	}
 
 	.content {
@@ -342,8 +337,6 @@
 		padding-inline: 8px;
 		padding-bottom: 16px;
 	}
-
-	
 
 	.selection-button {
 		border: none;
