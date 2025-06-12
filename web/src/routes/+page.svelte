@@ -1,4 +1,8 @@
 <script lang="ts">
+	let { data }: PageProps = $props();
+
+	console.log(data);
+
 	import {
 		ArrowUp,
 		ChevronDown,
@@ -6,11 +10,12 @@
 		Paperclip,
 		PanelLeft,
 		Search,
-		Eye,
-		Brain
 	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from './ModelRow.svelte';
+	import Sidebar from './Sidebar.svelte';
+	import SearchInput from './SearchInput.svelte';
+	import type { PageProps } from './$types';
 
 	interface ModelSelections {
 		icon: string;
@@ -55,7 +60,7 @@
 
 	let textarea: HTMLElement;
 	let message = $state('');
-	let sidebarCollapsed = $state(true);
+	let sidebarCollapsed = $state(false);
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelSelections[] = $state(models);
@@ -86,6 +91,7 @@
 	}
 
 	function modelSearchFilter() {
+		console.log(modelSearchTerm);
 		filteredModels = models.filter((model) =>
 			model.modelName.toLowerCase().includes(modelSearchTerm.toLowerCase())
 		);
@@ -93,6 +99,10 @@
 
 	function changeModel() {
 		closeModelSelection();
+	}
+
+	function newChat() {
+
 	}
 
 	onMount(() => {
@@ -127,7 +137,7 @@
 	<button onclick={toggleSidebar} class="sidebar-button">
 		<PanelLeft size={iconSize} />
 	</button>
-	<div class="sidebar {sidebarCollapsed ? 'collapsed' : ''}"></div>
+	<Sidebar {sidebarCollapsed} {newChat}/>
 	<div class="content">
 		<div class="chat"></div>
 		<div class="input-wrapper">
@@ -144,18 +154,10 @@
 					<div class="button-group">
 						<div class="selection-container" use:clickOutside onoutsideclick={closeModelSelection}>
 							<div class="selection-box {modelSelectionOpen ? 'visible' : ''}">
-								<div class="search-container">
-									<Search size={iconSize} />
-									<input
-										oninput={modelSearchFilter}
-										bind:value={modelSearchTerm}
-										placeholder="Search Models..."
-										type="text"
-									/>
-								</div>
+								<SearchInput bind:value={modelSearchTerm} onInputFunction={modelSearchFilter} placeholder="Search Models..."/>
 								<div class="model-container">
 									{#each filteredModels as model}
-										<ModelRow {model} {changeModel}/>
+										<ModelRow {model} {changeModel} />
 									{/each}
 								</div>
 							</div>
@@ -199,29 +201,19 @@
 	.sidebar-button {
 		all: unset;
 		position: absolute;
-		top: 20px;
-		left: 20px;
+		top: 16px;
+		left: 16px;
 
 		z-index: 1;
 		display: flex;
 		justify-self: center;
 		align-items: center;
-		border: 1px solid #88888833;
+		border: 1px solid #88888822;
 		border-radius: 8px;
 		padding: 8px;
 		cursor: pointer;
 		color: hsl(var(--secondary-foreground));
-	}
-
-	.sidebar {
-		flex: 0 0 256px;
-		padding: 16px;
-		background-color: var(--sidebar-background);
-		transition: margin 0.15s ease-in-out;
-	}
-
-	.sidebar.collapsed {
-		margin-left: -256px;
+		transition: background-color .15s ease-out;
 	}
 
 	.content {
@@ -351,23 +343,7 @@
 		padding-bottom: 16px;
 	}
 
-	.search-container {
-		display: flex;
-		justify-self: flex-start;
-		align-items: center;
-		gap: 8px;
-		color: #888888;
-		padding-inline: 14px;
-	}
-
-	.search-container input {
-		all: unset;
-		background: none;
-		padding-block: 8px;
-		font-size: 14px;
-		color: hsl(var(--secondary-foreground));
-		flex: 1;
-	}
+	
 
 	.selection-button {
 		border: none;
