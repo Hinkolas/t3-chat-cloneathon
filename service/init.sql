@@ -4,9 +4,11 @@ CREATE TABLE
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         model TEXT NOT NULL,
-        pinned INTEGER NOT NULL,
+        is_pinned INTEGER NOT NULL,
         is_streaming INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
+        last_message_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
     );
 
 CREATE TABLE
@@ -36,9 +38,11 @@ INSERT INTO
         user_id,
         title,
         model,
-        pinned,
+        is_pinned,
         is_streaming,
-        created_at
+        last_message_at,
+        created_at,
+        updated_at
     )
 VALUES
     (
@@ -48,7 +52,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1748791019
+        1748791079,
+        1748791019,
+        1748791079
     ),
     (
         'test-chat-2',
@@ -57,7 +63,9 @@ VALUES
         'qwen3',
         0,
         0,
-        1748841019
+        1748841079,
+        1748841019,
+        1748841079
     ),
     (
         'test-chat-3',
@@ -66,7 +74,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1748891019
+        1748891079,
+        1748891019,
+        1748891079
     ),
     (
         'test-chat-4',
@@ -75,7 +85,9 @@ VALUES
         'qwen3',
         1,
         0,
-        1748941019
+        1748941079,
+        1748941019,
+        1748941079
     ),
     (
         'test-chat-5',
@@ -84,7 +96,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1748991019
+        1748991079,
+        1748991019,
+        1748991079
     ),
     (
         'test-chat-6',
@@ -93,7 +107,9 @@ VALUES
         'qwen3',
         0,
         0,
-        1749041019
+        1749041079,
+        1749041019,
+        1749041079
     ),
     (
         'test-chat-7',
@@ -102,7 +118,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1749091019
+        1749091079,
+        1749091019,
+        1749091079
     ),
     (
         'test-chat-8',
@@ -111,7 +129,9 @@ VALUES
         'qwen3',
         0,
         0,
-        1749141019
+        1749141079,
+        1749141019,
+        1749141079
     ),
     (
         'test-chat-9',
@@ -120,7 +140,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1749191019
+        1749191079,
+        1749191019,
+        1749191079
     ),
     (
         'test-chat-10',
@@ -129,6 +151,8 @@ VALUES
         'qwen3',
         0,
         0,
+        1749241019,
+        1749241019,
         1749241019
     );
 
@@ -568,9 +592,11 @@ INSERT INTO
         user_id,
         title,
         model,
-        pinned,
+        is_pinned,
         is_streaming,
-        created_at
+        last_message_at,
+        created_at,
+        updated_at
     )
 VALUES
     (
@@ -580,7 +606,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1749309419
+        1749309479,
+        1749309419,
+        1749309479
     ),
     (
         'test-chat-12',
@@ -589,7 +617,9 @@ VALUES
         'qwen3',
         0,
         0,
-        1749360000
+        1749360060,
+        1749360000,
+        1749360060
     ),
     (
         'test-chat-13',
@@ -598,7 +628,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1749410000
+        1749410060,
+        1749410000,
+        1749410060
     ),
     (
         'test-chat-14',
@@ -607,7 +639,9 @@ VALUES
         'qwen3',
         1,
         0,
-        1749460000
+        1749460060,
+        1749460000,
+        1749460060
     ),
     (
         'test-chat-15',
@@ -616,7 +650,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1749510000
+        1749510060,
+        1749510000,
+        1749510060
     ),
     (
         'test-chat-16',
@@ -625,7 +661,9 @@ VALUES
         'qwen3',
         0,
         0,
-        1749560000
+        1749560060,
+        1749560000,
+        1749560060
     ),
     (
         'test-chat-17',
@@ -634,7 +672,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1749610000
+        1749610060,
+        1749610000,
+        1749610060
     ),
     (
         'test-chat-18',
@@ -643,7 +683,9 @@ VALUES
         'qwen3',
         0,
         0,
-        1749660000
+        1749660060,
+        1749660000,
+        1749660060
     ),
     (
         'test-chat-19',
@@ -652,7 +694,9 @@ VALUES
         'claude-4-sonnet',
         0,
         0,
-        1749710000
+        1749710060,
+        1749710000,
+        1749710060
     ),
     (
         'test-chat-20',
@@ -661,7 +705,9 @@ VALUES
         'qwen3',
         0,
         0,
-        1749760000
+        1749827819,
+        1749760000,
+        1749827819
     );
 
 INSERT INTO
