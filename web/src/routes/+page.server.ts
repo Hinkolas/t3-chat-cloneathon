@@ -6,7 +6,7 @@ export const load = (async () => {
 	const url = 'http://192.168.69.178:3141';
 
 	try {
-		const response = await fetch(`${url}/v1/models`);
+		const response = await fetch(`${url}/v1/models/`);
 
 		if (!response.ok) {
 			throw new Error('Something happened during Record');

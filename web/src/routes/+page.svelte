@@ -12,6 +12,7 @@
 	import Sidebar from './Sidebar.svelte';
 	import ChatView from './ChatView.svelte';
 	import Popup from './Popup.svelte';
+	import Error from './Error.svelte';
 
 	let sidebarCollapsed = $state(true);
 	function sendMessage(message: string) {
@@ -20,20 +21,27 @@
 
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
+		
 	}
 
 	function newChat() {}
+
+	
 </script>
 
 <div class="container">
-	<Popup />
-	<button onclick={toggleSidebar} class="sidebar-button">
-		<PanelLeft size="16" />
-	</button>
-	<Sidebar {sidebarCollapsed} {newChat} />
-	<div class="content">
-		<ChatView {data} {sendMessage} />
-	</div>
+	{#if !data.models || Object.keys(data.models).length === 0}
+		<Error />
+	{:else}
+		<Popup />
+		<button onclick={toggleSidebar} class="sidebar-button">
+			<PanelLeft size="16" />
+		</button>
+		<Sidebar {sidebarCollapsed} {newChat} {toggleSidebar}/>
+		<div class="content">
+			<ChatView {data} {sendMessage} />
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -70,6 +78,4 @@
 		position: relative;
 		flex: 1;
 	}
-
-	
 </style>

@@ -1,6 +1,8 @@
 <script lang="ts">
-	let { sidebarCollapsed, newChat } = $props();
+	let { sidebarCollapsed, newChat, toggleSidebar } = $props();
 
+	import { fade } from 'svelte/transition';
+	import { isMobile } from './deviceDetection';
 	import SearchInput from './SearchInput.svelte';
 	import { X } from '@lucide/svelte';
 	import { popupModule } from './store';
@@ -9,33 +11,57 @@
 
 	function openPopup() {
 		popupModule.update((currentModule) => {
-            return {
-                ...currentModule, // Keep existing properties
-                show: true,
-                title: 'Delete Thread',
-                description: 'Are you sure you want to delete "Greeting Title"? This action cannot be undone.',
-                primaryButtonName: 'Delete',
-                primaryButtonFunction: () => {
+			return {
+				...currentModule, // Keep existing properties
+				show: true,
+				title: 'Delete Thread',
+				description:
+					'Are you sure you want to delete "Greeting Title"? This action cannot be undone.',
+				primaryButtonName: 'Delete',
+				primaryButtonFunction: () => {
 					// the historychat delete function logic comes here
-                    console.log('Chat Deleted!');
+					console.log('Chat Deleted!');
 
-					$popupModule.show=false;
-                },
-            };
-        });
+					$popupModule.show = false;
+				}
+			};
+		});
+	}
+
+	function closeSidebar() {
+		sidebarCollapsed = true;
 	}
 
 	function chatSearchFilter() {}
 </script>
 
-<div class="sidebar {sidebarCollapsed ? 'collapsed' : ''}">
+{#if $isMobile && !sidebarCollapsed}
+	<div
+		class="sidebar-mobile-overlay"
+		transition:fade={{ duration: 150 }}
+		onclick={toggleSidebar}
+		aria-label="Toggle Sidebar"
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape') {
+				toggleSidebar();
+			}
+		}}
+	></div>
+{/if}
+<div class="sidebar {sidebarCollapsed ? 'collapsed' : ''} {$isMobile ? 'isMobile' : ''}">
 	<div class="head">
 		<div class="title">Chat</div>
 		<div class="newChatButton">
 			<button onclick={newChat}>New Chat</button>
 		</div>
 		<div class="search-container">
-			<SearchInput bind:value={chatSearchTerm} onInputFunction={chatSearchFilter} placeholder="Search your threads..."/>
+			<SearchInput
+				bind:value={chatSearchTerm}
+				onInputFunction={chatSearchFilter}
+				placeholder="Search your threads..."
+			/>
 		</div>
 		<div class="chats-container">
 			<div class="day-title">Today</div>
@@ -48,7 +74,7 @@
 						</button>
 					</div>
 				</div>
-                <div class="chat">
+				<div class="chat">
 					<span>Greeting Title</span>
 					<div class="buttons">
 						<button onclick={openPopup}>
@@ -63,6 +89,16 @@
 </div>
 
 <style>
+	.sidebar-mobile-overlay {
+		z-index: 98;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: #00000088;
+	}
+
 	.sidebar {
 		flex: 0 0 256px;
 		padding-block: 20px;
@@ -73,6 +109,17 @@
 		flex-direction: column;
 		justify-content: space-between;
 		align-items: center;
+	}
+
+	.sidebar.isMobile {
+		width: 256px;
+		z-index: 99;
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		border-right: 1px solid #88888822;
+		background-color: var(--chat-background);
 	}
 
 	.sidebar.collapsed {
@@ -124,6 +171,7 @@
 	}
 
 	.search-container {
+		width: 100%;
 		padding-inline: 2px;
 	}
 
