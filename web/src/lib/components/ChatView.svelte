@@ -137,11 +137,10 @@
 	};
 
 	let activeTab: string = $state('create');
-	let currentSuggestions: string[] = $state(buttonData[activeTab]?.suggestions || []);
+	let currentSuggestions: string[] = $derived(buttonData[activeTab]?.suggestions || []);
 
 	function setActiveTab(tab: string) {
 		activeTab = tab;
-		currentSuggestions = buttonData[tab]?.suggestions || [];
 	}
 </script>
 
