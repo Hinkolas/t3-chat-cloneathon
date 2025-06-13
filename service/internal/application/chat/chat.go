@@ -21,9 +21,11 @@ func (s *Service) GetModels(w http.ResponseWriter, r *http.Request) {
 }
 
 type ChatListItem struct {
-	ID     string `json:"id"`
-	Title  string `json:"title"`
-	Pinned bool   `json:"pinned"`
+	ID            string `json:"id"`
+	Title         string `json:"title"`
+	IsPinned      bool   `json:"is_pinned"`
+	LastMessageAt int64  `json:"last_message_at"`
+	CreatedAt     int64  `json:"created_at"`
 }
 
 func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +34,7 @@ func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
 
 	chats := make([]ChatListItem, 0)
 
-	rows, err := s.db.Query("SELECT id, title, pinned FROM chats WHERE user_id = ?", userID)
+	rows, err := s.db.Query("SELECT id, title, is_pinned, last_message_at, created_at FROM chats WHERE user_id = ?", userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -41,7 +43,7 @@ func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var chat ChatListItem
-		if err := rows.Scan(&chat.ID, &chat.Title, &chat.Pinned); err != nil {
+		if err := rows.Scan(&chat.ID, &chat.Title, &chat.IsPinned, &chat.LastMessageAt, &chat.CreatedAt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -62,15 +64,20 @@ func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
 }
 
 type Chat struct {
-	ID          string    `json:"id"`
-	UserID      string    `json:"user_id"`
-	Title       string    `json:"title"`
-	Model       string    `json:"model"`
-	Messages    []Message `json:"messages"`
-	Pinned      bool      `json:"pinned"`
-	IsStreaming bool      `json:"is_streaming"`
-	CreatedAt   int64     `json:"created_at"`
+	ID          string `json:"id"`
+	UserID      string `json:"user_id"`
+	Title       string `json:"title"`
+	Model       string `json:"model"`
+	IsPinned    bool   `json:"is_pinned"`
+	IsStreaming bool   `json:"is_streaming"`
+
+	LastMessageAt int64 `json:"last_message_at"`
+	CreatedAt     int64 `json:"created_at"`
+	UpdatedAt     int64 `json:"updated_at"`
+
+	Messages []Message `json:"messages"`
 }
+
 type Message struct {
 	ID           string       `json:"id"`
 	Role         string       `json:"role"`
@@ -93,8 +100,8 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	query := `
-        SELECT 
-            c.id, c.user_id, c.title, c.model, c.pinned, c.is_streaming, c.created_at,
+        SELECT
+            c.id, c.user_id, c.title, c.model, c.pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
             m.id, m.role, m.content, m.created_at, m.message_index,
             a.id, a.name, a.type
         FROM chats c
@@ -117,10 +124,9 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var (
 			// Chat fields
-			cID, cUserID, cTitle, cModel string
-			cPinned, cIsStreaming        int
-			cCreatedAt                   int64
-
+			cID, cUserID, cTitle, cModel           string
+			cIsPinned, cIsStreaming                int
+			cLastMessageAt, cCreatedAt, cUpdatedAt int64
 			// Message fields (nullable)
 			mID, mRole, mContent sql.NullString
 			mCreatedAt           sql.NullInt64
@@ -131,7 +137,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 		)
 
 		err := rows.Scan(
-			&cID, &cUserID, &cTitle, &cModel, &cPinned, &cIsStreaming, &cCreatedAt,
+			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
 			&mID, &mRole, &mContent, &mCreatedAt, &mMessageIndex,
 			&aID, &aName, &aType,
 		)
@@ -143,14 +149,16 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 		// Initialize chat on first row
 		if chat == nil {
 			chat = &Chat{
-				ID:          cID,
-				UserID:      cUserID,
-				Title:       cTitle,
-				Model:       cModel,
-				Pinned:      cPinned == 1,
-				IsStreaming: cIsStreaming == 1,
-				CreatedAt:   cCreatedAt,
-				Messages:    []Message{},
+				ID:            cID,
+				UserID:        cUserID,
+				Title:         cTitle,
+				Model:         cModel,
+				IsPinned:      cIsPinned == 1,
+				IsStreaming:   cIsStreaming == 1,
+				LastMessageAt: cLastMessageAt,
+				CreatedAt:     cCreatedAt,
+				UpdatedAt:     cUpdatedAt,
+				Messages:      []Message{},
 			}
 		}
 
@@ -195,7 +203,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if chat == nil {
-		http.Error(w, "Chat not found", http.StatusInternalServerError)
+		http.Error(w, "Chat not found", http.StatusNotFound)
 		return
 	}
 
