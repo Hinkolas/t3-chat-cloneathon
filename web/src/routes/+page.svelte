@@ -69,6 +69,12 @@
 		transition: background-color 0.15s ease-out;
 	}
 
+	@media(max-width: 1024px) {
+		.sidebar-button{
+			z-index: 100;
+		}
+	}
+
 	.sidebar-button:hover {
 		background-color: #88888822;
 	}

@@ -135,6 +135,19 @@
 		align-items: center;
 	}
 
+	@media (max-width: 1024px) {
+		.sidebar {
+			width: 256px;
+			z-index: 99;
+			position: absolute;
+			left: 0;
+			top: 0;
+			height: 100%;
+			border-right: 1px solid #88888822;
+			background-color: var(--chat-background);
+		}
+	}
+
 	.sidebar.isMobile {
 		width: 256px;
 		z-index: 99;
