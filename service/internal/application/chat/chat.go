@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (s *Service) GetModels(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ListModels(w http.ResponseWriter, r *http.Request) {
 
 	models := s.mr.ListModels()
 
@@ -21,18 +21,20 @@ func (s *Service) GetModels(w http.ResponseWriter, r *http.Request) {
 }
 
 type ChatListItem struct {
-	ID     string `json:"id"`
-	Title  string `json:"title"`
-	Pinned bool   `json:"pinned"`
+	ID            string `json:"id"`
+	Title         string `json:"title"`
+	IsPinned      bool   `json:"is_pinned"`
+	LastMessageAt int64  `json:"last_message_at"`
+	CreatedAt     int64  `json:"created_at"`
 }
 
-func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 	userID := "user-123" // TODO: Replace with context from auth middleware
 
 	chats := make([]ChatListItem, 0)
 
-	rows, err := s.db.Query("SELECT id, title, pinned FROM chats WHERE user_id = ?", userID)
+	rows, err := s.db.Query("SELECT id, title, is_pinned, last_message_at, created_at FROM chats WHERE user_id = ?", userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -41,7 +43,7 @@ func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var chat ChatListItem
-		if err := rows.Scan(&chat.ID, &chat.Title, &chat.Pinned); err != nil {
+		if err := rows.Scan(&chat.ID, &chat.Title, &chat.IsPinned, &chat.LastMessageAt, &chat.CreatedAt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -62,22 +64,35 @@ func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
 }
 
 type Chat struct {
-	ID          string    `json:"id"`
-	UserID      string    `json:"user_id"`
-	Title       string    `json:"title"`
-	Model       string    `json:"model"`
-	Messages    []Message `json:"messages"`
-	Pinned      bool      `json:"pinned"`
-	IsStreaming bool      `json:"is_streaming"`
-	CreatedAt   int64     `json:"created_at"`
+	ID     string `json:"id"`
+	UserID string `json:"user_id"`
+
+	Title       string `json:"title"`
+	Model       string `json:"model"`
+	IsPinned    bool   `json:"is_pinned"`
+	IsStreaming bool   `json:"is_streaming"`
+
+	LastMessageAt int64 `json:"last_message_at"`
+	CreatedAt     int64 `json:"created_at"`
+	UpdatedAt     int64 `json:"updated_at"`
+
+	Messages []Message `json:"messages"`
 }
+
 type Message struct {
-	ID           string       `json:"id"`
-	Role         string       `json:"role"`
-	Content      string       `json:"content"`
-	Attachments  []Attachment `json:"attachments,omitempty"` // Optional field for
-	MessageIndex int64        `json:"message_index"`
-	CreatedAt    int64        `json:"created_at"`
+	ID     string `json:"id"`
+	ChatID string `json:"chat_id,omitempty"`
+	// StreamID string `json:"stream_id"`
+
+	Role      string `json:"role"`
+	Model     string `json:"model"`
+	Content   string `json:"content"`
+	Reasoning string `json:"reasoning,omitempty"`
+
+	CreatedAt int64 `json:"created_at"`
+	UpdatedAt int64 `json:"updated_at"`
+
+	Attachments []Attachment `json:"attachments,omitempty"`
 }
 
 type Attachment struct {
@@ -93,15 +108,15 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	query := `
-        SELECT 
-            c.id, c.user_id, c.title, c.model, c.pinned, c.is_streaming, c.created_at,
-            m.id, m.role, m.content, m.created_at, m.message_index,
+        SELECT
+            c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
+            m.id, m.role, m.model, m.content, m.reasoning, m.created_at, m.updated_at,
             a.id, a.name, a.type
         FROM chats c
         LEFT JOIN messages m ON c.id = m.chat_id
         LEFT JOIN attachments a ON m.id = a.message_id
         WHERE c.id = ? AND c.user_id = ?
-        ORDER BY m.message_index ASC, a.id ASC
+        ORDER BY m.created_at ASC, a.id ASC
     `
 
 	rows, err := s.db.Query(query, id, userID)
@@ -117,22 +132,19 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var (
 			// Chat fields
-			cID, cUserID, cTitle, cModel string
-			cPinned, cIsStreaming        int
-			cCreatedAt                   int64
-
+			cID, cUserID, cTitle, cModel           string
+			cIsPinned, cIsStreaming                int
+			cLastMessageAt, cCreatedAt, cUpdatedAt int64
 			// Message fields (nullable)
-			mID, mRole, mContent sql.NullString
-			mCreatedAt           sql.NullInt64
-			mMessageIndex        sql.NullInt64
-
+			mID, mRole, mModel, mContent, mReasoning sql.NullString
+			mCreatedAt, mUpdatedAt                   sql.NullInt64
 			// Attachment fields (nullable)
 			aID, aName, aType sql.NullString
 		)
 
 		err := rows.Scan(
-			&cID, &cUserID, &cTitle, &cModel, &cPinned, &cIsStreaming, &cCreatedAt,
-			&mID, &mRole, &mContent, &mCreatedAt, &mMessageIndex,
+			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
+			&mID, &mRole, &mModel, &mContent, &mReasoning, &mCreatedAt, &mUpdatedAt,
 			&aID, &aName, &aType,
 		)
 		if err != nil {
@@ -143,14 +155,16 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 		// Initialize chat on first row
 		if chat == nil {
 			chat = &Chat{
-				ID:          cID,
-				UserID:      cUserID,
-				Title:       cTitle,
-				Model:       cModel,
-				Pinned:      cPinned == 1,
-				IsStreaming: cIsStreaming == 1,
-				CreatedAt:   cCreatedAt,
-				Messages:    []Message{},
+				ID:            cID,
+				UserID:        cUserID,
+				Title:         cTitle,
+				Model:         cModel,
+				IsPinned:      cIsPinned == 1,
+				IsStreaming:   cIsStreaming == 1,
+				LastMessageAt: cLastMessageAt,
+				CreatedAt:     cCreatedAt,
+				UpdatedAt:     cUpdatedAt,
+				Messages:      []Message{},
 			}
 		}
 
@@ -159,12 +173,14 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			message, exists := messages[mID.String]
 			if !exists {
 				message = &Message{
-					ID:           mID.String,
-					Role:         mRole.String,
-					Content:      mContent.String,
-					CreatedAt:    mCreatedAt.Int64,
-					MessageIndex: mMessageIndex.Int64,
-					Attachments:  []Attachment{},
+					ID:          mID.String,
+					Role:        mRole.String,
+					Model:       mModel.String,
+					Content:     mContent.String,
+					Reasoning:   mReasoning.String,
+					CreatedAt:   mCreatedAt.Int64,
+					UpdatedAt:   mUpdatedAt.Int64,
+					Attachments: []Attachment{},
 				}
 				messages[mID.String] = message
 				chat.Messages = append(chat.Messages, *message)
@@ -195,7 +211,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if chat == nil {
-		http.Error(w, "Chat not found", http.StatusInternalServerError)
+		http.Error(w, "Chat not found", http.StatusNotFound)
 		return
 	}
 
@@ -229,6 +245,70 @@ func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 	if rowsAffected == 0 {
 		http.Error(w, "Chat not found", http.StatusNotFound)
 		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+
+}
+
+type PatchChatRequest struct {
+	Title    *string `json:"title,omitempty"`
+	IsPinned *bool   `json:"is_pinned,omitempty"`
+}
+
+func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
+
+	userID := "user-123" // TODO: Replace with context from auth middleware
+
+	id := mux.Vars(r)["id"]
+
+	var req PatchChatRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title == nil && req.IsPinned == nil {
+		http.Error(w, "No fields to update", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title != nil {
+		result, err := s.db.Exec("UPDATE chats SET title = ? WHERE id = ? AND user_id = ?", *req.Title, id, userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if rowsAffected == 0 {
+			http.Error(w, "Chat not found", http.StatusNotFound)
+			return
+		}
+	}
+
+	if req.IsPinned != nil {
+		result, err := s.db.Exec("UPDATE chats SET is_pinned = ? WHERE id = ? AND user_id = ?", *req.IsPinned, id, userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if rowsAffected == 0 {
+			http.Error(w, "Chat not found", http.StatusNotFound)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)
