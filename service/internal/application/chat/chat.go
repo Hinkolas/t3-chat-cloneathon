@@ -242,3 +242,67 @@ func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 
 }
+
+type PatchChatRequest struct {
+	Title    *string `json:"title,omitempty"`
+	IsPinned *bool   `json:"is_pinned,omitempty"`
+}
+
+func (s *Service) PatchChat(w http.ResponseWriter, r *http.Request) {
+
+	userID := "user-123" // TODO: Replace with context from auth middleware
+
+	id := mux.Vars(r)["id"]
+
+	var req PatchChatRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title == nil && req.IsPinned == nil {
+		http.Error(w, "No fields to update", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title != nil {
+		result, err := s.db.Exec("UPDATE chats SET title = ? WHERE id = ? AND user_id = ?", *req.Title, id, userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if rowsAffected == 0 {
+			http.Error(w, "Chat not found", http.StatusNotFound)
+			return
+		}
+	}
+
+	if req.IsPinned != nil {
+		result, err := s.db.Exec("UPDATE chats SET is_pinned = ? WHERE id = ? AND user_id = ?", *req.IsPinned, id, userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if rowsAffected == 0 {
+			http.Error(w, "Chat not found", http.StatusNotFound)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+
+}
