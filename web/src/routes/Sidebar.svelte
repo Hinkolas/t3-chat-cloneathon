@@ -9,6 +9,7 @@
 	import type { ChatData } from './types';
 
 	let chatSearchTerm = $state('');
+	let filteredChats = $state(chats);
 
 	function openPopup(id: string) {
 		popupModule.update((currentModule) => {
@@ -49,7 +50,15 @@
 		}
 	}
 
-	function chatSearchFilter() {}
+	function chatSearchFilter() {
+		if (chatSearchTerm.trim() === '') {
+			filteredChats = chats;
+		} else {
+			filteredChats = chats.filter((chat: ChatData) =>
+				chat.title.toLowerCase().includes(chatSearchTerm.toLowerCase())
+			);
+		}
+	}
 </script>
 
 {#if $isMobile && !sidebarCollapsed}
@@ -83,7 +92,7 @@
 		<div class="chats-container">
 			<div class="day-title">Today</div>
 			<div class="chats">
-				{#each chats as chat}
+				{#each filteredChats as chat}
 					<div class="chat">
 						<span>{chat.title}</span>
 						<div class="buttons">
@@ -119,7 +128,7 @@
 		padding-block: 20px;
 		background-color: var(--sidebar-background);
 		transition: margin 0.15s ease-in-out;
-
+		max-height: 100dvh;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -147,6 +156,9 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 16px;
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	.title {
@@ -191,11 +203,20 @@
 	}
 
 	.chats-container {
+		flex: 1;
 		width: 100%;
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
-
+		overflow-y: auto;
 		padding-inline: 16px;
+	}
+
+	/* WebKit scrollbar styling (Chrome, Edge) */
+	.chats-container::-webkit-scrollbar {
+		width: 0px !important;
+		height: 0px !important;
+		display: none !important;
 	}
 
 	.day-title {
@@ -209,6 +230,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
+		flex: 1;
 	}
 
 	.chat {
