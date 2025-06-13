@@ -1,5 +1,5 @@
 <script lang="ts">
-	export let tag;
+	let { feature } = $props();
 
 	import { Globe, Eye, Brain, CircleHelp, Icon } from '@lucide/svelte';
 
@@ -9,18 +9,38 @@
 		icon: typeof Icon;
 	}
 
-	const features: Record<string, Feature> = {
-		vision: {
+	const featuresList: Record<string, Feature> = {
+		has_vision: {
 			backgroundColor: '#262B2B',
 			color: '#9AE1D2',
 			icon: Eye
 		},
-		think: {
+		has_reasoning: {
 			backgroundColor: '#24202F',
 			color: '#979DF0',
 			icon: Brain
 		},
-		search: {
+		has_pdf: {
+			backgroundColor: '#24262E',
+			color: '#98BFE2',
+			icon: Globe
+		},
+		has_effort_control: {
+			backgroundColor: '#24262E',
+			color: '#98BFE2',
+			icon: Globe
+		},
+		has_image_generation: {
+			backgroundColor: '#24262E',
+			color: '#98BFE2',
+			icon: Globe
+		},
+		has_fast: {
+			backgroundColor: '#24262E',
+			color: '#98BFE2',
+			icon: Globe
+		},
+		has_web_search: {
 			backgroundColor: '#24262E',
 			color: '#98BFE2',
 			icon: Globe
@@ -28,22 +48,41 @@
 	};
 </script>
 
-{#if tag == 'vision' || tag == 'think' || tag == 'search'}
-	{@const Icon = features[tag].icon}
+{#if feature}
+	{@const Icon = featuresList[feature].icon}
 	<div
 		class="feature"
-		style="background-color: {features[tag].backgroundColor}; color: {features[tag].color};"
+		style="background-color: {featuresList[feature].backgroundColor}; color: {featuresList[feature]
+			.color};"
 	>
 		<Icon size={16} />
 	</div>
 {:else}
 	<div
 		class="feature"
-		style="background-color: {features[tag].backgroundColor}; color: {features[tag].color};"
+		style="background-color: {featuresList[feature].backgroundColor}; color: {featuresList[feature]
+			.color};"
 	>
 		<CircleHelp size={16} />
 	</div>
 {/if}
+
+<!-- {#if features == 'vision' || features == 'think' || features == 'search'}
+	{@const Icon = featuresList[features].icon}
+	<div
+		class="feature"
+		style="background-color: {featuresList[features].backgroundColor}; color: {featuresList[features].color};"
+	>
+		<Icon size={16} />
+	</div>
+{:else}
+	<div
+		class="feature"
+		style="background-color: {featuresList[features].backgroundColor}; color: {featuresList[features].color};"
+	>
+		<CircleHelp size={16} />
+	</div>
+{/if} -->
 
 <style>
 	.feature {
