@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ModelsResponse, ChatResponse } from './types';
+	import type { ModelsResponse, ChatResponse } from '$lib//types';
 	interface Props {
 		data: {
 			models: ModelsResponse;
@@ -10,10 +10,10 @@
 	let { data }: Props = $props();
 
 	import { PanelLeft } from '@lucide/svelte';
-	import Sidebar from './Sidebar.svelte';
-	import ChatView from './ChatView.svelte';
-	import Popup from './Popup.svelte';
-	import Error from './Error.svelte';
+	import Sidebar from '$lib/components/Sidebar.svelte';
+	import ChatView from '$lib/components/ChatView.svelte';
+	import Popup from '$lib/components/Popup.svelte';
+	import Error from '$lib/components/Error.svelte';
 
 	let chats = $state(data.chats);
 	let sidebarCollapsed = $state(true);
@@ -69,8 +69,8 @@
 		transition: background-color 0.15s ease-out;
 	}
 
-	@media(max-width: 1024px) {
-		.sidebar-button{
+	@media (max-width: 1024px) {
+		.sidebar-button {
 			z-index: 100;
 		}
 	}

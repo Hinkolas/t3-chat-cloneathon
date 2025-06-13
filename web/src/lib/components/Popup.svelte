@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	import { popupModule } from './store';
+	import { popupModule } from '$lib/store';
 
 	function cancelPopup() {
 		popupModule.update(() => {

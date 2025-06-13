@@ -1,8 +1,8 @@
 <script lang="ts">
 	let { model, changeModel } = $props();
 
-	import FeatureTag from './FeatureTag.svelte';
-	import ModelIcon from './ModelIcon.svelte';
+	import FeatureTag from '$lib/components/FeatureTag.svelte';
+	import ModelIcon from '$lib/components/ModelIcon.svelte';
 </script>
 
 <button onclick={changeModel} class="model">

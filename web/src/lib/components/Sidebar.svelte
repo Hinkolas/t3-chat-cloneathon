@@ -2,11 +2,11 @@
 	let { chats = $bindable(), sidebarCollapsed, newChat, toggleSidebar } = $props();
 
 	import { fade } from 'svelte/transition';
-	import { isMobile } from './deviceDetection';
-	import SearchInput from './SearchInput.svelte';
+	import { isMobile } from '$lib/deviceDetection';
+	import SearchInput from '$lib/components/SearchInput.svelte';
 	import { X } from '@lucide/svelte';
-	import { popupModule } from './store';
-	import type { ChatData } from './types';
+	import { popupModule } from '$lib/store';
+	import type { ChatData } from '$lib/types';
 
 	let chatSearchTerm = $state('');
 	let filteredChats = $state(chats);

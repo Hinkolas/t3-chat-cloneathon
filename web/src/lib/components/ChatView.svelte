@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ModelsResponse, ModelData } from './types';
+	import type { ModelsResponse, ModelData } from '$lib/types';
 
 	interface Props {
 		data: {
@@ -23,8 +23,8 @@
 		SignalZero
 	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
-	import ModelRow from './ModelRow.svelte';
-	import SearchInput from './SearchInput.svelte';
+	import ModelRow from '$lib/components/ModelRow.svelte';
+	import SearchInput from '$lib/components/SearchInput.svelte';
 	import { fade, scale } from 'svelte/transition';
 
 	const iconSize = 16;
