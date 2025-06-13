@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (s *Service) GetModels(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ListModels(w http.ResponseWriter, r *http.Request) {
 
 	models := s.mr.ListModels()
 
@@ -28,7 +28,7 @@ type ChatListItem struct {
 	CreatedAt     int64  `json:"created_at"`
 }
 
-func (s *Service) GetChats(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 	userID := "user-123" // TODO: Replace with context from auth middleware
 
@@ -248,7 +248,7 @@ type PatchChatRequest struct {
 	IsPinned *bool   `json:"is_pinned,omitempty"`
 }
 
-func (s *Service) PatchChat(w http.ResponseWriter, r *http.Request) {
+func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
 
 	userID := "user-123" // TODO: Replace with context from auth middleware
 
