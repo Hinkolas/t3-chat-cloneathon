@@ -64,8 +64,9 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 }
 
 type Chat struct {
-	ID          string `json:"id"`
-	UserID      string `json:"user_id"`
+	ID     string `json:"id"`
+	UserID string `json:"user_id"`
+
 	Title       string `json:"title"`
 	Model       string `json:"model"`
 	IsPinned    bool   `json:"is_pinned"`
@@ -79,12 +80,19 @@ type Chat struct {
 }
 
 type Message struct {
-	ID           string       `json:"id"`
-	Role         string       `json:"role"`
-	Content      string       `json:"content"`
-	Attachments  []Attachment `json:"attachments,omitempty"` // Optional field for
-	MessageIndex int64        `json:"message_index"`
-	CreatedAt    int64        `json:"created_at"`
+	ID     string `json:"id"`
+	ChatID string `json:"chat_id,omitempty"`
+	// StreamID string `json:"stream_id"`
+
+	Role      string `json:"role"`
+	Model     string `json:"model"`
+	Content   string `json:"content"`
+	Reasoning string `json:"reasoning,omitempty"`
+
+	CreatedAt int64 `json:"created_at"`
+	UpdatedAt int64 `json:"updated_at"`
+
+	Attachments []Attachment `json:"attachments,omitempty"`
 }
 
 type Attachment struct {
@@ -102,13 +110,13 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	query := `
         SELECT
             c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
-            m.id, m.role, m.content, m.created_at, m.message_index,
+            m.id, m.role, m.model, m.content, m.reasoning, m.created_at, m.updated_at,
             a.id, a.name, a.type
         FROM chats c
         LEFT JOIN messages m ON c.id = m.chat_id
         LEFT JOIN attachments a ON m.id = a.message_id
         WHERE c.id = ? AND c.user_id = ?
-        ORDER BY m.message_index ASC, a.id ASC
+        ORDER BY m.created_at ASC, a.id ASC
     `
 
 	rows, err := s.db.Query(query, id, userID)
@@ -128,17 +136,15 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			cIsPinned, cIsStreaming                int
 			cLastMessageAt, cCreatedAt, cUpdatedAt int64
 			// Message fields (nullable)
-			mID, mRole, mContent sql.NullString
-			mCreatedAt           sql.NullInt64
-			mMessageIndex        sql.NullInt64
-
+			mID, mRole, mModel, mContent, mReasoning sql.NullString
+			mCreatedAt, mUpdatedAt                   sql.NullInt64
 			// Attachment fields (nullable)
 			aID, aName, aType sql.NullString
 		)
 
 		err := rows.Scan(
 			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
-			&mID, &mRole, &mContent, &mCreatedAt, &mMessageIndex,
+			&mID, &mRole, &mModel, &mContent, &mReasoning, &mCreatedAt, &mUpdatedAt,
 			&aID, &aName, &aType,
 		)
 		if err != nil {
@@ -167,12 +173,14 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			message, exists := messages[mID.String]
 			if !exists {
 				message = &Message{
-					ID:           mID.String,
-					Role:         mRole.String,
-					Content:      mContent.String,
-					CreatedAt:    mCreatedAt.Int64,
-					MessageIndex: mMessageIndex.Int64,
-					Attachments:  []Attachment{},
+					ID:          mID.String,
+					Role:        mRole.String,
+					Model:       mModel.String,
+					Content:     mContent.String,
+					Reasoning:   mReasoning.String,
+					CreatedAt:   mCreatedAt.Int64,
+					UpdatedAt:   mUpdatedAt.Int64,
+					Attachments: []Attachment{},
 				}
 				messages[mID.String] = message
 				chat.Messages = append(chat.Messages, *message)
