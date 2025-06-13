@@ -1,7 +1,7 @@
 <script>
-    import { Skull, Zap } from '@lucide/svelte';
+	import { Skull, Zap } from '@lucide/svelte';
 
-    const errorMessages = [
+	const errorMessages = [
 		'Oops! The hamsters powering our servers took a coffee break ☕',
 		'404: Brain not found. Please try turning it off and on again 🧠',
 		"Error 418: I'm a teapot... wait, that's not right 🫖",
@@ -15,26 +15,26 @@
 </script>
 
 <div class="error-container">
-			<div class="error-icon">
-				<Skull size="120" />
-			</div>
-			<div class="error-content">
-				<h2 class="error-title">Well, this is embarrassing...</h2>
-				<p class="error-message">{randomError}</p>
-				<div class="error-details">
-					<p>What happened?</p>
-					<ul>
-						<li>The models decided to play hide and seek</li>
-						<li>Our servers are having a moment</li>
-						<li>The internet gremlins struck again</li>
-					</ul>
-				</div>
-				<button class="retry-button" onclick={() => window.location.reload()}>
-					<Zap size="16" />
-					Try Again (Pretty Please?)
-				</button>
-			</div>
+	<div class="error-icon">
+		<Skull size="120" />
+	</div>
+	<div class="error-content">
+		<h2 class="error-title">Well, this is embarrassing...</h2>
+		<p class="error-message">{randomError}</p>
+		<div class="error-details">
+			<p>What happened?</p>
+			<ul>
+				<li>The models decided to play hide and seek</li>
+				<li>Our servers are having a moment</li>
+				<li>The internet gremlins struck again</li>
+			</ul>
 		</div>
+		<button class="retry-button" onclick={() => window.location.reload()}>
+			<Zap size="16" />
+			Try Again (Pretty Please?)
+		</button>
+	</div>
+</div>
 
 <style>
 	.error-container {
@@ -58,9 +58,9 @@
 
 	.error-content {
 		max-width: 600px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	.error-title {
@@ -78,7 +78,7 @@
 	}
 
 	.error-details {
-        width: max-content;
+		width: max-content;
 		background: #88888811;
 		border-radius: 12px;
 		padding: 1.5rem;
@@ -112,7 +112,7 @@
 	}
 
 	.retry-button {
-		background: linear-gradient(45deg, hsl(var(--primary) /0.5), hsl(var(--primary) /0.8));
+		background: linear-gradient(45deg, hsl(var(--primary) / 0.5), hsl(var(--primary) / 0.8));
 		color: white;
 		border: none;
 		padding: 1rem 2rem;
@@ -124,11 +124,11 @@
 		align-items: center;
 		gap: 0.5rem;
 		margin: 0 auto;
-		box-shadow: 0 4px 15px hsl(var(--primary) /0.5);
+		box-shadow: 0 4px 15px hsl(var(--primary) / 0.5);
 	}
 
 	.retry-button:hover {
-		box-shadow: 0 6px 20px hsl(var(--primary) /0.5);
+		box-shadow: 0 6px 20px hsl(var(--primary) / 0.5);
 		background: linear-gradient(45deg, hsl(var(--primary) / 0.8), hsl(var(--primary)));
 	}
 

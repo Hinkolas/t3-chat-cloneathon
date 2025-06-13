@@ -21,12 +21,9 @@
 
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
-		
 	}
 
 	function newChat() {}
-
-	
 </script>
 
 <div class="container">
@@ -37,7 +34,7 @@
 		<button onclick={toggleSidebar} class="sidebar-button">
 			<PanelLeft size="16" />
 		</button>
-		<Sidebar {sidebarCollapsed} {newChat} {toggleSidebar}/>
+		<Sidebar {sidebarCollapsed} {newChat} {toggleSidebar} />
 		<div class="content">
 			<ChatView {data} {sendMessage} />
 		</div>

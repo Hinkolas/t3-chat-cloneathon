@@ -1,14 +1,14 @@
 <script lang="ts">
-    import type { ModelsResponse, ModelData } from './types';
+	import type { ModelsResponse, ModelData } from './types';
 
-    interface Props {
+	interface Props {
 		data: {
 			models: ModelsResponse;
 		};
-		sendMessage: (message: string) => void; 
+		sendMessage: (message: string) => void;
 	}
 
-	let { data , sendMessage }: Props = $props();
+	let { data, sendMessage }: Props = $props();
 
 	import { ArrowUp, ChevronDown, Globe, Paperclip } from '@lucide/svelte';
 	import { onMount } from 'svelte';
@@ -16,7 +16,7 @@
 	import SearchInput from './SearchInput.svelte';
 
 	const iconSize = 16;
-    
+
 	let textarea: HTMLElement;
 	let message = $state('');
 	let modelSelectionOpen = $state(false);
@@ -41,8 +41,9 @@
 	}
 
 	function modelSearchFilter() {
-		const filteredEntries = Object.entries(data.models).filter(([modelId, model]: [string, ModelData]) =>
-			model.title.toLowerCase().includes(modelSearchTerm.toLowerCase())
+		const filteredEntries = Object.entries(data.models).filter(
+			([modelId, model]: [string, ModelData]) =>
+				model.title.toLowerCase().includes(modelSearchTerm.toLowerCase())
 		);
 
 		filteredModels = Object.fromEntries(filteredEntries);

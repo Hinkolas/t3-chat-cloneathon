@@ -1,8 +1,8 @@
-import { writable } from "svelte/store";
+import { writable } from 'svelte/store';
 export const popupModule = writable({
-    show: false,
-    title: '',
-    description: '',
-    primaryButtonName: '',
-    primaryButtonFunction: () => {}
+	show: false,
+	title: '',
+	description: '',
+	primaryButtonName: '',
+	primaryButtonFunction: () => {}
 });

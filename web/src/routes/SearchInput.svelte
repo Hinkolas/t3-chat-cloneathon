@@ -1,12 +1,12 @@
 <script lang="ts">
-    let { value = $bindable(), onInputFunction, placeholder } = $props();
+	let { value = $bindable(), onInputFunction, placeholder } = $props();
 
 	import { Search } from '@lucide/svelte';
 </script>
 
 <div class="search-container">
 	<Search size="16" />
-	<input oninput={onInputFunction} bind:value placeholder={placeholder} type="text" />
+	<input oninput={onInputFunction} bind:value {placeholder} type="text" />
 </div>
 
 <style>

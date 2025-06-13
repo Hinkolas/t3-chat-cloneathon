@@ -8,7 +8,7 @@
 <button onclick={changeModel} class="model">
 	<div class="details">
 		<div class="provider-icon">
-			<ModelIcon {model} size=16 />
+			<ModelIcon {model} size="16" />
 		</div>
 		<div class="title">{model.title}</div>
 	</div>
@@ -64,5 +64,4 @@
 		align-items: center;
 		gap: 8px;
 	}
-
 </style>

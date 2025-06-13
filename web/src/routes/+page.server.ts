@@ -1,6 +1,5 @@
 import type { PageServerLoad } from './$types';
-import type { ModelsResponse} from './types';
-
+import type { ModelsResponse } from './types';
 
 export const load = (async () => {
 	const url = 'http://192.168.69.178:3141';
@@ -13,7 +12,7 @@ export const load = (async () => {
 		}
 
 		const models: ModelsResponse = await response.json();
-		
+
 		return { models };
 	} catch (error) {
 		console.log(error);

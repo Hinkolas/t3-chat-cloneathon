@@ -52,14 +52,16 @@
 	{@const Icon = featuresList[feature].icon}
 	<div
 		class="feature"
-		style="background-color: {featuresList[feature].backgroundColor}; color: {featuresList[feature].color};"
+		style="background-color: {featuresList[feature].backgroundColor}; color: {featuresList[feature]
+			.color};"
 	>
 		<Icon size={16} />
 	</div>
 {:else}
 	<div
 		class="feature"
-		style="background-color: {featuresList[feature].backgroundColor}; color: {featuresList[feature].color};"
+		style="background-color: {featuresList[feature].backgroundColor}; color: {featuresList[feature]
+			.color};"
 	>
 		<CircleHelp size={16} />
 	</div>
