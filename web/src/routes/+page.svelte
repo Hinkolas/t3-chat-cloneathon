@@ -1,9 +1,15 @@
 <script lang="ts">
-	let { data }: PageProps = $props();
+	import type { ModelsResponse } from './types';
+	interface Props {
+		data: {
+			models: ModelsResponse;
+			// add other properties of data here if needed
+		};
+	}
+	let { data }: Props = $props();
 
 	import { PanelLeft } from '@lucide/svelte';
 	import Sidebar from './Sidebar.svelte';
-	import type { PageProps } from './$types';
 	import ChatView from './ChatView.svelte';
 	import Popup from './Popup.svelte';
 
@@ -26,7 +32,7 @@
 	</button>
 	<Sidebar {sidebarCollapsed} {newChat} />
 	<div class="content">
-		<ChatView {sendMessage} />
+		<ChatView {data} {sendMessage} />
 	</div>
 </div>
 

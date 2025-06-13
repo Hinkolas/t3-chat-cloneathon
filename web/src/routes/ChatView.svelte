@@ -1,57 +1,27 @@
 <script lang="ts">
-	let { sendMessage } = $props();
+    import type { ModelsResponse, ModelData } from './types';
+
+    interface Props {
+		data: {
+			models: ModelsResponse;
+		};
+		sendMessage: (message: string) => void; 
+	}
+
+	let { data , sendMessage }: Props = $props();
 
 	import { ArrowUp, ChevronDown, Globe, Paperclip } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from './ModelRow.svelte';
 	import SearchInput from './SearchInput.svelte';
 
-	interface ModelSelections {
-		icon: string;
-		modelName: string;
-		features: string[];
-	}
-
-	const models: ModelSelections[] = [
-		{
-			icon: 'gemini',
-			modelName: 'Gemini 2.5 Flash',
-			features: ['vision', 'think']
-		},
-		{
-			icon: 'openai',
-			modelName: 'GPT 4o-mini',
-			features: ['vision']
-		},
-		{
-			icon: 'meta',
-			modelName: 'Llama 4 Scout',
-			features: ['search']
-		},
-		{
-			icon: 'meta',
-			modelName: 'Llama 3.3 70b',
-			features: ['think']
-		},
-		{
-			icon: 'anthropic',
-			modelName: 'Claude 4 Sonnet (Resonning)',
-			features: ['vision', 'search', 'think']
-		},
-		{
-			icon: 'anthropic',
-			modelName: 'Claude 4 Sonnet',
-			features: ['search']
-		}
-	];
-
 	const iconSize = 16;
-
+    
 	let textarea: HTMLElement;
 	let message = $state('');
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
-	let filteredModels: ModelSelections[] = $state(models);
+	let filteredModels: ModelsResponse = $state(data.models);
 
 	function toggleModelSelection() {
 		if (modelSelectionOpen) {
@@ -66,15 +36,16 @@
 
 		setTimeout(() => {
 			modelSearchTerm = '';
-			filteredModels = models;
+			filteredModels = data.models;
 		}, 150);
 	}
 
 	function modelSearchFilter() {
-		console.log(modelSearchTerm);
-		filteredModels = models.filter((model) =>
-			model.modelName.toLowerCase().includes(modelSearchTerm.toLowerCase())
+		const filteredEntries = Object.entries(data.models).filter(([modelId, model]: [string, ModelData]) =>
+			model.title.toLowerCase().includes(modelSearchTerm.toLowerCase())
 		);
+
+		filteredModels = Object.fromEntries(filteredEntries);
 	}
 
 	onMount(() => {
@@ -130,7 +101,7 @@
 							placeholder="Search Models..."
 						/>
 						<div class="model-container">
-							{#each filteredModels as model}
+							{#each Object.entries(filteredModels) as [modelId, model]}
 								<ModelRow {model} {changeModel} />
 							{/each}
 						</div>
@@ -153,7 +124,7 @@
 					class={message.length == 0 ? '' : 'active'}
 					onclick={() => {
 						sendMessage(message);
-                        message = '';
+						message = '';
 					}}
 					disabled={message.length == 0}
 					id="SendButton"
@@ -265,6 +236,8 @@
 		border-radius: 8px;
 		display: flex;
 		flex-direction: column;
+		/* TODO: max-width adjusment -> overflow on mobile */
+		min-width: 360px;
 
 		opacity: 0;
 		transform: translateY(10px) scale(0.95);
