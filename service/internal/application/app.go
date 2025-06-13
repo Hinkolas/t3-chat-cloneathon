@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type Config struct {
@@ -94,8 +95,17 @@ func (app *App) Start() error {
 
 	fmt.Println("Starting app...")
 
+	// Setup CORS middleware
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"*"},
+	})
+
+	handler := c.Handler(app.Router)
+
 	server := &http.Server{
-		Handler: app.Router,
+		Handler: handler,
 		Addr:    ":3141",
 	}
 
