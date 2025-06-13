@@ -10,10 +10,22 @@
 
 	let { data, sendMessage }: Props = $props();
 
-	import { ArrowUp, ChevronDown, Globe, Paperclip } from '@lucide/svelte';
+	import {
+		ArrowUp,
+		ChevronDown,
+		Globe,
+		Paperclip,
+		Sparkles,
+		Newspaper,
+		Code,
+		GraduationCap,
+		Icon,
+		SignalZero
+	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from './ModelRow.svelte';
 	import SearchInput from './SearchInput.svelte';
+	import { fade, scale } from 'svelte/transition';
 
 	const iconSize = 16;
 
@@ -79,9 +91,90 @@
 			}
 		};
 	}
+	interface ButtonData {
+		icon: typeof Icon;
+		label: string;
+		suggestions: string[];
+	}
+
+	const buttonData: Record<string, ButtonData> = {
+		create: {
+			icon: Sparkles,
+			label: 'Create',
+			suggestions: [
+				'Write a creative story about space exploration',
+				'Generate ideas for a mobile app',
+				'Create a marketing campaign for a new product'
+			]
+		},
+		explore: {
+			icon: Newspaper,
+			label: 'Explore',
+			suggestions: [
+				'What are the latest developments in AI?',
+				'Explain quantum computing in simple terms',
+				'What are the benefits of renewable energy?'
+			]
+		},
+		code: {
+			icon: Code,
+			label: 'Code',
+			suggestions: [
+				'How to create a REST API with Node.js?',
+				'Explain React hooks with examples',
+				'Write a Python function to sort an array'
+			]
+		},
+		learn: {
+			icon: GraduationCap,
+			label: 'Learn',
+			suggestions: [
+				'How does machine learning work?',
+				'Explain the basics of blockchain technology',
+				'What is the difference between AI and ML?'
+			]
+		}
+	};
+
+	let activeTab: string = $state('create');
+	let currentSuggestions: string[] = $state(buttonData[activeTab]?.suggestions || []);
+
+	function setActiveTab(tab: string) {
+		activeTab = tab;
+		currentSuggestions = buttonData[tab]?.suggestions || [];
+	}
 </script>
 
-<div class="chat"></div>
+<div class="chat">
+	{#if message.length == 0}
+		<div class="placeholder" transition:fade={{ duration: 100 }}>
+			<div class="title">How can I help you?</div>
+			<div class="buttons">
+				{#each Object.entries(buttonData) as [key, button]}
+					{@const Icon = buttonData[key].icon}
+					<button class:active={activeTab === key} onclick={() => setActiveTab(key)}>
+						<Icon size="16" />
+						{button.label}
+					</button>
+				{/each}
+			</div>
+			<div class="suggestions">
+				{#each currentSuggestions as suggestion, index}
+					{#if index > 0}
+						<div class="divider"></div>
+					{/if}
+					<button
+						onclick={() => {
+							message = suggestion;
+						}}
+					>
+						{suggestion}
+					</button>
+				{/each}
+			</div>
+		</div>
+	{/if}
+</div>
 <div class="input-wrapper">
 	<div class="input-container">
 		<textarea
@@ -107,7 +200,10 @@
 							{/each}
 						</div>
 					</div>
-					<button onclick={toggleModelSelection} class="selection-button non-selectable">
+					<button
+						onclick={toggleModelSelection}
+						class="selection-button non-selectable {modelSelectionOpen ? 'active' : ''}"
+					>
 						<span>Gemini 2.5 Flash</span>
 						<ChevronDown size={iconSize} />
 					</button>
@@ -138,6 +234,116 @@
 </div>
 
 <style>
+	.chat {
+		width: 100%;
+		max-width: 768px;
+		margin: 0 auto;
+		overflow: hidden;
+	}
+
+	.placeholder {
+		width: 100%;
+		padding: 24px;
+		padding-top: 100px;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 24px;
+	}
+
+	.placeholder .title {
+		font-size: 30px;
+		font-weight: 600;
+		color: #ffffff;
+	}
+
+	.placeholder .buttons {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 12px;
+	}
+
+	.placeholder .buttons button {
+		all: unset;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 8px 20px;
+		font-size: 14px;
+		font-weight: 500;
+		letter-spacing: 0.24px;
+		background-color: #88888811;
+		border: 1px solid #88888811;
+		border-radius: 999px;
+		gap: 12px;
+		cursor: pointer;
+		transition: background-color 0.15s ease-out;
+		color: hsl(var(--secondary-foreground));
+	}
+	.placeholder .buttons button.active {
+		background-color: hsl(var(--primary) / 0.2);
+		box-shadow: 0px 0px 2px hsl(var(--primary) / 0.3);
+	}
+
+	.placeholder .buttons button:hover {
+		background-color: #88888822;
+	}
+
+	.placeholder .buttons button.active:hover {
+		background-color: hsl(var(--primary) / 0.4);
+	}
+
+	.placeholder .suggestions {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		gap: 4px;
+	}
+
+	.placeholder .suggestions .divider {
+		width: 100%;
+		height: 1px;
+		background-color: #88888811;
+	}
+
+	.placeholder .suggestions button {
+		all: unset;
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		padding: 8px 16px;
+		font-size: 16px;
+		letter-spacing: 0.24px;
+		background-color: transparent;
+		border: none;
+		border-radius: 12px;
+		gap: 12px;
+		cursor: pointer;
+		transition: background-color 0.15s ease-out;
+		color: hsl(var(--secondary-foreground));
+	}
+
+	.placeholder .suggestions button:hover {
+		background-color: #88888811;
+	}
+
+	@media (max-width: 768px) {
+		.placeholder .buttons {
+			width: 100%;
+			justify-content: space-around;
+		}
+		.placeholder .buttons button {
+			border-radius: 8px;
+			flex-direction: column;
+			gap: 2px;
+			padding: 12px 8px 8px 8px;
+		}
+
+		.placeholder .suggestions button:hover {
+			background-color: transparent;
+		}
+	}
+
 	.input-wrapper {
 		position: absolute;
 		bottom: 0;
@@ -187,7 +393,7 @@
 		color: #888888;
 	}
 
-	.buttons {
+	.input-container .buttons {
 		width: 100%;
 		display: flex;
 		justify-content: space-between;
@@ -264,7 +470,7 @@
 	.selection-button {
 		border: none;
 		border-radius: 8px;
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 	}
 
@@ -288,5 +494,29 @@
 
 	#SendButton:hover {
 		background-color: hsl(var(--primary) / 0.8);
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		button:hover {
+			background-color: transparent;
+		}
+
+		#SendButton:hover {
+			background-color: hsl(var(--primary) / 0.2);
+		}
+
+		#SendButton.active:hover {
+			background-color: hsl(var(--primary) / 0.4);
+		}
+	}
+
+	@media (max-width: 768px) {
+		button:hover {
+			background-color: transparent;
+		}
+
+		.selection-button.active {
+			background-color: #88888811;
+		}
 	}
 </style>
