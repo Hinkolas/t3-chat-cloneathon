@@ -3,10 +3,8 @@ package chat
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
 	"github.com/gorilla/mux"
 )
 
@@ -209,60 +207,30 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 }
 
-type ChatCompletionRequest struct {
-	Model string `json:"model"`
-}
+func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 
-func (s *Service) ChatCompletion(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json")
-
-	var body ChatCompletionRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(map[string]string{
-			"error": fmt.Errorf("failed to decode request body: %w", err).Error(),
-		}); err != nil {
-			panic("json encoding failed: " + err.Error())
-		}
-		return
-	}
-
-	req := chat.Request{
-		Model:               body.Model,
-		Temperature:         0,
-		MaxCompletionTokens: 1024,
-		TopP:                1.0,
-		Stream:              true,
-		Thinking:            0,
-		Stop:                nil,
-		Messages: []chat.Message{
-			{
-				Role:    "user",
-				Content: "Hello Claude!",
-			},
-		},
-	}
+	userID := "user-123" // TODO: Replace with context from auth middleware
 
 	id := mux.Vars(r)["id"]
 
-	completion, err := s.mr.ChatCompletion(req)
+	// Delete the chat (this will cascade delete messages and attachments if foreign keys are set up properly)
+	result, err := s.db.Exec("DELETE FROM chats WHERE id = ? AND user_id = ?", id, userID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		if err := json.NewEncoder(w).Encode(map[string]string{
-			"error": err.Error(),
-		}); err != nil {
-			panic("json encoding failed: " + err.Error())
-		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(map[string]string{
-		"chat_id":       id,
-		"completion_id": completion,
-	}); err != nil {
-		panic("json encoding failed: " + err.Error())
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	if rowsAffected == 0 {
+		http.Error(w, "Chat not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 
 }
