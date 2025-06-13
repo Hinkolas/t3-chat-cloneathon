@@ -101,7 +101,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 	query := `
         SELECT
-            c.id, c.user_id, c.title, c.model, c.pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
+            c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
             m.id, m.role, m.content, m.created_at, m.message_index,
             a.id, a.name, a.type
         FROM chats c
