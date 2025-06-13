@@ -2,13 +2,14 @@ package auth
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func (s *Service) Handle(r *mux.Router) {
 
-	router := r.PathPrefix("/api/v1/auth").Subrouter()
+	router := r.PathPrefix("/v1/auth").Subrouter()
 
 	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		s.log.Info("Login Request")
