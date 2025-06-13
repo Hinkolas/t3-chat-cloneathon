@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import type { ModelsResponse, ChatResponse } from './types';
+import type { ModelsResponse, ChatResponse } from '$lib/types';
 
 export const load = (async () => {
 	const url = 'http://localhost:3141';
