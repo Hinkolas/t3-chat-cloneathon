@@ -1,15 +1,16 @@
 <script lang="ts">
-	let { sidebarCollapsed, newChat, toggleSidebar } = $props();
+	let { chats = $bindable(), sidebarCollapsed, newChat, toggleSidebar } = $props();
 
 	import { fade } from 'svelte/transition';
 	import { isMobile } from './deviceDetection';
 	import SearchInput from './SearchInput.svelte';
 	import { X } from '@lucide/svelte';
 	import { popupModule } from './store';
+	import type { ChatData } from './types';
 
 	let chatSearchTerm = $state('');
 
-	function openPopup() {
+	function openPopup(id: string) {
 		popupModule.update((currentModule) => {
 			return {
 				...currentModule, // Keep existing properties
@@ -19,17 +20,33 @@
 					'Are you sure you want to delete "Greeting Title"? This action cannot be undone.',
 				primaryButtonName: 'Delete',
 				primaryButtonFunction: () => {
-					// the historychat delete function logic comes here
-					console.log('Chat Deleted!');
-
+					deleteChat(id);
 					$popupModule.show = false;
 				}
 			};
 		});
 	}
 
-	function closeSidebar() {
-		sidebarCollapsed = true;
+	async function deleteChat(id: string) {
+		const url = 'http://localhost:3141';
+
+		try {
+			const modelResponse = await fetch(`${url}/v1/chats/${id}/`, {
+				method: 'DELETE'
+			});
+
+			if (!modelResponse.ok) {
+				throw new Error('Something happened during Record');
+			}
+
+			// Direktes Entfernen aus dem reaktiven Array
+			const index = chats.findIndex((chat: ChatData) => chat.id === id);
+			if (index > -1) {
+				chats.splice(index, 1);
+			}
+		} catch (error) {
+			console.error('Error deleting chat:', error);
+		}
 	}
 
 	function chatSearchFilter() {}
@@ -66,22 +83,20 @@
 		<div class="chats-container">
 			<div class="day-title">Today</div>
 			<div class="chats">
-				<div class="chat">
-					<span>Greeting Title</span>
-					<div class="buttons">
-						<button onclick={openPopup}>
-							<X size="14" />
-						</button>
+				{#each chats as chat}
+					<div class="chat">
+						<span>{chat.title}</span>
+						<div class="buttons">
+							<button
+								onclick={() => {
+									openPopup(chat.id);
+								}}
+							>
+								<X size="14" />
+							</button>
+						</div>
 					</div>
-				</div>
-				<div class="chat">
-					<span>Greeting Title</span>
-					<div class="buttons">
-						<button onclick={openPopup}>
-							<X size="14" />
-						</button>
-					</div>
-				</div>
+				{/each}
 			</div>
 		</div>
 	</div>

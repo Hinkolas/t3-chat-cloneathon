@@ -30,3 +30,9 @@ export interface ModelData {
 export interface ModelsResponse {
 	[modelId: string]: ModelData;
 }
+
+export interface Chat {
+	id: string,
+	title: string,
+	pinned: boolean //TODO: change to is_pinned
+}

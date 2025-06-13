@@ -1,8 +1,9 @@
 <script lang="ts">
-	import type { ModelsResponse } from './types';
+	import type { ModelsResponse, ChatResponse } from './types';
 	interface Props {
 		data: {
 			models: ModelsResponse;
+			chats: ChatResponse;
 			// add other properties of data here if needed
 		};
 	}
@@ -14,6 +15,7 @@
 	import Popup from './Popup.svelte';
 	import Error from './Error.svelte';
 
+	let chats = $state(data.chats);
 	let sidebarCollapsed = $state(true);
 	function sendMessage(message: string) {
 		console.log(message);
@@ -34,7 +36,7 @@
 		<button onclick={toggleSidebar} class="sidebar-button">
 			<PanelLeft size="16" />
 		</button>
-		<Sidebar {sidebarCollapsed} {newChat} {toggleSidebar} />
+		<Sidebar {chats} {sidebarCollapsed} {newChat} {toggleSidebar} />
 		<div class="content">
 			<ChatView {data} {sendMessage} />
 		</div>
