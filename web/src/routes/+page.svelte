@@ -7,7 +7,7 @@
 	import ChatView from './ChatView.svelte';
 	import Popup from './Popup.svelte';
 
-	let sidebarCollapsed = $state(false);
+	let sidebarCollapsed = $state(true);
 	function sendMessage(message: string) {
 		console.log(message);
 	}
@@ -63,7 +63,6 @@
 	.content {
 		position: relative;
 		flex: 1;
-		background-color: var(--chat-background);
 	}
 
 	
