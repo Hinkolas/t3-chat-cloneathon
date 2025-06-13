@@ -5,6 +5,7 @@
 	import Sidebar from './Sidebar.svelte';
 	import type { PageProps } from './$types';
 	import ChatView from './ChatView.svelte';
+	import Popup from './Popup.svelte';
 
 	let sidebarCollapsed = $state(false);
 	function sendMessage(message: string) {
@@ -16,16 +17,16 @@
 	}
 
 	function newChat() {}
-
 </script>
 
 <div class="container">
+	<Popup />
 	<button onclick={toggleSidebar} class="sidebar-button">
-		<PanelLeft size=16 />
+		<PanelLeft size="16" />
 	</button>
 	<Sidebar {sidebarCollapsed} {newChat} />
 	<div class="content">
-		<ChatView {sendMessage}/>
+		<ChatView {sendMessage} />
 	</div>
 </div>
 
@@ -55,31 +56,15 @@
 		transition: background-color 0.15s ease-out;
 	}
 
+	.sidebar-button:hover {
+		background-color: #88888822;
+	}
+
 	.content {
 		position: relative;
 		flex: 1;
 		background-color: var(--chat-background);
 	}
 
-	button {
-		all: unset;
-
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 4px;
-		padding: 8px;
-		border-radius: 9999px;
-		white-space: nowrap;
-		font-size: 12px;
-		line-height: 1rem;
-		cursor: pointer;
-		border: 1px solid #88888833;
-		color: hsl(var(--secondary-foreground));
-		transition: background-color 0.15s ease;
-	}
-
-	button:hover {
-		background-color: var(--button-hover);
-	}
+	
 </style>

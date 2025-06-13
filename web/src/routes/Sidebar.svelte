@@ -3,8 +3,27 @@
 
 	import SearchInput from './SearchInput.svelte';
 	import { X } from '@lucide/svelte';
+	import { popupModule } from './store';
 
 	let chatSearchTerm = $state('');
+
+	function openPopup() {
+		popupModule.update((currentModule) => {
+            return {
+                ...currentModule, // Keep existing properties
+                show: true,
+                title: 'Delete Thread',
+                description: 'Are you sure you want to delete "Greeting Title"? This action cannot be undone.',
+                primaryButtonName: 'Delete',
+                primaryButtonFunction: () => {
+					// the historychat delete function logic comes here
+                    console.log('Chat Deleted!');
+
+					$popupModule.show=false;
+                },
+            };
+        });
+	}
 
 	function chatSearchFilter() {}
 </script>
@@ -24,7 +43,7 @@
 				<div class="chat">
 					<span>Greeting Title</span>
 					<div class="buttons">
-						<button>
+						<button onclick={openPopup}>
 							<X size="14" />
 						</button>
 					</div>
@@ -32,7 +51,7 @@
                 <div class="chat">
 					<span>Greeting Title</span>
 					<div class="buttons">
-						<button>
+						<button onclick={openPopup}>
 							<X size="14" />
 						</button>
 					</div>
