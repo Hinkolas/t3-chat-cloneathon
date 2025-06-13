@@ -50,7 +50,8 @@ var startCmd = &cobra.Command{
 			json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Why are you checking? Don't you trust me?"})
 		})
 
-		db, err := sql.Open("sqlite3", "./_data/dev.db")
+		// TODO: Maybe replace with postgres in production
+		db, err := sql.Open("sqlite3", "data.db")
 		if err != nil {
 			panic(err)
 		}
