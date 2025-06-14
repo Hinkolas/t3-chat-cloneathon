@@ -1,5 +1,31 @@
+-- Auth Data
 CREATE TABLE
-    chats (
+    IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        is_verified INTEGER NOT NULL,
+        mfa_active INTEGER NOT NULL
+    );
+
+CREATE TABLE
+    IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        issued_at INTEGER NOT NULL,
+        renewed_at INTEGER NOT NULL,
+        time_to_live INTEGER NOT NULL,
+        is_verified INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    );
+
+-- Chat Data
+CREATE TABLE
+    IF NOT EXISTS chats (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
@@ -8,33 +34,48 @@ CREATE TABLE
         is_streaming INTEGER NOT NULL,
         last_message_at INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
 
 CREATE TABLE
-    messages (
+    IF NOT EXISTS messages (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
-        chat_id TEXT NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
+        chat_id TEXT NOT NULL,
         role TEXT NOT NULL,
         model TEXT NOT NULL,
         content TEXT NOT NULL,
         reasoning TEXT NOT NULL,
         created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (chat_id) REFERENCES chats (id) ON DELETE CASCADE
     );
 
 CREATE TABLE
-    attachments (
+    IF NOT EXISTS attachments (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
-        message_id TEXT NOT NULL REFERENCES messages (id) ON DELETE CASCADE,
+        message_id TEXT NOT NULL,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
-        created_at INTEGER NOT NULL
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (message_id) REFERENCES messages (id) ON DELETE CASCADE
     );
 
-CREATE INDEX idx_messages_chat_id_created_at ON messages (chat_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_chats_user_id ON chats (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages (chat_id);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_message_id ON attachments (message_id);
+
+CREATE INDEX IF NOT EXISTS idx_messages_chat_id_created_at ON messages (chat_id, created_at);
 
 INSERT INTO
     chats (
@@ -619,7 +660,7 @@ VALUES
         'assistant',
         'qwen3',
         'Short power naps (20-30 minutes) can be beneficial for alertness, but longer or irregular naps can disrupt nighttime sleep.',
-'The user is asking about the benefits/downsides of napping. I will provide a nuanced answer, differentiating between beneficial "power naps" (short duration) and potentially disruptive "longer or irregular naps," explaining the impact on alertness versus nighttime sleep.',
+        'The user is asking about the benefits/downsides of napping. I will provide a nuanced answer, differentiating between beneficial "power naps" (short duration) and potentially disruptive "longer or irregular naps," explaining the impact on alertness versus nighttime sleep.',
         1749141079000,
         1749141079000
     );
