@@ -53,7 +53,7 @@
 <svelte:window on:keydown={(e) => e.key === 'Escape' && onContextMenuOpen(null)} />
 
 <!-- TODO: Implement Link -->
-<a href='/chat/{chat.id}' class="chat" oncontextmenu={handleContextMenu}>
+<a href="/chat/{chat.id}" class="chat" oncontextmenu={handleContextMenu}>
 	<span>{chat.title}</span>
 	<div class="buttons">
 		<button onclick={() => patchChat(chat, !chat.is_pinned)}>
@@ -128,17 +128,30 @@
 	}
 
 	.buttons {
-		position: relative;
+		position: absolute;
 		top: 50%;
-		left: 100%;
+		right: -100%;
 		transform: translateY(-50%);
 		flex-shrink: 0;
 
 		padding-right: 8px;
+		padding-left: 8px;
 		display: flex;
 		justify-content: flex-end;
+		margin-left: auto;
 		gap: 4px;
-		transition: left 0.15s ease;
+		transition: right 0.15s ease;
+		background-color: var(--sidebar-chat-hover);
+	}
+
+	.buttons::before {
+		content: '';
+		position: absolute;
+		left: -12px;
+		top: 0;
+		height: 100%;
+		width: 12px;
+		background: linear-gradient(to right, transparent, #261922);
 	}
 
 	.buttons button {
@@ -160,7 +173,7 @@
 	}
 
 	.chat:hover .buttons {
-		left: 0;
+		right: 0;
 	}
 
 	/* Context Menu Styles */
