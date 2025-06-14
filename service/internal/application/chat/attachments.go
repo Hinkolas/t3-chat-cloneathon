@@ -3,6 +3,8 @@ package chat
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Attachment struct {
@@ -171,39 +173,33 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
 // }
 
-// func (s *Service) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
+func (s *Service) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
 
-// 	userID := "user-123" // TODO: Replace with context from auth middleware
+	userID := "user-123" // TODO: Replace with context from auth middleware
 
-// 	id := mux.Vars(r)["id"]
+	id := mux.Vars(r)["id"]
 
-// 	// Delete the chat (this will cascade delete messages and attachments if foreign keys are set up properly)
-// 	result, err := s.db.Exec(`
-// 		DELETE FROM attachments
-// 		WHERE id = ? AND message_id IN (
-// 			SELECT m.id FROM messages m
-// 			JOIN chats c ON m.chat_id = c.id
-// 			WHERE c.user_id = ?
-// 		)`, id, userID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	// Delete the chat (this will cascade delete messages and attachments if foreign keys are set up properly)
+	result, err := s.db.Exec("DELETE FROM attachments WHERE id = ? AND user_id = ?", id, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	rowsAffected, err := result.RowsAffected()
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	if rowsAffected == 0 {
-// 		http.Error(w, "Chat not found", http.StatusNotFound)
-// 		return
-// 	}
+	if rowsAffected == 0 {
+		http.Error(w, "Attachment not found", http.StatusNotFound)
+		return
+	}
 
-// 	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
 
-// }
+}
 
 // type PatchChatRequest struct {
 // 	Title    *string `json:"title,omitempty"`

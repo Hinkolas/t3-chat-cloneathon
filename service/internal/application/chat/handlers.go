@@ -21,7 +21,7 @@ func (s *Service) Handle(r *mux.Router) {
 	router = r.PathPrefix("/v1/attachments").Subrouter()
 	router.HandleFunc("/", s.ListAttachments).Methods("GET")
 	// router.HandleFunc("/{id}/", s.GetAttachment).Methods("GET")
-	// router.HandleFunc("/{id}/", s.DeleteAttachment).Methods("DELETE")
+	router.HandleFunc("/{id}/", s.DeleteAttachment).Methods("DELETE")
 	// router.HandleFunc("/{id}/", s.UploadAttachment).Methods("POST")
 
 }
