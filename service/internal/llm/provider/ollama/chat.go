@@ -2,6 +2,7 @@ package ollama
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,11 +15,6 @@ import (
 
 func ChatCompletion(req chat.Request) (*stream.Stream, error) {
 
-	// TODO: replace with a global application client pool
-	httpClient := &http.Client{
-		Timeout: 0, // no global timeout; per-request ctx handles it
-	}
-
 	var base *url.URL
 	var err error
 
@@ -28,29 +24,34 @@ func ChatCompletion(req chat.Request) (*stream.Stream, error) {
 		return nil, fmt.Errorf("failed to parse OLLAMA_BASE_URL: %w", err)
 	}
 
-	client := api.NewClient(
-		base,
-		httpClient,
-	)
+	client := api.NewClient(base, &http.Client{}) // TODO: replace with a shared client pool
 
-	doThink := true  // Defined by the user
-	doStream := true // TODO: has to be true all the time for now
-
-	ctx := context.TODO()
 	request := &api.ChatRequest{
-		Model:  "qwen3:30b",
-		Think:  &doThink,
-		Stream: &doStream,
-		Options: map[string]any{
-			"temperature": 0,
-		},
-		Messages: []api.Message{
-			{
-				Role:    "user",
-				Content: req.Messages[0].Content,
-			},
-		},
+		Model:    req.Model,
+		Think:    new(bool),
+		Stream:   new(bool),
+		Options:  make(map[string]any),
+		Messages: make([]api.Message, len(req.Messages)),
 	}
+
+	*request.Think = req.Reasoning > 0 // Defined by the user
+	*request.Stream = true             // TODO: has to be true all the time for now
+
+	// Add temperature to the ollama request options
+	if req.Temperature >= 0 && req.Temperature <= 1 {
+		request.Options["temperature"] = req.Temperature
+	}
+
+	// Convert universal format to ollama message format
+	for i, message := range req.Messages {
+		request.Messages[i] = api.Message{
+			Role:     message.Role,
+			Content:  message.Content,
+			Thinking: message.Reasoning, // TODO: Maybe remove to save ressources
+		}
+	}
+
+	_ = json.NewEncoder(os.Stdout).Encode(request)
 
 	s := stream.New()
 
@@ -71,14 +72,12 @@ func ChatCompletion(req chat.Request) (*stream.Stream, error) {
 
 	go func() {
 
-		err := client.Chat(ctx, request, respFunc)
+		err := client.Chat(context.TODO(), request, respFunc) // TODO: replace with a proper context
 		if err != nil {
 			s.Fail(err)
 		}
 
 	}()
-
-	fmt.Println("Ollama completion started!") // TODO: Remove this debug statement
 
 	return s, nil
 
