@@ -30,7 +30,8 @@ CREATE TABLE
         user_id TEXT NOT NULL,
         message_id TEXT NOT NULL REFERENCES messages (id) ON DELETE CASCADE,
         name TEXT NOT NULL,
-        type TEXT NOT NULL
+        type TEXT NOT NULL,
+        created_at INTEGER NOT NULL
     );
 
 CREATE INDEX idx_messages_chat_id_created_at ON messages (chat_id, created_at);
@@ -1425,145 +1426,165 @@ VALUES
     );
 
 INSERT INTO
-    attachments (id, message_id, name, type)
+    attachments (id, user_id, message_id, name, type, created_at)
 VALUES
     (
         'att-1-1-1',
         'user-123',
         'msg-1-1',
         'morning_routine_inspiration.jpeg',
-        'image/jpeg'
+        'image/jpeg',
+        1748791016
     ),
     (
         'att-1-3-1',
         'user-123',
         'msg-1-3',
         'morning_routine_tracker.pdf',
-        'application/pdf'
+        'application/pdf',
+        1748791056
     ),
     (
         'att-3-1-1',
         'user-123',
         'msg-3-1',
         'garden_layout_sketch.png',
-        'image/png'
+        'image/png',
+        1748891016
     ),
     (
         'att-3-3-1',
         'user-123',
         'msg-3-3',
         'gardening_tool_list.docx',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        1748891056
     ),
     (
         'att-5-1-1',
         'user-123',
         'msg-5-1',
         'current_expenses_spreadsheet.xlsx',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        1748991016
     ),
     (
         'att-5-3-1',
         'user-123',
         'msg-5-3',
         'budget_template.pdf',
-        'application/pdf'
+        'application/pdf',
+        1748991056
     ),
     (
         'att-7-1-1',
         'user-123',
         'msg-7-1',
         'leaky_faucet_photo.jpeg',
-        'image/jpeg'
+        'image/jpeg',
+        1749091016
     ),
     (
         'att-7-3-1',
         'user-123',
         'msg-7-3',
         'diy_repair_manual_cover.png',
-        'image/png'
+        'image/png',
+        1749091056
     ),
     (
         'att-9-1-1',
         'user-123',
         'msg-9-1',
         'investment_portfolio_chart.svg',
-        'image/svg+xml'
+        'image/svg+xml',
+        1749191016
     ),
     (
         'att-9-3-1',
         'user-123',
         'msg-9-3',
         'market_outlook_report.pdf',
-        'application/pdf'
+        'application/pdf',
+        1749191056
     ),
     (
         'att-11-1-1',
         'user-123',
         'msg-11-1',
         'meal_plan_example.pdf',
-        'application/pdf'
+        'application/pdf',
+        1749309416
     ),
     (
         'att-11-3-1',
         'user-123',
         'msg-11-3',
         'dietary_guidelines.pdf',
-        'application/pdf'
+        'application/pdf',
+        1749309456
     ),
     (
         'att-13-1-1',
         'user-123',
         'msg-13-1',
         'living_room_before_photo.jpeg',
-        'image/jpeg'
+        'image/jpeg',
+        1749409997
     ),
     (
         'att-13-3-1',
         'user-123',
         'msg-13-3',
         'lighting_fixture_options.png',
-        'image/png'
+        'image/png',
+        1749410037
     ),
     (
         'att-15-1-1',
         'user-123',
         'msg-15-1',
         'cat_scratch_post_ideas.jpeg',
-        'image/jpeg'
+        'image/jpeg',
+        1749509997
     ),
     (
         'att-15-3-1',
         'user-123',
         'msg-15-3',
         'dog_feeding_chart.pdf',
-        'application/pdf'
+        'application/pdf',
+        1749510037
     ),
     (
         'att-17-1-1',
         'user-123',
         'msg-17-1',
         'coding_challenge_platform_screenshot.png',
-        'image/png'
+        'image/png',
+        1749609997
     ),
     (
         'att-17-3-1',
         'user-123',
         'msg-17-3',
         'project_idea_flowchart.svg',
-        'image/svg+xml'
+        'image/svg+xml',
+        1749610037
     ),
     (
         'att-19-1-1',
         'user-123',
         'msg-19-1',
         'camera_settings_diagram.jpeg',
-        'image/jpeg'
+        'image/jpeg',
+        1749709997
     ),
     (
         'att-19-3-1',
         'user-123',
         'msg-19-3',
         'composition_rule_of_thirds.png',
-        'image/png'
+        'image/png',
+        1749710037
     );
