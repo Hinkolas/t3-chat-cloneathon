@@ -95,12 +95,6 @@ type Message struct {
 	Attachments []Attachment `json:"attachments,omitempty"`
 }
 
-type Attachment struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
 func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 	userID := "user-123" // TODO: Replace with context from auth middleware
@@ -111,7 +105,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
         SELECT
             c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
             m.id, m.role, m.model, m.content, m.reasoning, m.created_at, m.updated_at,
-            a.id, a.name, a.type
+            a.id, a.name, a.type, a.created_at
         FROM chats c
         LEFT JOIN messages m ON c.id = m.chat_id
         LEFT JOIN attachments a ON m.id = a.message_id
@@ -137,7 +131,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			cLastMessageAt, cCreatedAt, cUpdatedAt int64
 			// Message fields (nullable)
 			mID, mRole, mModel, mContent, mReasoning sql.NullString
-			mCreatedAt, mUpdatedAt                   sql.NullInt64
+			mCreatedAt, mUpdatedAt, aCreatedAt       sql.NullInt64
 			// Attachment fields (nullable)
 			aID, aName, aType sql.NullString
 		)
@@ -145,7 +139,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 		err := rows.Scan(
 			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
 			&mID, &mRole, &mModel, &mContent, &mReasoning, &mCreatedAt, &mUpdatedAt,
-			&aID, &aName, &aType,
+			&aID, &aName, &aType, &aCreatedAt,
 		)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -189,9 +183,10 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			// Add attachment if it exists
 			if aID.Valid {
 				attachment := Attachment{
-					ID:   aID.String,
-					Name: aName.String,
-					Type: aType.String,
+					ID:        aID.String,
+					Name:      aName.String,
+					Type:      aType.String,
+					CreatedAt: aCreatedAt.Int64,
 				}
 
 				// Find the message in chat.Messages and add attachment
