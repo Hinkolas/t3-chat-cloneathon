@@ -14,6 +14,7 @@ CREATE TABLE
 CREATE TABLE
     messages (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
         chat_id TEXT NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
         role TEXT NOT NULL,
         model TEXT NOT NULL,
@@ -26,6 +27,7 @@ CREATE TABLE
 CREATE TABLE
     attachments (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
         message_id TEXT NOT NULL REFERENCES messages (id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         type TEXT NOT NULL
@@ -160,6 +162,7 @@ VALUES
 INSERT INTO
     messages (
         id,
+        user_id,
         chat_id,
         role,
         model,
@@ -171,6 +174,7 @@ INSERT INTO
 VALUES
     (
         'msg-1-1',
+        'user-123,'
         'test-chat-1',
         'user',
         'claude-4-sonnet',
@@ -181,6 +185,7 @@ VALUES
     ),
     (
         'msg-1-2',
+        'user-123,'
         'test-chat-1',
         'assistant',
         'claude-4-sonnet',
@@ -191,6 +196,7 @@ VALUES
     ),
     (
         'msg-1-3',
+        'user-123,'
         'test-chat-1',
         'user',
         'claude-4-sonnet',
@@ -201,6 +207,7 @@ VALUES
     ),
     (
         'msg-1-4',
+        'user-123,'
         'test-chat-1',
         'assistant',
         'claude-4-sonnet',
@@ -224,6 +231,7 @@ INSERT INTO
 VALUES
     (
         'msg-2-1',
+        'user-123,'
         'test-chat-2',
         'user',
         'qwen3',
@@ -234,6 +242,7 @@ VALUES
     ),
     (
         'msg-2-2',
+        'user-123,'
         'test-chat-2',
         'assistant',
         'qwen3',
@@ -244,6 +253,7 @@ VALUES
     ),
     (
         'msg-2-3',
+        'user-123,'
         'test-chat-2',
         'user',
         'qwen3',
@@ -254,6 +264,7 @@ VALUES
     ),
     (
         'msg-2-4',
+        'user-123,'
         'test-chat-2',
         'assistant',
         'qwen3',
@@ -277,6 +288,7 @@ INSERT INTO
 VALUES
     (
         'msg-3-1',
+        'user-123,'
         'test-chat-3',
         'user',
         'claude-4-sonnet',
@@ -287,6 +299,7 @@ VALUES
     ),
     (
         'msg-3-2',
+        'user-123,'
         'test-chat-3',
         'assistant',
         'claude-4-sonnet',
@@ -297,6 +310,7 @@ VALUES
     ),
     (
         'msg-3-3',
+        'user-123,'
         'test-chat-3',
         'user',
         'claude-4-sonnet',
@@ -307,6 +321,7 @@ VALUES
     ),
     (
         'msg-3-4',
+        'user-123,'
         'test-chat-3',
         'assistant',
         'claude-4-sonnet',
@@ -330,6 +345,7 @@ INSERT INTO
 VALUES
     (
         'msg-4-1',
+        'user-123,'
         'test-chat-4',
         'user',
         'qwen3',
@@ -340,6 +356,7 @@ VALUES
     ),
     (
         'msg-4-2',
+        'user-123,'
         'test-chat-4',
         '_assistant',
         'qwen3',
@@ -350,6 +367,7 @@ VALUES
     ),
     (
         'msg-4-3',
+        'user-123,'
         'test-chat-4',
         'user',
         'qwen3',
@@ -360,6 +378,7 @@ VALUES
     ),
     (
         'msg-4-4',
+        'user-123,'
         'test-chat-4',
         'assistant',
         'qwen3',
@@ -383,6 +402,7 @@ INSERT INTO
 VALUES
     (
         'msg-5-1',
+        'user-123,'
         'test-chat-5',
         'user',
         'claude-4-sonnet',
@@ -393,6 +413,7 @@ VALUES
     ),
     (
         'msg-5-2',
+        'user-123,'
         'test-chat-5',
         'assistant',
         'claude-4-sonnet',
@@ -403,6 +424,7 @@ VALUES
     ),
     (
         'msg-5-3',
+        'user-123,'
         'test-chat-5',
         'user',
         'claude-4-sonnet',
@@ -413,6 +435,7 @@ VALUES
     ),
     (
         'msg-5-4',
+        'user-123,'
         'test-chat-5',
         'assistant',
         'claude-4-sonnet',
@@ -436,6 +459,7 @@ INSERT INTO
 VALUES
     (
         'msg-6-1',
+        'user-123,'
         'test-chat-6',
         'user',
         'qwen3',
@@ -446,6 +470,7 @@ VALUES
     ),
     (
         'msg-6-2',
+        'user-123,'
         'test-chat-6',
         'assistant',
         'qwen3',
@@ -456,6 +481,7 @@ VALUES
     ),
     (
         'msg-6-3',
+        'user-123,'
         'test-chat-6',
         'user',
         'qwen3',
@@ -466,6 +492,7 @@ VALUES
     ),
     (
         'msg-6-4',
+        'user-123,'
         'test-chat-6',
         'assistant',
         'qwen3',
@@ -489,6 +516,7 @@ INSERT INTO
 VALUES
     (
         'msg-7-1',
+        'user-123,'
         'test-chat-7',
         'user',
         'claude-4-sonnet',
@@ -499,6 +527,7 @@ VALUES
     ),
     (
         'msg-7-2',
+        'user-123,'
         'test-chat-7',
         'assistant',
         'claude-4-sonnet',
@@ -509,6 +538,7 @@ VALUES
     ),
     (
         'msg-7-3',
+        'user-123,'
         'test-chat-7',
         'user',
         'claude-4-sonnet',
@@ -519,6 +549,7 @@ VALUES
     ),
     (
         'msg-7-4',
+        'user-123,'
         'test-chat-7',
         'assistant',
         'claude-4-sonnet',
@@ -542,6 +573,7 @@ INSERT INTO
 VALUES
     (
         'msg-8-1',
+        'user-123,'
         'test-chat-8',
         'user',
         'qwen3',
@@ -552,6 +584,7 @@ VALUES
     ),
     (
         'msg-8-2',
+        'user-123,'
         'test-chat-8',
         'assistant',
         'qwen3',
@@ -562,6 +595,7 @@ VALUES
     ),
     (
         'msg-8-3',
+        'user-123,'
         'test-chat-8',
         'user',
         'qwen3',
@@ -572,6 +606,7 @@ VALUES
     ),
     (
         'msg-8-4',
+        'user-123,'
         'test-chat-8',
         'assistant',
         'qwen3',
@@ -595,6 +630,7 @@ INSERT INTO
 VALUES
     (
         'msg-9-1',
+        'user-123,'
         'test-chat-9',
         'user',
         'claude-4-sonnet',
@@ -605,6 +641,7 @@ VALUES
     ),
     (
         'msg-9-2',
+        'user-123,'
         'test-chat-9',
         'assistant',
         'claude-4-sonnet',
@@ -615,6 +652,7 @@ VALUES
     ),
     (
         'msg-9-3',
+        'user-123,'
         'test-chat-9',
         'user',
         'claude-4-sonnet',
@@ -625,6 +663,7 @@ VALUES
     ),
     (
         'msg-9-4',
+        'user-123,'
         'test-chat-9',
         'assistant',
         'claude-4-sonnet',
@@ -648,6 +687,7 @@ INSERT INTO
 VALUES
     (
         'msg-10-1',
+        'user-123,'
         'test-chat-10',
         'user',
         'qwen3',
@@ -658,6 +698,7 @@ VALUES
     ),
     (
         'msg-10-2',
+        'user-123,'
         'test-chat-10',
         'assistant',
         'qwen3',
@@ -668,6 +709,7 @@ VALUES
     ),
     (
         'msg-10-3',
+        'user-123,'
         'test-chat-10',
         'user',
         'qwen3',
@@ -678,6 +720,7 @@ VALUES
     ),
     (
         'msg-10-4',
+        'user-123,'
         'test-chat-10',
         'assistant',
         'qwen3',
@@ -825,6 +868,7 @@ INSERT INTO
 VALUES
     (
         'msg-11-1',
+        'user-123,'
         'test-chat-11',
         'user',
         'claude-4-sonnet',
@@ -835,6 +879,7 @@ VALUES
     ),
     (
         'msg-11-2',
+        'user-123,'
         'test-chat-11',
         'assistant',
         'claude-4-sonnet',
@@ -845,6 +890,7 @@ VALUES
     ),
     (
         'msg-11-3',
+        'user-123,'
         'test-chat-11',
         'user',
         'claude-4-sonnet',
@@ -855,6 +901,7 @@ VALUES
     ),
     (
         'msg-11-4',
+        'user-123,'
         'test-chat-11',
         'assistant',
         'claude-4-sonnet',
@@ -878,6 +925,7 @@ INSERT INTO
 VALUES
     (
         'msg-12-1',
+        'user-123,'
         'test-chat-12',
         'user',
         'qwen3',
@@ -888,6 +936,7 @@ VALUES
     ),
     (
         'msg-12-2',
+        'user-123,'
         'test-chat-12',
         'assistant',
         'qwen3',
@@ -898,6 +947,7 @@ VALUES
     ),
     (
         'msg-12-3',
+        'user-123,'
         'test-chat-12',
         'user',
         'qwen3',
@@ -908,6 +958,7 @@ VALUES
     ),
     (
         'msg-12-4',
+        'user-123,'
         'test-chat-12',
         'assistant',
         'qwen3',
@@ -931,6 +982,7 @@ INSERT INTO
 VALUES
     (
         'msg-13-1',
+        'user-123,'
         'test-chat-13',
         'user',
         'claude-4-sonnet',
@@ -941,6 +993,7 @@ VALUES
     ),
     (
         'msg-13-2',
+        'user-123,'
         'test-chat-13',
         'assistant',
         'claude-4-sonnet',
@@ -951,6 +1004,7 @@ VALUES
     ),
     (
         'msg-13-3',
+        'user-123,'
         'test-chat-13',
         'user',
         'claude-4-sonnet',
@@ -961,6 +1015,7 @@ VALUES
     ),
     (
         'msg-13-4',
+        'user-123,'
         'test-chat-13',
         'assistant',
         'claude-4-sonnet',
@@ -984,6 +1039,7 @@ INSERT INTO
 VALUES
     (
         'msg-14-1',
+        'user-123,'
         'test-chat-14',
         'user',
         'qwen3',
@@ -994,6 +1050,7 @@ VALUES
     ),
     (
         'msg-14-2',
+        'user-123,'
         'test-chat-14',
         'assistant',
         'qwen3',
@@ -1004,6 +1061,7 @@ VALUES
     ),
     (
         'msg-14-3',
+        'user-123,'
         'test-chat-14',
         'user',
         'qwen3',
@@ -1014,6 +1072,7 @@ VALUES
     ),
     (
         'msg-14-4',
+        'user-123,'
         'test-chat-14',
         'assistant',
         'qwen3',
@@ -1037,6 +1096,7 @@ INSERT INTO
 VALUES
     (
         'msg-15-1',
+        'user-123,'
         'test-chat-15',
         'user',
         'claude-4-sonnet',
@@ -1047,6 +1107,7 @@ VALUES
     ),
     (
         'msg-15-2',
+        'user-123,'
         'test-chat-15',
         'assistant',
         'claude-4-sonnet',
@@ -1057,6 +1118,7 @@ VALUES
     ),
     (
         'msg-15-3',
+        'user-123,'
         'test-chat-15',
         'user',
         'claude-4-sonnet',
@@ -1067,6 +1129,7 @@ VALUES
     ),
     (
         'msg-15-4',
+        'user-123,'
         'test-chat-15',
         'assistant',
         'claude-4-sonnet',
@@ -1090,6 +1153,7 @@ INSERT INTO
 VALUES
     (
         'msg-16-1',
+        'user-123,'
         'test-chat-16',
         'user',
         'qwen3',
@@ -1100,6 +1164,7 @@ VALUES
     ),
     (
         'msg-16-2',
+        'user-123,'
         'test-chat-16',
         'assistant',
         'qwen3',
@@ -1110,6 +1175,7 @@ VALUES
     ),
     (
         'msg-16-3',
+        'user-123,'
         'test-chat-16',
         'user',
         'qwen3',
@@ -1120,6 +1186,7 @@ VALUES
     ),
     (
         'msg-16-4',
+        'user-123,'
         'test-chat-16',
         'assistant',
         'qwen3',
@@ -1143,6 +1210,7 @@ INSERT INTO
 VALUES
     (
         'msg-17-1',
+        'user-123,'
         'test-chat-17',
         'user',
         'claude-4-sonnet',
@@ -1153,6 +1221,7 @@ VALUES
     ),
     (
         'msg-17-2',
+        'user-123,'
         'test-chat-17',
         'assistant',
         'claude-4-sonnet',
@@ -1163,6 +1232,7 @@ VALUES
     ),
     (
         'msg-17-3',
+        'user-123,'
         'test-chat-17',
         'user',
         'claude-4-sonnet',
@@ -1173,6 +1243,7 @@ VALUES
     ),
     (
         'msg-17-4',
+        'user-123,'
         'test-chat-17',
         'assistant',
         'claude-4-sonnet',
@@ -1196,6 +1267,7 @@ INSERT INTO
 VALUES
     (
         'msg-18-1',
+        'user-123,'
         'test-chat-18',
         'user',
         'qwen3',
@@ -1206,6 +1278,7 @@ VALUES
     ),
     (
         'msg-18-2',
+        'user-123,'
         'test-chat-18',
         'assistant',
         'qwen3',
@@ -1216,6 +1289,7 @@ VALUES
     ),
     (
         'msg-18-3',
+        'user-123,'
         'test-chat-18',
         'user',
         'qwen3',
@@ -1226,6 +1300,7 @@ VALUES
     ),
     (
         'msg-18-4',
+        'user-123,'
         'test-chat-18',
         'assistant',
         'qwen3',
@@ -1249,6 +1324,7 @@ INSERT INTO
 VALUES
     (
         'msg-19-1',
+        'user-123,'
         'test-chat-19',
         'user',
         'claude-4-sonnet',
@@ -1259,6 +1335,7 @@ VALUES
     ),
     (
         'msg-19-2',
+        'user-123,'
         'test-chat-19',
         'assistant',
         'claude-4-sonnet',
@@ -1269,6 +1346,7 @@ VALUES
     ),
     (
         'msg-19-3',
+        'user-123,'
         'test-chat-19',
         'user',
         'claude-4-sonnet',
@@ -1279,6 +1357,7 @@ VALUES
     ),
     (
         'msg-19-4',
+        'user-123,'
         'test-chat-19',
         'assistant',
         'claude-4-sonnet',
@@ -1302,6 +1381,7 @@ INSERT INTO
 VALUES
     (
         'msg-20-1',
+        'user-123,'
         'test-chat-20',
         'user',
         'qwen3',
@@ -1312,6 +1392,7 @@ VALUES
     ),
     (
         'msg-20-2',
+        'user-123,'
         'test-chat-20',
         'assistant',
         'qwen3',
@@ -1322,6 +1403,7 @@ VALUES
     ),
     (
         'msg-20-3',
+        'user-123,'
         'test-chat-20',
         'user',
         'qwen3',
@@ -1332,6 +1414,7 @@ VALUES
     ),
     (
         'msg-20-4',
+        'user-123,'
         'test-chat-20',
         'assistant',
         'qwen3',
@@ -1346,120 +1429,140 @@ INSERT INTO
 VALUES
     (
         'att-1-1-1',
+        'user-123',
         'msg-1-1',
         'morning_routine_inspiration.jpeg',
         'image/jpeg'
     ),
     (
         'att-1-3-1',
+        'user-123',
         'msg-1-3',
         'morning_routine_tracker.pdf',
         'application/pdf'
     ),
     (
         'att-3-1-1',
+        'user-123',
         'msg-3-1',
         'garden_layout_sketch.png',
         'image/png'
     ),
     (
         'att-3-3-1',
+        'user-123',
         'msg-3-3',
         'gardening_tool_list.docx',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ),
     (
         'att-5-1-1',
+        'user-123',
         'msg-5-1',
         'current_expenses_spreadsheet.xlsx',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ),
     (
         'att-5-3-1',
+        'user-123',
         'msg-5-3',
         'budget_template.pdf',
         'application/pdf'
     ),
     (
         'att-7-1-1',
+        'user-123',
         'msg-7-1',
         'leaky_faucet_photo.jpeg',
         'image/jpeg'
     ),
     (
         'att-7-3-1',
+        'user-123',
         'msg-7-3',
         'diy_repair_manual_cover.png',
         'image/png'
     ),
     (
         'att-9-1-1',
+        'user-123',
         'msg-9-1',
         'investment_portfolio_chart.svg',
         'image/svg+xml'
     ),
     (
         'att-9-3-1',
+        'user-123',
         'msg-9-3',
         'market_outlook_report.pdf',
         'application/pdf'
     ),
     (
         'att-11-1-1',
+        'user-123',
         'msg-11-1',
         'meal_plan_example.pdf',
         'application/pdf'
     ),
     (
         'att-11-3-1',
+        'user-123',
         'msg-11-3',
         'dietary_guidelines.pdf',
         'application/pdf'
     ),
     (
         'att-13-1-1',
+        'user-123',
         'msg-13-1',
         'living_room_before_photo.jpeg',
         'image/jpeg'
     ),
     (
         'att-13-3-1',
+        'user-123',
         'msg-13-3',
         'lighting_fixture_options.png',
         'image/png'
     ),
     (
         'att-15-1-1',
+        'user-123',
         'msg-15-1',
         'cat_scratch_post_ideas.jpeg',
         'image/jpeg'
     ),
     (
         'att-15-3-1',
+        'user-123',
         'msg-15-3',
         'dog_feeding_chart.pdf',
         'application/pdf'
     ),
     (
         'att-17-1-1',
+        'user-123',
         'msg-17-1',
         'coding_challenge_platform_screenshot.png',
         'image/png'
     ),
     (
         'att-17-3-1',
+        'user-123',
         'msg-17-3',
         'project_idea_flowchart.svg',
         'image/svg+xml'
     ),
     (
         'att-19-1-1',
+        'user-123',
         'msg-19-1',
         'camera_settings_diagram.jpeg',
         'image/jpeg'
     ),
     (
         'att-19-3-1',
+        'user-123',
         'msg-19-3',
         'composition_rule_of_thirds.png',
         'image/png'
