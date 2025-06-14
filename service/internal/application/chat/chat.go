@@ -254,6 +254,7 @@ func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 type PatchChatRequest struct {
 	Title    *string `json:"title,omitempty"`
 	IsPinned *bool   `json:"is_pinned,omitempty"`
+	Model    *string `json:"model,omitempty"`
 }
 
 func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
@@ -308,6 +309,30 @@ func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
 		if rowsAffected == 0 {
 			http.Error(w, "Chat not found", http.StatusNotFound)
 			return
+		}
+	}
+
+	if req.Model != nil {
+		_, ok := s.mr.GetModel(*req.Model)
+		if ok {
+
+			result, err := s.db.Exec("UPDATE chats SET model = ? WHERE id = ? AND user_id = ?", *req.Model, id, userID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			if rowsAffected == 0 {
+				http.Error(w, "Chat not found", http.StatusNotFound)
+				return
+			}
+
 		}
 	}
 
