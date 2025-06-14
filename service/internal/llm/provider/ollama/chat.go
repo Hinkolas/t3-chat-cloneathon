@@ -2,7 +2,6 @@ package ollama
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -50,8 +49,6 @@ func ChatCompletion(req chat.Request) (*stream.Stream, error) {
 			Thinking: message.Reasoning, // TODO: Maybe remove to save ressources
 		}
 	}
-
-	_ = json.NewEncoder(os.Stdout).Encode(request)
 
 	s := stream.New()
 
