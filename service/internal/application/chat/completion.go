@@ -6,16 +6,18 @@ import (
 	"net/http"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
+	"github.com/gorilla/mux"
 )
 
 type ChatCompletionRequest struct {
-	Model   string `json:"model"`
-	Content string `json:"content"`
+	Model     string `json:"model"`
+	Content   string `json:"content"`
+	Reasoning int32  `json:"reasoning"`
 }
 
-func (s *Service) ChatCompletion(w http.ResponseWriter, r *http.Request) {
+func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 
-	// id := mux.Vars(r)["id"]
+	userID := "user-123" // TODO: Replace with context from auth middleware
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -31,20 +33,43 @@ func (s *Service) ChatCompletion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	chatID := mux.Vars(r)["id"]
+	messages := make([]chat.Message, 0)
+	rows, err := s.db.Query("SELECT role, content, reasoning FROM messages WHERE chat_id = ? AND user_id = ? ORDER BY created_at ASC", chatID, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var message chat.Message
+		if err := rows.Scan(&message.Role, &message.Content, &message.Reasoning); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		messages = append(messages, message)
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	messages = append(messages, chat.Message{
+		Role:    "user",
+		Content: body.Content,
+	})
+
 	req := chat.Request{
 		Model:               body.Model,
 		Temperature:         0,
 		MaxCompletionTokens: 1024,
 		TopP:                1.0,
 		Stream:              true,
-		Thinking:            0,
+		Reasoning:           body.Reasoning,
 		Stop:                nil,
-		Messages: []chat.Message{
-			{
-				Role:    "user",
-				Content: body.Content,
-			},
-		},
+		Messages:            messages,
 	}
 
 	stream, err := s.mr.ChatCompletion(req)
@@ -76,10 +101,10 @@ func (s *Service) ChatCompletion(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	// Subscribe to the stream
-	sub := stream.Subscribe(1)
+	sub := stream.Subscribe(10)
 
 	for c := range sub {
-		fmt.Fprint(w, "data: ")
+		fmt.Fprint(w, "event: message_delta\ndata: ")
 		if err := json.NewEncoder(w).Encode(c); err != nil {
 			panic("json encoding failed: " + err.Error())
 		}
@@ -89,7 +114,7 @@ func (s *Service) ChatCompletion(w http.ResponseWriter, r *http.Request) {
 
 	stream.Close()
 
-	fmt.Fprintf(w, "data: [DONE]\n\n")
+	fmt.Fprintf(w, "event: message_end\ndata: {\"done\":true}\n\n")
 	flusher.Flush()
 
 }

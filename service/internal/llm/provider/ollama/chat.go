@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/stream"
@@ -12,63 +13,69 @@ import (
 )
 
 func ChatCompletion(req chat.Request) (*stream.Stream, error) {
-	// TODO: implement chat completion logic using the Ollama SDK
 
-	httpClient := &http.Client{
-		Timeout: 0, // no global timeout; per-request ctx handles it
+	var base *url.URL
+	var err error
+
+	env, ok := os.LookupEnv("OLLAMA_BASE_URL")
+	base, err = url.Parse(env)
+	if !ok || err != nil {
+		return nil, fmt.Errorf("failed to parse OLLAMA_BASE_URL: %w", err)
 	}
 
-	client := api.NewClient(
-		&url.URL{
-			Scheme: "https",
-			Host:   "digitalfabrik.kilohertz.dev:3141",
-			Path:   "/I5myvSQjxWZzQEKkn2z5sfrDvPLewIE54A58TAWUWUIrVZaC8WpV1bJENCgLQ4mhs9M15sstrzQfh80RjIw6Q9ezfaIIqQenvXaPh20SeNFiAzzmL9eLiQfPW3k5bx46",
-		},
-		httpClient,
-	)
+	client := api.NewClient(base, &http.Client{}) // TODO: replace with a shared client pool
 
-	think := false
-
-	ctx := context.Background()
 	request := &api.ChatRequest{
-		Model: "qwen3:30b",
-		Think: &think,
-		Messages: []api.Message{
-			{
-				Role:    "user",
-				Content: req.Messages[0].Content,
-			},
-		},
+		Model:    req.Model,
+		Think:    new(bool),
+		Stream:   new(bool),
+		Options:  make(map[string]any),
+		Messages: make([]api.Message, len(req.Messages)),
+	}
+
+	*request.Think = req.Reasoning > 0 // Defined by the user
+	*request.Stream = true             // TODO: has to be true all the time for now
+
+	// Add temperature to the ollama request options
+	if req.Temperature >= 0 && req.Temperature <= 1 {
+		request.Options["temperature"] = req.Temperature
+	}
+
+	// Convert universal format to ollama message format
+	for i, message := range req.Messages {
+		request.Messages[i] = api.Message{
+			Role:     message.Role,
+			Content:  message.Content,
+			Thinking: message.Reasoning, // TODO: Maybe remove to save ressources
+		}
 	}
 
 	s := stream.New()
 
 	respFunc := func(resp api.ChatResponse) error {
 
-		s.Publish(stream.Chunk{
-			Thinking: resp.Message.Thinking,
-			Content:  resp.Message.Content,
-		})
-
 		if resp.Done {
 			s.Close()
-			fmt.Println("Chat completion done!")
-			// json.NewEncoder(os.Stdout).Encode(resp.Metrics)
+		} else {
+			s.Publish(stream.Chunk{
+				Thinking: resp.Message.Thinking,
+				Content:  resp.Message.Content,
+			})
 		}
+
 		return nil
+
 	}
 
 	go func() {
 
-		err := client.Chat(ctx, request, respFunc)
+		err := client.Chat(context.TODO(), request, respFunc) // TODO: replace with a proper context
 		if err != nil {
-			fmt.Println("ERROR: ", err.Error())
-			s.Close()
+			s.Fail(err)
 		}
 
 	}()
 
-	fmt.Println("Chat completion started!")
-
 	return s, nil
+
 }

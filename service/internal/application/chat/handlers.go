@@ -16,7 +16,7 @@ func (s *Service) Handle(r *mux.Router) {
 	router.HandleFunc("/{id}/", s.GetChat).Methods("GET")
 	router.HandleFunc("/{id}/", s.DeleteChat).Methods("DELETE")
 	router.HandleFunc("/{id}/", s.EditChat).Methods("PATCH")
-	router.HandleFunc("/{id}/", s.ChatCompletion).Methods("POST")
+	router.HandleFunc("/{id}/", s.StreamMessage).Methods("POST")
 
 	router = r.PathPrefix("/v1/attachments").Subrouter()
 	router.HandleFunc("/", s.ListAttachments).Methods("GET")

@@ -67,6 +67,11 @@ func (s *Stream) Wait() error {
 	return s.err
 }
 
+func (s *Stream) Fail(err error) {
+	s.setError(err)
+	close(s.pub)
+}
+
 // Closes the stream and all subscriber channels. Should be called ofter stream is done.
 func (s *Stream) Close() {
 	s.finish()
