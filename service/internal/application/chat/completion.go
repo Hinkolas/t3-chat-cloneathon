@@ -13,7 +13,7 @@ type ChatCompletionRequest struct {
 	Content string `json:"content"`
 }
 
-func (s *Service) ChatCompletion(w http.ResponseWriter, r *http.Request) {
+func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 
 	// id := mux.Vars(r)["id"]
 
