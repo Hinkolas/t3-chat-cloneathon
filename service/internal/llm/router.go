@@ -39,9 +39,9 @@ func (mr *ModelRouter) ChatCompletion(req chat.Request) (string, error) {
 	}
 
 	switch model.Provider {
-	case Anthropic:
-		// Handle Anthropic request
-		return anthropic.ChatCompletion(req) // Assuming ollama is a package that
+	// case Anthropic:
+	// Handle Anthropic request
+	// return anthropic.ChatCompletion(req) // Assuming ollama is a package that
 	case Ollama:
 		// Handle Ollama request
 		return ollama.ChatCompletion(req) // Assuming ollama is a package that
