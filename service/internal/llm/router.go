@@ -22,6 +22,11 @@ func (mr *ModelRouter) AddModel(key string, model Model) {
 	mr.models[key] = model
 }
 
+func (mr *ModelRouter) GetModel(key string) (Model, bool) {
+	model, ok := mr.models[key]
+	return model, ok
+}
+
 func (mr *ModelRouter) ListModels() map[string]Model {
 	return mr.models
 }
