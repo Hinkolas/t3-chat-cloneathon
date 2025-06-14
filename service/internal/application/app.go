@@ -96,6 +96,7 @@ func (app *App) Start() error {
 	fmt.Println("Starting app...")
 
 	// Setup CORS middleware
+	// TODO: use proper cors settings in production
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
