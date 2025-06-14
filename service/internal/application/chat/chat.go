@@ -110,7 +110,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
         LEFT JOIN messages m ON c.id = m.chat_id
         LEFT JOIN attachments a ON m.id = a.message_id
         WHERE c.id = ? AND c.user_id = ?
-        ORDER BY m.created_at ASC, a.id ASC
+        ORDER BY m.created_at ASC, a.created_at ASC
     `
 
 	rows, err := s.db.Query(query, id, userID)
