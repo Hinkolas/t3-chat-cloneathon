@@ -1648,3 +1648,226 @@ VALUES
         'image/png',
         1749710037000
     );
+
+INSERT INTO
+    chats (
+        id,
+        user_id,
+        title,
+        model,
+        is_pinned,
+        is_streaming,
+        last_message_at,
+        created_at,
+        updated_at
+    )
+VALUES
+    (
+        'test-chat-21',
+        'user-123',
+        'Understanding Quantum Computing',
+        'claude-4-sonnet',
+        0,
+        0,
+        1749310899000,
+        1749310509000,
+        1749310899000
+    );
+
+INSERT INTO
+    messages (
+        id,
+        user_id,
+        chat_id,
+        role,
+        model,
+        content,
+        reasoning,
+        created_at,
+        updated_at
+    )
+VALUES
+    (
+        'msg-21-1',
+        'user-123',
+        'test-chat-21',
+        'user',
+        'claude-4-sonnet',
+        'What is quantum computing?',
+        '',
+        1749310509000,
+        1749310509000
+    ),
+    (
+        'msg-21-2',
+        'user-123',
+        'test-chat-21',
+        'assistant',
+        'claude-4-sonnet',
+        'Quantum computing is a new type of computation that harnesses the principles of quantum mechanics, such as superposition and entanglement, to solve complex problems that are intractable for classical computers. Unlike classical computers that use bits to represent information as either 0 or 1, quantum computers use **qubits**. Qubits can exist in multiple states simultaneously, which is known as superposition. This allows quantum computers to process a vast number of possibilities at once, leading to potentially exponential speedups for certain types of problems.
+
+Key concepts include:
+
+*   **Superposition**: A qubit can be in a state of 0, 1, or a combination of both simultaneously. This is often visualized as a sphere where a point on the surface represents the qubit''s state.
+*   **Entanglement**: Two or more qubits can become linked in such a way that they share the same fate, even when physically separated. Measuring the state of one entangled qubit instantly influences the state of the other(s).
+*   **Quantum Tunneling**: A quantum phenomenon where a particle can pass through a potential energy barrier, even if it does not have enough kinetic energy to do so classically. While not directly a computational principle, it plays a role in some quantum annealing processes.
+
+Here''s a simple Python example of a classical bit vs. a quantum bit concept (conceptual, not runnable quantum code):
+
+```python
+# Classical bit
+classical_bit = 0 # Can be 0 or 1
+
+# Quantum bit (conceptual representation of superposition)
+# In reality, this would require a quantum computing library like Qiskit or Cirq
+class Qubit:
+    def __init__(self):
+        self.state = "superposition (0 and 1)"
+
+my_qubit = Qubit()
+print(f"Classical bit state: {classical_bit}")
+print(f"Quantum bit state: {my_qubit.state}")
+```
+
+Quantum computers are not meant to replace classical computers for everyday tasks, but rather to excel at specific, highly complex problems in fields like drug discovery, material science, financial modeling, and cryptography.',
+        '',
+        1749310549000,
+        1749310549000
+    ),
+    (
+        'msg-21-3',
+        'user-123',
+        'test-chat-21',
+        'user',
+        'claude-4-sonnet',
+        'What kind of problems can it solve?',
+        '',
+        1749310589000,
+        1749310589000
+    ),
+    (
+        'msg-21-4',
+        'user-123',
+        'test-chat-21',
+        'assistant',
+        'claude-4-sonnet',
+        'Quantum computers are particularly well-suited for problems that involve a large number of variables and complex interactions, where classical computers would take an impossibly long time to find a solution. Some of the key areas where quantum computing is expected to make a significant impact include:
+
+1.  **Drug Discovery and Materials Science**: Simulating molecular structures and chemical reactions at the quantum level. This could lead to the development of new drugs with fewer side effects, and novel materials with unprecedented properties (e.g., superconductors at room temperature). The ability to accurately model molecular interactions is crucial for rational drug design.
+
+    *   *Example Application*: Designing a new catalyst for a chemical reaction.
+    *   *Traditional Approach*: Costly and time-consuming trial-and-error experiments.
+    *   *Quantum Approach*: Simulate the reaction at an atomic level to identify optimal catalysts.
+
+2.  **Optimization Problems**: Finding the most efficient solution among a vast number of possibilities. This includes logistics, supply chain management, financial modeling, and traffic flow optimization.
+
+    *   *Example Application*: Optimizing delivery routes for a large logistics company.
+    *   *Traditional Approach*: Heuristics and approximations that may not find the global optimum.
+    *   *Quantum Approach*: Explore a much larger solution space to find more optimal routes.
+
+3.  **Cryptography**: Breaking currently secure encryption methods (like RSA) and developing new, quantum-resistant cryptographic algorithms. Shor''s algorithm, for instance, can efficiently factor large numbers, posing a threat to public-key cryptography.
+
+    *   *Example Application*: Securing sensitive data in a post-quantum world.
+    *   *Traditional Approach*: Relying on the computational difficulty of factoring large numbers.
+    *   *Quantum Approach*: Utilizing quantum algorithms to break or create stronger encryption.
+
+    Here''s a conceptual representation of how Shor''s algorithm might look in a simplified quantum circuit (using Qiskit syntax for illustration):
+
+    ```python
+    from qiskit import QuantumCircuit, transpile, Aer, IBMQ
+    from qiskit.visualization import plot_histogram
+
+    # This is a highly simplified conceptual example and not a runnable Shor''s algorithm
+    # Shor''s algorithm is much more complex and requires many qubits and operations.
+    qc = QuantumCircuit(4, 2) # 4 qubits, 2 classical bits
+
+    # Apply some Hadamard gates for superposition (conceptual)
+    qc.h([0, 1])
+
+    # Apply some controlled-NOT gates for entanglement (conceptual)
+    qc.cx(0, 2)
+    qc.cx(1, 3)
+
+    # Measure (conceptual)
+    qc.measure([0, 1], [0, 1])
+
+    print("Simplified Quantum Circuit for factoring (conceptual):")
+    print(qc.draw(output=''text''))
+
+    # You would then run this on a quantum simulator or actual hardware
+    # simulator = Aer.get_backend(''qasm_simulator'')
+    # job = simulator.run(transpile(qc, simulator), shots=1024)
+    # result = job.result()
+    # counts = result.get_counts(qc)
+    # print(plot_histogram(counts))
+    ```
+
+4.  **Machine Learning**: Enhancing machine learning algorithms for tasks like pattern recognition, data analysis, and artificial intelligence. Quantum machine learning could offer speedups for training complex models or processing vast datasets.
+
+    *   *Example Application*: Accelerating the training of deep neural networks.
+    *   *Traditional Approach*: Computationally intensive training on classical CPUs/GPUs.
+    *   *Quantum Approach*: Leveraging quantum parallelism for faster convergence.
+
+These are just a few examples, and the field is rapidly evolving, with new applications being discovered constantly.',
+        '',
+        1749310629000,
+        1749310629000
+    ),
+    (
+        'msg-21-5',
+        'user-123',
+        'test-chat-21',
+        'user',
+        'claude-4-sonnet',
+        'Is it available now?',
+        '',
+        1749310669000,
+        1749310669000
+    ),
+    (
+        'msg-21-6',
+        'user-123',
+        'test-chat-21',
+        'assistant',
+        'claude-4-sonnet',
+        'Yes, quantum computing is available now, but it''s still very much in its early stages of development and primarily accessible to researchers, large corporations, and dedicated quantum computing startups. It''s not yet a consumer-level technology, nor is it capable of outperforming classical computers for most common tasks.
+
+Here''s a breakdown of the current landscape:
+
+*   **Cloud-Based Access**: Major technology companies like IBM (IBM Quantum Experience), Google (Quantum AI), Amazon (Amazon Braket), and Microsoft (Azure Quantum) provide cloud access to their quantum processors. This allows users to write quantum algorithms and run them on actual quantum hardware or simulators without needing to build and maintain their own quantum computers. This is the most common way for researchers and developers to experiment with quantum computing today.
+
+    *   *Example*: Using IBM Quantum Experience to run a small quantum circuit:
+        ```python
+        # Requires IBM Quantum Experience account and qiskit installed
+        # from qiskit import QuantumCircuit, transpile, Aer
+        # from qiskit_ibm_runtime import QiskitRuntimeService
+
+        # # Authenticate with your IBM Quantum token
+        # service = QiskitRuntimeService(channel=''ibm_cloud'', token=''YOUR_IBM_QUANTUM_TOKEN'')
+        # backend = service.get_backend(''ibm_brisbane'') # Or another available backend
+
+        # qc = QuantumCircuit(1, 1)
+        # qc.h(0) # Apply Hadamard gate
+        # qc.measure(0, 0) # Measure qubit
+
+        # print("Simple Hadamard Circuit:")
+        # print(qc.draw(output=''text''))
+
+        # # Job execution (conceptual, requires proper setup)
+        # # job = backend.run(transpile(qc, backend), shots=1024)
+        # # result = job.result()
+        # # counts = result.get_counts(qc)
+        # # print(f"Measurement counts: {counts}")
+        ```
+
+*   **Noisy Intermediate-Scale Quantum (NISQ) Era**: We are currently in the NISQ era, meaning quantum computers have a limited number of qubits (typically tens to a few hundreds) and are prone to errors (noise). This limits the complexity of algorithms that can be run reliably. Significant error correction technologies are still under development.
+
+*   **Specialized Applications**: As mentioned before, quantum computers are not general-purpose machines. Their current applications are highly specialized and often involve exploring proof-of-concept solutions for the problems discussed earlier (drug discovery, optimization, etc.).
+
+*   **Future Outlook**: The field is advancing rapidly. Researchers are constantly improving qubit coherence times, increasing the number of qubits, and developing more robust error correction techniques. While a truly fault-tolerant quantum computer capable of solving large-scale, real-world problems is still years away, the progress is undeniable. Many experts predict that quantum computing will start to have a tangible impact on various industries within the next decade.
+
+In summary, while you can access and experiment with quantum computers today through cloud platforms, they are not yet ubiquitous or capable of solving everyday computational tasks more efficiently than classical computers. The journey towards widespread practical quantum computing is ongoing.',
+        '',
+        1749310899000,
+        1749310899000
+    );
