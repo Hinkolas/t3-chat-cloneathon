@@ -8,19 +8,94 @@
 	import { popupModule } from '$lib/store';
 	import type { ChatResponse, ChatData } from '$lib/types';
 
+	console.log(chats);
+
+	// Interface for grouped chats
+	interface GroupedChats {
+		today: ChatData[];
+		yesterday: ChatData[];
+		last7Days: ChatData[];
+		last30Days: ChatData[];
+		older: ChatData[];
+	}
+
 	let chatSearchTerm: string = $state('');
 
-	let filteredChats: ChatResponse = $derived(
-		chats.filter((chat: ChatData) => chat.is_pinned == false)
-	);
+	// Helper function to get date boundaries
+	function getDateBoundaries() {
+		const now = new Date();
+		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+		const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+		const last7Days = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+		const last30Days = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+		return {
+			today: today,
+			yesterday: yesterday,
+			last7Days: last7Days,
+			last30Days: last30Days
+		};
+	}
+
+	// Function to group chats by time periods
+	function groupChatsByTime(chats: ChatData[]): GroupedChats {
+		const boundaries = getDateBoundaries();
+		const grouped: GroupedChats = {
+			today: [],
+			yesterday: [],
+			last7Days: [],
+			last30Days: [],
+			older: []
+		};
+
+		chats.forEach((chat) => {
+			const chatTime = new Date(chat.last_message_at);
+
+			if (chatTime >= boundaries.today) {
+				grouped.today.push(chat);
+			} else if (chatTime >= boundaries.yesterday) {
+				grouped.yesterday.push(chat);
+			} else if (chatTime >= boundaries.last7Days) {
+				grouped.last7Days.push(chat);
+			} else if (chatTime >= boundaries.last30Days) {
+				grouped.last30Days.push(chat);
+			} else {
+				grouped.older.push(chat);
+			}
+		});
+
+		// Sort each group by last_message_at (newest first)
+		Object.keys(grouped).forEach((key) => {
+			grouped[key as keyof GroupedChats].sort((a, b) => b.last_message_at - a.last_message_at);
+		});
+
+		return grouped;
+	}
+
+	// Filter and group chats
+	let filteredAndGroupedChats = $derived.by(() => {
+		let filtered = chats.filter((chat: ChatData) => chat.is_pinned === false);
+
+		// Apply search filter if search term exists
+		if (chatSearchTerm.trim() !== '') {
+			filtered = filtered.filter((chat: ChatData) =>
+				chat.title.toLowerCase().includes(chatSearchTerm.toLowerCase())
+			);
+		}
+
+		return groupChatsByTime(filtered);
+	});
+
 	let pinnedChats: ChatResponse = $derived(
-		chats.filter((chat: ChatData) => chat.is_pinned == true)
+		chats
+			.filter((chat: ChatData) => chat.is_pinned === true)
+			.sort((a: ChatData, b: ChatData) => b.last_message_at - a.last_message_at)
 	);
 
 	function openPopup(id: string) {
 		popupModule.update((currentModule) => {
 			return {
-				...currentModule, // Keep existing properties
+				...currentModule,
 				show: true,
 				title: 'Delete Thread',
 				description:
@@ -46,23 +121,12 @@
 				throw new Error('Something happened during Record');
 			}
 
-			// Direktes Entfernen aus dem reaktiven Array
 			const index = chats.findIndex((chat: ChatData) => chat.id === id);
 			if (index > -1) {
 				chats.splice(index, 1);
 			}
 		} catch (error) {
 			console.error('Error deleting chat:', error);
-		}
-	}
-
-	function chatSearchFilter() {
-		if (chatSearchTerm.trim() === '') {
-			filteredChats = chats;
-		} else {
-			filteredChats = chats.filter((chat: ChatData) =>
-				chat.title.toLowerCase().includes(chatSearchTerm.toLowerCase())
-			);
 		}
 	}
 
@@ -83,7 +147,7 @@
 			if (!response.ok) {
 				popupModule.update((currentModule) => {
 					return {
-						...currentModule, // Keep existing properties
+						...currentModule,
 						show: true,
 						title: `Ups! Something ain't right..`,
 						description: 'Some error happend while we tried to sync your data. Try again later.',
@@ -125,14 +189,11 @@
 			<button onclick={newChat}>New Chat</button>
 		</div>
 		<div class="search-container">
-			<SearchInput
-				bind:value={chatSearchTerm}
-				onInputFunction={chatSearchFilter}
-				placeholder="Search your threads..."
-			/>
+			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
 		</div>
 		<div class="chats-container">
-			{#if !(pinnedChats.length === 0)}
+			<!-- Pinned Chats -->
+			{#if pinnedChats.length > 0}
 				<div class="day-title">
 					<Pin size="14" />
 					Pinned
@@ -142,18 +203,10 @@
 						<div class="chat">
 							<span>{chat.title}</span>
 							<div class="buttons">
-								<button
-									onclick={() => {
-										patchChat(chat, false);
-									}}
-								>
+								<button onclick={() => patchChat(chat, false)}>
 									<PinOff size="14" />
 								</button>
-								<button
-									onclick={() => {
-										openPopup(chat.id);
-									}}
-								>
+								<button onclick={() => openPopup(chat.id)}>
 									<X size="14" />
 								</button>
 							</div>
@@ -161,30 +214,106 @@
 					{/each}
 				</div>
 			{/if}
-			<div class="day-title">Today</div>
-			<div class="chats">
-				{#each filteredChats as chat}
-					<div class="chat">
-						<span>{chat.title}</span>
-						<div class="buttons">
-							<button
-								onclick={() => {
-									patchChat(chat, true);
-								}}
-							>
-								<Pin size="14" />
-							</button>
-							<button
-								onclick={() => {
-									openPopup(chat.id);
-								}}
-							>
-								<X size="14" />
-							</button>
+
+			<!-- Today -->
+			{#if filteredAndGroupedChats.today.length > 0}
+				<div class="day-title">Today</div>
+				<div class="chats">
+					{#each filteredAndGroupedChats.today as chat}
+						<div class="chat">
+							<span>{chat.title}</span>
+							<div class="buttons">
+								<button onclick={() => patchChat(chat, true)}>
+									<Pin size="14" />
+								</button>
+								<button onclick={() => openPopup(chat.id)}>
+									<X size="14" />
+								</button>
+							</div>
 						</div>
-					</div>
-				{/each}
-			</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Yesterday -->
+			{#if filteredAndGroupedChats.yesterday.length > 0}
+				<div class="day-title">Yesterday</div>
+				<div class="chats">
+					{#each filteredAndGroupedChats.yesterday as chat}
+						<div class="chat">
+							<span>{chat.title}</span>
+							<div class="buttons">
+								<button onclick={() => patchChat(chat, true)}>
+									<Pin size="14" />
+								</button>
+								<button onclick={() => openPopup(chat.id)}>
+									<X size="14" />
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Last 7 Days -->
+			{#if filteredAndGroupedChats.last7Days.length > 0}
+				<div class="day-title">Last 7 Days</div>
+				<div class="chats">
+					{#each filteredAndGroupedChats.last7Days as chat}
+						<div class="chat">
+							<span>{chat.title}</span>
+							<div class="buttons">
+								<button onclick={() => patchChat(chat, true)}>
+									<Pin size="14" />
+								</button>
+								<button onclick={() => openPopup(chat.id)}>
+									<X size="14" />
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Last 30 Days -->
+			{#if filteredAndGroupedChats.last30Days.length > 0}
+				<div class="day-title">Last 30 Days</div>
+				<div class="chats">
+					{#each filteredAndGroupedChats.last30Days as chat}
+						<div class="chat">
+							<span>{chat.title}</span>
+							<div class="buttons">
+								<button onclick={() => patchChat(chat, true)}>
+									<Pin size="14" />
+								</button>
+								<button onclick={() => openPopup(chat.id)}>
+									<X size="14" />
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Older -->
+			{#if filteredAndGroupedChats.older.length > 0}
+				<div class="day-title">Older</div>
+				<div class="chats">
+					{#each filteredAndGroupedChats.older as chat}
+						<div class="chat">
+							<span>{chat.title}</span>
+							<div class="buttons">
+								<button onclick={() => patchChat(chat, true)}>
+									<Pin size="14" />
+								</button>
+								<button onclick={() => openPopup(chat.id)}>
+									<X size="14" />
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 	<div class="foot">Login</div>
