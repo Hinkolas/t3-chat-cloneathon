@@ -5,6 +5,7 @@ export const load = (async () => {
 	const url = 'http://localhost:3141';
 
 	try {
+		// Fetch models
 		const modelResponse = await fetch(`${url}/v1/models/`);
 
 		if (!modelResponse.ok) {
@@ -12,6 +13,7 @@ export const load = (async () => {
 		}
 		const models: ModelsResponse = await modelResponse.json();
 
+		// Fetch chat history
 		const chatResponse = await fetch(`${url}/v1/chats/`);
 
 		if (!chatResponse.ok) {

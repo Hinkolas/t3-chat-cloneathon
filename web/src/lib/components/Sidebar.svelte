@@ -4,12 +4,18 @@
 	import { fade } from 'svelte/transition';
 	import { isMobile } from '$lib/deviceDetection';
 	import SearchInput from '$lib/components/SearchInput.svelte';
-	import { X } from '@lucide/svelte';
+	import { X, Pin, PinOff } from '@lucide/svelte';
 	import { popupModule } from '$lib/store';
-	import type { ChatData } from '$lib/types';
+	import type { ChatResponse, ChatData } from '$lib/types';
 
-	let chatSearchTerm = $state('');
-	let filteredChats = $state(chats);
+	let chatSearchTerm: string = $state('');
+
+	let filteredChats: ChatResponse = $derived(
+		chats.filter((chat: ChatData) => chat.is_pinned == false)
+	);
+	let pinnedChats: ChatResponse = $derived(
+		chats.filter((chat: ChatData) => chat.is_pinned == true)
+	);
 
 	function openPopup(id: string) {
 		popupModule.update((currentModule) => {
@@ -59,6 +65,42 @@
 			);
 		}
 	}
+
+	async function patchChat(chat: ChatData, pin: boolean) {
+		const url = 'http://localhost:3141';
+
+		try {
+			const response = await fetch(`${url}/v1/chats/${chat.id}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					is_pinned: pin
+				})
+			});
+
+			if (!response.ok) {
+				popupModule.update((currentModule) => {
+					return {
+						...currentModule, // Keep existing properties
+						show: true,
+						title: `Ups! Something ain't right..`,
+						description: 'Some error happend while we tried to sync your data. Try again later.',
+						primaryButtonName: 'Confirm',
+						primaryButtonFunction: () => {
+							$popupModule.show = false;
+						}
+					};
+				});
+				throw new Error("Couldn't sync Chats History");
+			}
+
+			chat.is_pinned = pin;
+		} catch (error) {
+			throw new Error(`${error}`);
+		}
+	}
 </script>
 
 {#if $isMobile && !sidebarCollapsed}
@@ -90,12 +132,48 @@
 			/>
 		</div>
 		<div class="chats-container">
+			{#if !(pinnedChats.length === 0)}
+				<div class="day-title">
+					<Pin size="14" />
+					Pinned
+				</div>
+				<div class="chats">
+					{#each pinnedChats as chat}
+						<div class="chat">
+							<span>{chat.title}</span>
+							<div class="buttons">
+								<button
+									onclick={() => {
+										patchChat(chat, false);
+									}}
+								>
+									<PinOff size="14" />
+								</button>
+								<button
+									onclick={() => {
+										openPopup(chat.id);
+									}}
+								>
+									<X size="14" />
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 			<div class="day-title">Today</div>
 			<div class="chats">
 				{#each filteredChats as chat}
 					<div class="chat">
 						<span>{chat.title}</span>
 						<div class="buttons">
+							<button
+								onclick={() => {
+									patchChat(chat, true);
+								}}
+							>
+								<Pin size="14" />
+							</button>
 							<button
 								onclick={() => {
 									openPopup(chat.id);
@@ -125,6 +203,7 @@
 
 	.sidebar {
 		flex: 0 0 256px;
+		max-width: 256px;
 		padding-block: 20px;
 		background-color: var(--sidebar-background);
 		transition: margin 0.15s ease-in-out;
@@ -221,6 +300,7 @@
 		min-height: 0;
 		display: flex;
 		flex-direction: column;
+		gap: 16px;
 		overflow-y: auto;
 		padding-inline: 16px;
 	}
@@ -237,28 +317,39 @@
 		font-weight: 600;
 		color: var(--secondary);
 		text-shadow: 0 0 4px hsl(var(--primary) / 0.2);
+		display: flex;
+		align-items: center;
+		gap: 4px;
 	}
 
 	.chats {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		flex: 1;
 	}
 
 	.chat {
 		position: relative;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
 		padding: 8px 8px;
 		border-radius: 8px;
 		cursor: pointer;
 		transition: background-color 0.15s ease-out;
 		overflow: hidden;
+		min-width: 0;
 	}
 
 	.chat span {
 		color: hsl(var(--secondary-foreground));
 		font-size: 14px;
 		font-weight: 500;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.chat:hover {
@@ -266,15 +357,16 @@
 	}
 
 	.buttons {
-		position: absolute;
+		position: relative;
 		top: 50%;
 		left: 100%;
 		transform: translateY(-50%);
-		width: 100%;
+		flex-shrink: 0;
 
 		padding-right: 8px;
 		display: flex;
 		justify-content: flex-end;
+		gap: 4px;
 		transition: left 0.15s ease;
 	}
 
