@@ -13,15 +13,7 @@ export const load = (async () => {
 		}
 		const models: ModelsResponse = await modelResponse.json();
 
-		// Fetch chat history
-		const chatResponse = await fetch(`${url}/v1/chats/`);
-
-		if (!chatResponse.ok) {
-			throw new Error('Something happened during Record');
-		}
-
-		const chats: ChatResponse = await chatResponse.json();
-		return { models, chats };
+		return { models };
 	} catch (error) {
 		console.log(error);
 	}

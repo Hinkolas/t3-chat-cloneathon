@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { ModelsResponse, ChatResponse } from '$lib//types';
+	import type { ChatResponse, ModelsResponse, ChatHistoryResponse } from '$lib//types';
 	interface Props {
 		data: {
 			models: ModelsResponse;
-			chats: ChatResponse;
+			chats: ChatHistoryResponse;
 			// add other properties of data here if needed
 		};
 	}
@@ -11,15 +11,11 @@
 
 	import { PanelLeft } from '@lucide/svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
-	import ChatView from '$lib/components/ChatView.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Error from '$lib/components/Error.svelte';
 
 	let chats = $state(data.chats);
-	let sidebarCollapsed = $state(true);
-	function sendMessage(message: string) {
-		console.log(message);
-	}
+	let sidebarCollapsed = $state(false);
 
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
@@ -38,7 +34,7 @@
 		</button>
 		<Sidebar {chats} {sidebarCollapsed} {newChat} {toggleSidebar} />
 		<div class="content">
-			<ChatView {data} {sendMessage} />
+            <slot />
 		</div>
 	{/if}
 </div>
@@ -82,6 +78,7 @@
 	.content {
 		position: relative;
 		width: 100%;
+        flex: 1;
 		display: flex;
 	}
 </style>

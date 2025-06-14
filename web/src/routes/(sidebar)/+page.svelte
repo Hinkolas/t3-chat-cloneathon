@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ModelsResponse, ModelData } from '$lib/types';
+	import type { ChatData, ModelsResponse, ModelData, MessageData } from '$lib/types';
 
 	interface Props {
 		data: {
@@ -19,8 +19,7 @@
 		Newspaper,
 		Code,
 		GraduationCap,
-		Icon,
-		SignalZero
+		Icon
 	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
@@ -146,7 +145,7 @@
 
 <div class="chat">
 	{#if message.length == 0}
-		<div class="placeholder" transition:fade={{ duration: 100 }}>
+		<div class="placeholder" transition:scale={{ duration: 100, start: .95 }}>
 			<div class="title">How can I help you?</div>
 			<div class="buttons">
 				{#each Object.entries(buttonData) as [key, button]}
@@ -238,6 +237,10 @@
 		max-width: 768px;
 		margin: 0 auto;
 		overflow: hidden;
+		padding: 40px 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 48px;
 	}
 
 	.placeholder {

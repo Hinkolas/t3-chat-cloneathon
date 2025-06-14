@@ -53,7 +53,7 @@
 <svelte:window on:keydown={(e) => e.key === 'Escape' && onContextMenuOpen(null)} />
 
 <!-- TODO: Implement Link -->
-<a href="#" class="chat" oncontextmenu={handleContextMenu}>
+<a href='/chat/{chat.id}' class="chat" oncontextmenu={handleContextMenu}>
 	<span>{chat.title}</span>
 	<div class="buttons">
 		<button onclick={() => patchChat(chat, !chat.is_pinned)}>

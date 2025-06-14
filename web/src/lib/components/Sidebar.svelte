@@ -6,7 +6,7 @@
 	import { Pin, LogOut } from '@lucide/svelte';
 	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
 	import { get } from 'svelte/store';
-	import type { ChatResponse, ChatData } from '$lib/types';
+	import type { ChatHistoryResponse, ChatHistoryData } from '$lib/types';
 	import HistoryChat from '$lib/components/HistoryChat.svelte';
 
 	// Import extracted services and utilities
@@ -23,15 +23,15 @@
 
 	// Filter and group chats
 	let filteredAndGroupedChats = $derived.by(() => {
-		let filtered = chats.filter((chat: ChatData) => chat.is_pinned === false);
+		let filtered = chats.filter((chat: ChatHistoryData) => chat.is_pinned === false);
 		filtered = filterChatsBySearchTerm(filtered, chatSearchTerm);
 		return groupChatsByTime(filtered);
 	});
 
-	let pinnedChats: ChatResponse = $derived(
+	let pinnedChats: ChatHistoryResponse = $derived(
 		chats
-			.filter((chat: ChatData) => chat.is_pinned === true)
-			.sort((a: ChatData, b: ChatData) => b.last_message_at - a.last_message_at)
+			.filter((chat: ChatHistoryData) => chat.is_pinned === true)
+			.sort((a: ChatHistoryData, b: ChatHistoryData) => b.last_message_at - a.last_message_at)
 	);
 
 	// UI-specific functions that remain in component
@@ -46,7 +46,7 @@
 		});
 	}
 
-	function renameChat(chat: ChatData) {
+	function renameChat(chat: ChatHistoryData) {
 		showRenamePopup({
 			title: 'Rename Chat',
 			description: 'Enter a new name for this chat:',
@@ -81,7 +81,7 @@
 	async function deleteChat(id: string) {
 		try {
 			await ChatApiService.deleteChat(id);
-			const index = chats.findIndex((chat: ChatData) => chat.id === id);
+			const index = chats.findIndex((chat: ChatHistoryData) => chat.id === id);
 			if (index > -1) {
 				chats.splice(index, 1);
 			}
@@ -90,7 +90,7 @@
 		}
 	}
 
-	async function patchChat(chat: ChatData, pin: boolean) {
+	async function patchChat(chat: ChatHistoryData, pin: boolean) {
 		try {
 			await ChatApiService.updateChatPinStatus(chat.id, pin);
 			chat.is_pinned = pin;
@@ -206,8 +206,7 @@
 	</div>
 	<div class="foot">
 		{#if userLoggedIn}
-			<!-- TODO: change href link to account-settings -->
-			<a href="#" class="account-button">
+			<a href="/settings" class="account-button">
 				<img src="https://placehold.co/100" alt="Profile" />
 				<div class="info">
 					<span class="username">Ertu K.</span>

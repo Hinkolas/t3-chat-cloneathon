@@ -31,12 +31,48 @@ export interface ModelsResponse {
 	[modelId: string]: ModelData;
 }
 
-export type ChatResponse = ChatData[];
+export type ChatHistoryResponse = ChatHistoryData[];
 
-export interface ChatData {
+export interface ChatHistoryData {
 	id: string;
 	title: string;
 	is_pinned: boolean;
 	last_message_at: number;
 	created_at: number;
+}
+
+export type ChatResponse = ChatData;
+
+export interface AttachmentData {
+	id: string;
+	user_id?: string;
+	message_id?: string;
+	name: string;
+	type: string;
+	created_at: number;
+}
+
+export interface MessageData {
+	id: string;
+	chat_id?: string;
+	role: string;
+	model: string;
+	content: string;
+	reasoning?: string;
+	created_at: number;
+	updated_at: number;
+	attachments?: AttachmentData[];
+}
+
+export interface ChatData {
+	id: string;
+	user_id: string;
+	title: string;
+	model: string;
+	is_pinned: boolean;
+	is_streaming: boolean;
+	last_message_at: number;
+	created_at: number;
+	updated_at: number;
+	messages: MessageData[];
 }
