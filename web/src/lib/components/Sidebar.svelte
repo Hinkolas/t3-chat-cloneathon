@@ -4,7 +4,7 @@
 	import { fade } from 'svelte/transition';
 	import { isMobile } from '$lib/deviceDetection';
 	import SearchInput from '$lib/components/SearchInput.svelte';
-	import { Pin } from '@lucide/svelte';
+	import { Pin, LogOut } from '@lucide/svelte';
 
 	// Updated import for new popup system
 	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
@@ -12,8 +12,6 @@
 
 	import type { ChatResponse, ChatData } from '$lib/types';
 	import HistoryChat from './HistoryChat.svelte';
-
-	console.log(chats);
 
 	// Interface for grouped chats
 	interface GroupedChats {
@@ -25,6 +23,7 @@
 	}
 
 	let chatSearchTerm: string = $state('');
+	const userLoggedIn: boolean = true; // TODO: change this to dynamic with Cookie's
 
 	// Helper function to get date boundaries
 	function getDateBoundaries() {
@@ -301,30 +300,49 @@
 		<div class="search-container">
 			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
 		</div>
-		<div class="chats-container">
-			{#each chatSections as section}
-				<div class="day-title">
-					{#if section.icon}
-						<Pin size="14" />
-					{/if}
-					{section.title}
-				</div>
-				<div class="chats">
-					{#each section.chats as chat}
-						<HistoryChat
-							{chat}
-							{patchChat}
-							{openPopup}
-							{renameChat}
-							{activeContextMenuId}
-							onContextMenuOpen={handleContextMenuOpen}
-						/>
-					{/each}
-				</div>
-			{/each}
+		<div class="chat-wrapper">
+			<div class="chats-container">
+				{#each chatSections as section}
+					<div class="day-title">
+						{#if section.icon}
+							<Pin size="14" />
+						{/if}
+						{section.title}
+					</div>
+					<div class="chats">
+						{#each section.chats as chat}
+							<HistoryChat
+								{chat}
+								{patchChat}
+								{openPopup}
+								{renameChat}
+								{activeContextMenuId}
+								onContextMenuOpen={handleContextMenuOpen}
+							/>
+						{/each}
+					</div>
+				{/each}
+			</div>
 		</div>
 	</div>
-	<div class="foot">Login</div>
+	<div class="foot">
+		{#if userLoggedIn}
+			<!-- TODO: change href link to account-settings -->
+			<a href="#" class="account-button">
+				<img src="https://placehold.co/100" alt="Profile Image" />
+				<div class="info">
+					<span class="username">Ertu K.</span>
+					<span class="subscription">Free</span>
+				</div>
+			</a>
+		{:else}
+			<!-- TODO: change href link to login -->
+			<a href="#" class="login-button">
+				<LogOut size="16" />
+				Login
+			</a>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -349,6 +367,7 @@
 		flex-direction: column;
 		justify-content: space-between;
 		align-items: center;
+		gap: 8px;
 	}
 
 	@media (max-width: 1024px) {
@@ -431,18 +450,50 @@
 		padding-inline: 2px;
 	}
 
-	.chats-container {
+	.chat-wrapper {
+		position: relative;
 		flex: 1;
 		width: 100%;
 		min-height: 0;
+	}
+
+	.chats-container {
+		position: relative;
+		height: 100%;
+		width: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
 		overflow-y: auto;
 		padding-inline: 16px;
+		padding-block: 16px;
 	}
 
-	/* WebKit scrollbar styling (Chrome, Edge) */
+	.chat-wrapper::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 20px; 
+		background: linear-gradient(to top, transparent, #1d131b);
+		pointer-events: none; 
+		z-index: 1;
+	}
+
+	.chat-wrapper::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 20px; 
+		background: linear-gradient(to bottom, transparent, #1d131b);
+		pointer-events: none; 
+		z-index: 1;
+	}
+
+	/* Hide scrollbar */
 	.chats-container::-webkit-scrollbar {
 		width: 0px !important;
 		height: 0px !important;
@@ -463,5 +514,83 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
+	}
+
+	.foot {
+		display: flex;
+		width: 100%;
+		padding-inline: 12px;
+	}
+
+	.login-button {
+		all: unset;
+		color: hsl(var(--secondary-foreground));
+		font-size: 14px;
+		font-weight: 500;
+		white-space: nowrap;
+		text-shadow: 0px 0px 4px hsl(var(--primary) / 0.8);
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		padding: 8px 20px;
+		cursor: pointer;
+		border-radius: 8px;
+		background-color: transparent;
+		transition: background-color 0.15s ease-out;
+	}
+
+	.login-button:hover {
+		background-color: hsl(var(--primary) / 0.3);
+	}
+
+	.account-button {
+		all: unset;
+		color: hsl(var(--secondary-foreground));
+		font-size: 14px;
+		font-weight: 500;
+		white-space: nowrap;
+		text-shadow: 0px 0px 4px hsl(var(--primary) / 0.8);
+
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		padding: 8px;
+		cursor: pointer;
+		border-radius: 8px;
+		background-color: transparent;
+		transition: background-color 0.15s ease-out;
+	}
+
+	.account-button:hover {
+		background-color: hsl(var(--primary) / 0.3);
+	}
+
+	.account-button img {
+		width: 32px;
+		height: 32px;
+		object-fit: cover;
+		border-radius: 9999px;
+	}
+
+	.account-button .info {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		line-height: 1.3;
+		letter-spacing: 0.24px;
+	}
+
+	.account-button .username {
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.account-button .subscription {
+		font-size: 12px;
 	}
 </style>
