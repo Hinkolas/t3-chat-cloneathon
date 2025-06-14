@@ -2,91 +2,29 @@
 	let { chats = $bindable(), sidebarCollapsed, newChat, toggleSidebar } = $props();
 
 	import { fade } from 'svelte/transition';
-	import { isMobile } from '$lib/deviceDetection';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import { Pin, LogOut } from '@lucide/svelte';
-
-	// Updated import for new popup system
 	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
 	import { get } from 'svelte/store';
-
 	import type { ChatResponse, ChatData } from '$lib/types';
-	import HistoryChat from './HistoryChat.svelte';
+	import HistoryChat from '$lib/components/HistoryChat.svelte';
 
-	// Interface for grouped chats
-	interface GroupedChats {
-		today: ChatData[];
-		yesterday: ChatData[];
-		last7Days: ChatData[];
-		last30Days: ChatData[];
-		older: ChatData[];
-	}
+	// Import extracted services and utilities
+	import { ChatApiService } from '$lib/utils/chatApi';
+	import {
+		groupChatsByTime,
+		filterChatsBySearchTerm,
+		type GroupedChats
+	} from '$lib/utils/chatUtils';
 
 	let chatSearchTerm: string = $state('');
+	let activeContextMenuId = $state<string | null>(null);
 	const userLoggedIn: boolean = true; // TODO: change this to dynamic with Cookie's
-
-	// Helper function to get date boundaries
-	function getDateBoundaries() {
-		const now = new Date();
-		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-		const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-		const last7Days = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-		const last30Days = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-		return {
-			today: today,
-			yesterday: yesterday,
-			last7Days: last7Days,
-			last30Days: last30Days
-		};
-	}
-
-	// Function to group chats by time periods
-	function groupChatsByTime(chats: ChatData[]): GroupedChats {
-		const boundaries = getDateBoundaries();
-		const grouped: GroupedChats = {
-			today: [],
-			yesterday: [],
-			last7Days: [],
-			last30Days: [],
-			older: []
-		};
-
-		chats.forEach((chat) => {
-			const chatTime = new Date(chat.last_message_at);
-
-			if (chatTime >= boundaries.today) {
-				grouped.today.push(chat);
-			} else if (chatTime >= boundaries.yesterday) {
-				grouped.yesterday.push(chat);
-			} else if (chatTime >= boundaries.last7Days) {
-				grouped.last7Days.push(chat);
-			} else if (chatTime >= boundaries.last30Days) {
-				grouped.last30Days.push(chat);
-			} else {
-				grouped.older.push(chat);
-			}
-		});
-
-		// Sort each group by last_message_at (newest first)
-		Object.keys(grouped).forEach((key) => {
-			grouped[key as keyof GroupedChats].sort((a, b) => b.last_message_at - a.last_message_at);
-		});
-
-		return grouped;
-	}
 
 	// Filter and group chats
 	let filteredAndGroupedChats = $derived.by(() => {
 		let filtered = chats.filter((chat: ChatData) => chat.is_pinned === false);
-
-		// Apply search filter if search term exists
-		if (chatSearchTerm.trim() !== '') {
-			filtered = filtered.filter((chat: ChatData) =>
-				chat.title.toLowerCase().includes(chatSearchTerm.toLowerCase())
-			);
-		}
-
+		filtered = filterChatsBySearchTerm(filtered, chatSearchTerm);
 		return groupChatsByTime(filtered);
 	});
 
@@ -96,7 +34,7 @@
 			.sort((a: ChatData, b: ChatData) => b.last_message_at - a.last_message_at)
 	);
 
-	// Updated to use new popup system
+	// UI-specific functions that remain in component
 	function openPopup(id: string, chatTitle: string = 'this chat') {
 		showConfirmationPopup({
 			title: 'Delete Thread',
@@ -108,97 +46,11 @@
 		});
 	}
 
-	async function deleteChat(id: string) {
-		const url = 'http://localhost:3141';
-
-		try {
-			const modelResponse = await fetch(`${url}/v1/chats/${id}/`, {
-				method: 'DELETE'
-			});
-
-			if (!modelResponse.ok) {
-				throw new Error('Something happened during Record');
-			}
-
-			const index = chats.findIndex((chat: ChatData) => chat.id === id);
-			if (index > -1) {
-				chats.splice(index, 1);
-			}
-		} catch (error) {
-			console.error('Error deleting chat:', error);
-		}
-	}
-
-	async function patchChat(chat: ChatData, pin: boolean) {
-		const url = 'http://localhost:3141';
-
-		try {
-			const response = await fetch(`${url}/v1/chats/${chat.id}/`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					is_pinned: pin
-				})
-			});
-
-			if (!response.ok) {
-				// Updated to use new popup system
-				showConfirmationPopup({
-					title: `Ups! Something ain't right..`,
-					description: 'Some error happened while we tried to sync your data. Try again later.',
-					primaryButtonName: 'Confirm',
-					primaryButtonFunction: () => {
-						// No additional action needed - popup will close automatically
-					}
-				});
-				throw new Error("Couldn't sync Chats History");
-			}
-
-			chat.is_pinned = pin;
-		} catch (error) {
-			throw new Error(`${error}`);
-		}
-	}
-
-	let activeContextMenuId = $state<string | null>(null);
-
-	// Simple function to handle context menu opening
-	function handleContextMenuOpen(chatId: string) {
-		activeContextMenuId = chatId;
-	}
-
-	async function updateChatTitle(chatId: string, newTitle: string) {
-		const url = 'http://localhost:3141';
-
-		try {
-			const response = await fetch(`${url}/v1/chats/${chatId}/`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					title: newTitle
-				})
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to update chat title');
-			}
-
-			console.log('Chat title updated successfully');
-		} catch (error) {
-			console.error('Error updating chat title:', error);
-		}
-	}
-
-	// Complete example for your component
 	function renameChat(chat: ChatData) {
 		showRenamePopup({
 			title: 'Rename Chat',
 			description: 'Enter a new name for this chat:',
-			inputValue: chat.title, // Pre-fill with current title
+			inputValue: chat.title,
 			inputPlaceholder: 'Enter chat name...',
 			inputLabel: 'Chat Name',
 			primaryButtonName: 'Rename',
@@ -209,19 +61,14 @@
 					const newTitle = currentState.inputValue.trim();
 
 					if (newTitle && newTitle !== chat.title) {
-						// Update locally first for immediate UI feedback
 						const oldTitle = chat.title;
 						chat.title = newTitle;
 
 						try {
-							// Update on server
-							await updateChatTitle(chat.id, newTitle);
+							await ChatApiService.updateChatTitle(chat.id, newTitle);
 							console.log(`Chat renamed from "${oldTitle}" to "${newTitle}"`);
-
-							// Trigger reactivity if needed
 							chats = [...chats];
 						} catch (error) {
-							// Revert on error
 							chat.title = oldTitle;
 							console.error('Failed to rename chat:', error);
 						}
@@ -229,6 +76,39 @@
 				}
 			}
 		});
+	}
+
+	async function deleteChat(id: string) {
+		try {
+			await ChatApiService.deleteChat(id);
+			const index = chats.findIndex((chat: ChatData) => chat.id === id);
+			if (index > -1) {
+				chats.splice(index, 1);
+			}
+		} catch (error) {
+			console.error('Error deleting chat:', error);
+		}
+	}
+
+	async function patchChat(chat: ChatData, pin: boolean) {
+		try {
+			await ChatApiService.updateChatPinStatus(chat.id, pin);
+			chat.is_pinned = pin;
+		} catch (error) {
+			showConfirmationPopup({
+				title: `Ups! Something ain't right..`,
+				description: 'Some error happened while we tried to sync your data. Try again later.',
+				primaryButtonName: 'Confirm',
+				primaryButtonFunction: () => {
+					// No additional action needed - popup will close automatically
+				}
+			});
+			throw new Error(`${error}`);
+		}
+	}
+
+	function handleContextMenuOpen(chatId: string) {
+		activeContextMenuId = chatId;
 	}
 
 	let chatSections = $derived.by(() => {
@@ -271,12 +151,11 @@
 			}
 		];
 
-		// Only return sections that have chats
 		return sections.filter((section) => section.chats.length > 0);
 	});
 </script>
 
-{#if $isMobile && !sidebarCollapsed}
+{#if !sidebarCollapsed}
 	<div
 		class="sidebar-mobile-overlay"
 		transition:fade={{ duration: 150 }}
@@ -291,7 +170,7 @@
 		}}
 	></div>
 {/if}
-<div class="sidebar {sidebarCollapsed ? 'collapsed' : ''} {$isMobile ? 'isMobile' : ''}">
+<div class="sidebar {sidebarCollapsed ? 'collapsed' : ''}">
 	<div class="head">
 		<div class="title">Chat</div>
 		<div class="newChatButton">
@@ -329,7 +208,7 @@
 		{#if userLoggedIn}
 			<!-- TODO: change href link to account-settings -->
 			<a href="#" class="account-button">
-				<img src="https://placehold.co/100" alt="Profile Image" />
+				<img src="https://placehold.co/100" alt="Profile" />
 				<div class="info">
 					<span class="username">Ertu K.</span>
 					<span class="subscription">Free</span>
@@ -356,6 +235,13 @@
 		background-color: #00000088;
 	}
 
+	/* Hide overlay on desktop (when sidebar is not absolute) */
+	@media (min-width: 1025px) {
+		.sidebar-mobile-overlay {
+			display: none;
+		}
+	}
+
 	.sidebar {
 		flex: 0 0 256px;
 		max-width: 256px;
@@ -379,19 +265,8 @@
 			top: 0;
 			height: 100%;
 			border-right: 1px solid #88888822;
-			background-color: var(--chat-background);
+			background-color: var(--sidebar-background);
 		}
-	}
-
-	.sidebar.isMobile {
-		width: 256px;
-		z-index: 99;
-		position: absolute;
-		left: 0;
-		top: 0;
-		height: 100%;
-		border-right: 1px solid #88888822;
-		background-color: var(--chat-background);
 	}
 
 	.sidebar.collapsed {
@@ -475,9 +350,9 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 20px; 
+		height: 20px;
 		background: linear-gradient(to top, transparent, #1d131b);
-		pointer-events: none; 
+		pointer-events: none;
 		z-index: 1;
 	}
 
@@ -487,9 +362,9 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		height: 20px; 
+		height: 20px;
 		background: linear-gradient(to bottom, transparent, #1d131b);
-		pointer-events: none; 
+		pointer-events: none;
 		z-index: 1;
 	}
 
