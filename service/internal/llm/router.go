@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
-	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/provider/anthropic"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/provider/ollama"
+	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/stream"
 )
 
 type ModelRouter struct {
@@ -31,17 +31,17 @@ func (mr *ModelRouter) ListModels() map[string]Model {
 	return mr.models
 }
 
-func (mr *ModelRouter) ChatCompletion(req chat.Request) (string, error) {
+func (mr *ModelRouter) ChatCompletion(req chat.Request) (*stream.Stream, error) {
 
 	model, ok := mr.models[req.Model]
 	if !ok {
-		return "", fmt.Errorf("%w: %s", ErrUnsupportedModel, req.Model)
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedModel, req.Model)
 	}
 
 	switch model.Provider {
-	case Anthropic:
-		// Handle Anthropic request
-		return anthropic.ChatCompletion(req) // Assuming ollama is a package that
+	// case Anthropic:
+	// Handle Anthropic request
+	// return anthropic.ChatCompletion(req) // Assuming ollama is a package that
 	case Ollama:
 		// Handle Ollama request
 		return ollama.ChatCompletion(req) // Assuming ollama is a package that
