@@ -12,8 +12,8 @@ import (
 )
 
 func ChatCompletion(req chat.Request) (*stream.Stream, error) {
-	// TODO: implement chat completion logic using the Ollama SDK
 
+	// TODO: replace with a global application client pool
 	httpClient := &http.Client{
 		Timeout: 0, // no global timeout; per-request ctx handles it
 	}
@@ -27,12 +27,17 @@ func ChatCompletion(req chat.Request) (*stream.Stream, error) {
 		httpClient,
 	)
 
-	think := false
+	doThink := true  // Defined by the user
+	doStream := true // TODO: has to be true all the time for now
 
-	ctx := context.Background()
+	ctx := context.TODO()
 	request := &api.ChatRequest{
-		Model: "qwen3:30b",
-		Think: &think,
+		Model:  "qwen3:30b",
+		Think:  &doThink,
+		Stream: &doStream,
+		Options: map[string]any{
+			"temperature": 0,
+		},
 		Messages: []api.Message{
 			{
 				Role:    "user",
@@ -45,30 +50,30 @@ func ChatCompletion(req chat.Request) (*stream.Stream, error) {
 
 	respFunc := func(resp api.ChatResponse) error {
 
-		s.Publish(stream.Chunk{
-			Thinking: resp.Message.Thinking,
-			Content:  resp.Message.Content,
-		})
-
 		if resp.Done {
 			s.Close()
-			fmt.Println("Chat completion done!")
-			// json.NewEncoder(os.Stdout).Encode(resp.Metrics)
+		} else {
+			s.Publish(stream.Chunk{
+				Thinking: resp.Message.Thinking,
+				Content:  resp.Message.Content,
+			})
 		}
+
 		return nil
+
 	}
 
 	go func() {
 
 		err := client.Chat(ctx, request, respFunc)
 		if err != nil {
-			fmt.Println("ERROR: ", err.Error())
-			s.Close()
+			s.Fail(err)
 		}
 
 	}()
 
-	fmt.Println("Chat completion started!")
+	fmt.Println("Ollama completion started!") // TODO: Remove this debug statement
 
 	return s, nil
+
 }
