@@ -11,14 +11,15 @@ type Request struct {
 	MaxCompletionTokens int       `json:"max_completion_tokens,omitempty"`
 	TopP                float64   `json:"top_p,omitempty"`
 	Stream              bool      `json:"stream"`
-	Thinking            int32     `json:"thinking,omitempty"`
+	Reasoning           int32     `json:"thinking,omitempty"`
 	Stop                any       `json:"stop,omitempty"`
 	Messages            []Message `json:"messages"`
 }
 
 type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role      string `json:"role"`
+	Content   string `json:"content"`
+	Reasoning string `json:"reasoning"`
 }
 
 // Response types
