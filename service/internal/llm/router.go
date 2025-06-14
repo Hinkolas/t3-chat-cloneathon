@@ -34,21 +34,24 @@ func (mr *ModelRouter) ListModels() map[string]Model {
 
 func (mr *ModelRouter) ChatCompletion(req chat.Request) (*stream.Stream, error) {
 
+	// Get the model that was requested.
+	// Return error if model does not exists.
 	model, ok := mr.models[req.Model]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedModel, req.Model)
 	}
 
+	// Replace router with provider model name.
+	req.Model = model.Name
+
+	// Route the request to the corrosponding model provider.
 	switch model.Provider {
 	case Anthropic:
-		// Handle Anthropic request
-		return anthropic.ChatCompletion(req) // Assuming ollama is a package that
+		return anthropic.ChatCompletion(req) // Handle request with Ollama
 	case Ollama:
-		// Handle Ollama request
-		return ollama.ChatCompletion(req) // Assuming ollama is a package that
+		return ollama.ChatCompletion(req) // Handle request with Anthropic
 	default:
-		// return "", fmt.Errorf("%w: %s", ErrUnsupportedProvider, model.Provider)
-		panic(fmt.Errorf("%w: %s", ErrUnsupportedProvider, model.Provider))
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedModel, model.Provider) // THIS SHOULD NEVER HAPPEN!!!
 	}
 
 }
