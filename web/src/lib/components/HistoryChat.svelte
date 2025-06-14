@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { X, PinOff, Pin, TextCursor } from '@lucide/svelte';
-    import { scale } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 
 	let { chat, patchChat, openPopup, renameChat, activeContextMenuId, onContextMenuOpen } = $props();
 
-	// Context menu state 
+	// Context menu state
 	let showContextMenu = $derived(activeContextMenuId === chat.id);
 	let contextMenuX = $state(0);
 	let contextMenuY = $state(0);
-	let contextMenuRef= $state<HTMLDivElement>();
+	let contextMenuRef = $state<HTMLDivElement>();
 
 	// Handle right-click
 	function handleContextMenu(event: MouseEvent) {
@@ -36,10 +36,10 @@
 		onContextMenuOpen(null); // Close menu
 	}
 
-    function handleRename() {
-        renameChat(chat);
-        onContextMenuOpen(null); // Close menu
-    }
+	function handleRename() {
+		renameChat(chat);
+		onContextMenuOpen(null); // Close menu
+	}
 
 	// Add global click listener when context menu is open
 	$effect(() => {
@@ -75,7 +75,7 @@
 		bind:this={contextMenuRef}
 		class="context-menu"
 		style="left: {contextMenuX}px; top: {contextMenuY}px;"
-        transition:scale={{duration: 100, start: 0.9}}
+		transition:scale={{ duration: 100, start: 0.9 }}
 	>
 		<button class="context-menu-item" onclick={handlePin}>
 			{#if chat.is_pinned}
@@ -86,7 +86,7 @@
 				Pin
 			{/if}
 		</button>
-        <button class="context-menu-item" onclick={handleRename}>
+		<button class="context-menu-item" onclick={handleRename}>
 			<TextCursor size="16" />
 			Rename
 		</button>
