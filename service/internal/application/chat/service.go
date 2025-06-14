@@ -15,7 +15,7 @@ type Service struct {
 	mr  *llm.ModelRouter
 }
 
-// NewService creates a new Auth service according to the provided config
+// NewService creates a new Chat service according to the provided config
 func NewService(app *application.App) (*Service, error) {
 
 	// Return initialized service
