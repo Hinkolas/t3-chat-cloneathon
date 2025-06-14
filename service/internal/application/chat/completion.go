@@ -101,7 +101,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	// Subscribe to the stream
-	sub := stream.Subscribe(1)
+	sub := stream.Subscribe(10)
 
 	for c := range sub {
 		fmt.Fprint(w, "data: ")
