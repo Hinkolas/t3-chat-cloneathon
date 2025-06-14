@@ -1,0 +1,197 @@
+<script lang="ts">
+	import { X, PinOff, Pin, TextCursor } from '@lucide/svelte';
+    import { scale } from 'svelte/transition';
+
+	let { chat, patchChat, openPopup, renameChat, activeContextMenuId, onContextMenuOpen } = $props();
+
+	// Context menu state 
+	let showContextMenu = $derived(activeContextMenuId === chat.id);
+	let contextMenuX = $state(0);
+	let contextMenuY = $state(0);
+	let contextMenuRef= $state<HTMLDivElement>();
+
+	// Handle right-click
+	function handleContextMenu(event: MouseEvent) {
+		event.preventDefault();
+		contextMenuX = event.clientX;
+		contextMenuY = event.clientY;
+		onContextMenuOpen(chat.id); // Tell parent this menu is now active
+	}
+
+	// Close context menu when clicking outside
+	function handleClickOutside(event: MouseEvent) {
+		if (contextMenuRef && !contextMenuRef.contains(event.target as Node)) {
+			onContextMenuOpen(null); // Close all menus
+		}
+	}
+
+	// Context menu actions
+	function handlePin() {
+		patchChat(chat, !chat.is_pinned);
+		onContextMenuOpen(null); // Close menu
+	}
+
+	function handleDelete() {
+		openPopup(chat.id);
+		onContextMenuOpen(null); // Close menu
+	}
+
+    function handleRename() {
+        renameChat(chat);
+        onContextMenuOpen(null); // Close menu
+    }
+
+	// Add global click listener when context menu is open
+	$effect(() => {
+		if (showContextMenu) {
+			document.addEventListener('click', handleClickOutside);
+			return () => document.removeEventListener('click', handleClickOutside);
+		}
+	});
+</script>
+
+<svelte:window on:keydown={(e) => e.key === 'Escape' && onContextMenuOpen(null)} />
+
+<!-- TODO: Implement Link -->
+<a href="#" class="chat" oncontextmenu={handleContextMenu}>
+	<span>{chat.title}</span>
+	<div class="buttons">
+		<button onclick={() => patchChat(chat, !chat.is_pinned)}>
+			{#if chat.is_pinned}
+				<PinOff size="14" />
+			{:else}
+				<Pin size="14" />
+			{/if}
+		</button>
+		<button onclick={() => openPopup(chat.id)}>
+			<X size="14" />
+		</button>
+	</div>
+</a>
+
+<!-- Context Menu -->
+{#if showContextMenu}
+	<div
+		bind:this={contextMenuRef}
+		class="context-menu"
+		style="left: {contextMenuX}px; top: {contextMenuY}px;"
+        transition:scale={{duration: 100, start: 0.9}}
+	>
+		<button class="context-menu-item" onclick={handlePin}>
+			{#if chat.is_pinned}
+				<PinOff size="16" />
+				Unpin
+			{:else}
+				<Pin size="16" />
+				Pin
+			{/if}
+		</button>
+        <button class="context-menu-item" onclick={handleRename}>
+			<TextCursor size="16" />
+			Rename
+		</button>
+		<button class="context-menu-item" onclick={handleDelete}>
+			<X size="16" />
+			Delete
+		</button>
+	</div>
+{/if}
+
+<style>
+	.chat {
+		text-decoration: none;
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 8px 8px;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: background-color 0.15s ease-out;
+		overflow: hidden;
+		min-width: 0;
+	}
+
+	.chat span {
+		color: hsl(var(--secondary-foreground));
+		font-size: 14px;
+		font-weight: 500;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.chat:hover {
+		background-color: var(--sidebar-chat-hover);
+	}
+
+	.buttons {
+		position: relative;
+		top: 50%;
+		left: 100%;
+		transform: translateY(-50%);
+		flex-shrink: 0;
+
+		padding-right: 8px;
+		display: flex;
+		justify-content: flex-end;
+		gap: 4px;
+		transition: left 0.15s ease;
+	}
+
+	.buttons button {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		background: none;
+		border: none;
+		border-radius: 4px;
+		padding: 4px;
+		cursor: pointer;
+		color: hsl(var(--secondary-foreground));
+		transition: background-color 0.15s ease-out;
+	}
+
+	.buttons button:hover {
+		background-color: hsl(var(--primary) / 0.5);
+	}
+
+	.chat:hover .buttons {
+		left: 0;
+	}
+
+	/* Context Menu Styles */
+	.context-menu {
+		position: fixed;
+		z-index: 1000;
+		background-color: var(--chat-background);
+		border: 1px solid hsl(var(--border));
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		padding: 4px;
+		min-width: 120px;
+	}
+
+	.context-menu-item {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px;
+		background: none;
+		border: none;
+		border-radius: 4px;
+		text-align: left;
+		cursor: pointer;
+		font-size: 14px;
+		color: hsl(var(--secondary-foreground));
+		transition: background-color 0.15s ease;
+	}
+
+	.context-menu-item:hover {
+		background-color: hsl(var(--primary) / 0.2);
+	}
+</style>

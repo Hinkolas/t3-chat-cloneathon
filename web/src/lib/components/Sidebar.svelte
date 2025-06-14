@@ -4,9 +4,14 @@
 	import { fade } from 'svelte/transition';
 	import { isMobile } from '$lib/deviceDetection';
 	import SearchInput from '$lib/components/SearchInput.svelte';
-	import { X, Pin, PinOff } from '@lucide/svelte';
-	import { popupModule } from '$lib/store';
+	import { Pin } from '@lucide/svelte';
+
+	// Updated import for new popup system
+	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
+	import { get } from 'svelte/store';
+
 	import type { ChatResponse, ChatData } from '$lib/types';
+	import HistoryChat from './HistoryChat.svelte';
 
 	console.log(chats);
 
@@ -92,20 +97,15 @@
 			.sort((a: ChatData, b: ChatData) => b.last_message_at - a.last_message_at)
 	);
 
-	function openPopup(id: string) {
-		popupModule.update((currentModule) => {
-			return {
-				...currentModule,
-				show: true,
-				title: 'Delete Thread',
-				description:
-					'Are you sure you want to delete "Greeting Title"? This action cannot be undone.',
-				primaryButtonName: 'Delete',
-				primaryButtonFunction: () => {
-					deleteChat(id);
-					$popupModule.show = false;
-				}
-			};
+	// Updated to use new popup system
+	function openPopup(id: string, chatTitle: string = 'this chat') {
+		showConfirmationPopup({
+			title: 'Delete Thread',
+			description: `Are you sure you want to delete "${chatTitle}"? This action cannot be undone.`,
+			primaryButtonName: 'Delete',
+			primaryButtonFunction: () => {
+				deleteChat(id);
+			}
 		});
 	}
 
@@ -145,17 +145,14 @@
 			});
 
 			if (!response.ok) {
-				popupModule.update((currentModule) => {
-					return {
-						...currentModule,
-						show: true,
-						title: `Ups! Something ain't right..`,
-						description: 'Some error happend while we tried to sync your data. Try again later.',
-						primaryButtonName: 'Confirm',
-						primaryButtonFunction: () => {
-							$popupModule.show = false;
-						}
-					};
+				// Updated to use new popup system
+				showConfirmationPopup({
+					title: `Ups! Something ain't right..`,
+					description: 'Some error happened while we tried to sync your data. Try again later.',
+					primaryButtonName: 'Confirm',
+					primaryButtonFunction: () => {
+						// No additional action needed - popup will close automatically
+					}
 				});
 				throw new Error("Couldn't sync Chats History");
 			}
@@ -165,6 +162,119 @@
 			throw new Error(`${error}`);
 		}
 	}
+
+	let activeContextMenuId = $state<string | null>(null);
+
+	// Simple function to handle context menu opening
+	function handleContextMenuOpen(chatId: string) {
+		activeContextMenuId = chatId;
+	}
+
+	async function updateChatTitle(chatId: string, newTitle: string) {
+		const url = 'http://localhost:3141';
+
+		try {
+			const response = await fetch(`${url}/v1/chats/${chatId}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					title: newTitle
+				})
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to update chat title');
+			}
+
+			console.log('Chat title updated successfully');
+		} catch (error) {
+			console.error('Error updating chat title:', error);
+		}
+	}
+
+	// Complete example for your component
+	function renameChat(chat: ChatData) {
+		showRenamePopup({
+			title: 'Rename Chat',
+			description: 'Enter a new name for this chat:',
+			inputValue: chat.title, // Pre-fill with current title
+			inputPlaceholder: 'Enter chat name...',
+			inputLabel: 'Chat Name',
+			primaryButtonName: 'Rename',
+			primaryButtonFunction: async () => {
+				const currentState = get(popup);
+
+				if (currentState.type === 'rename') {
+					const newTitle = currentState.inputValue.trim();
+
+					if (newTitle && newTitle !== chat.title) {
+						// Update locally first for immediate UI feedback
+						const oldTitle = chat.title;
+						chat.title = newTitle;
+
+						try {
+							// Update on server
+							await updateChatTitle(chat.id, newTitle);
+							console.log(`Chat renamed from "${oldTitle}" to "${newTitle}"`);
+
+							// Trigger reactivity if needed
+							chats = [...chats];
+						} catch (error) {
+							// Revert on error
+							chat.title = oldTitle;
+							console.error('Failed to rename chat:', error);
+						}
+					}
+				}
+			}
+		});
+	}
+
+	let chatSections = $derived.by(() => {
+		const sections = [
+			{
+				key: 'pinned',
+				title: 'Pinned',
+				chats: pinnedChats,
+				icon: true
+			},
+			{
+				key: 'today',
+				title: 'Today',
+				chats: filteredAndGroupedChats.today,
+				icon: false
+			},
+			{
+				key: 'yesterday',
+				title: 'Yesterday',
+				chats: filteredAndGroupedChats.yesterday,
+				icon: false
+			},
+			{
+				key: 'last7Days',
+				title: 'Last 7 Days',
+				chats: filteredAndGroupedChats.last7Days,
+				icon: false
+			},
+			{
+				key: 'last30Days',
+				title: 'Last 30 Days',
+				chats: filteredAndGroupedChats.last30Days,
+				icon: false
+			},
+			{
+				key: 'older',
+				title: 'Older',
+				chats: filteredAndGroupedChats.older,
+				icon: false
+			}
+		];
+
+		// Only return sections that have chats
+		return sections.filter((section) => section.chats.length > 0);
+	});
 </script>
 
 {#if $isMobile && !sidebarCollapsed}
@@ -192,128 +302,26 @@
 			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
 		</div>
 		<div class="chats-container">
-			<!-- Pinned Chats -->
-			{#if pinnedChats.length > 0}
+			{#each chatSections as section}
 				<div class="day-title">
-					<Pin size="14" />
-					Pinned
+					{#if section.icon}
+						<Pin size="14" />
+					{/if}
+					{section.title}
 				</div>
 				<div class="chats">
-					{#each pinnedChats as chat}
-						<div class="chat">
-							<span>{chat.title}</span>
-							<div class="buttons">
-								<button onclick={() => patchChat(chat, false)}>
-									<PinOff size="14" />
-								</button>
-								<button onclick={() => openPopup(chat.id)}>
-									<X size="14" />
-								</button>
-							</div>
-						</div>
+					{#each section.chats as chat}
+						<HistoryChat
+							{chat}
+							{patchChat}
+							{openPopup}
+							{renameChat}
+							{activeContextMenuId}
+							onContextMenuOpen={handleContextMenuOpen}
+						/>
 					{/each}
 				</div>
-			{/if}
-
-			<!-- Today -->
-			{#if filteredAndGroupedChats.today.length > 0}
-				<div class="day-title">Today</div>
-				<div class="chats">
-					{#each filteredAndGroupedChats.today as chat}
-						<div class="chat">
-							<span>{chat.title}</span>
-							<div class="buttons">
-								<button onclick={() => patchChat(chat, true)}>
-									<Pin size="14" />
-								</button>
-								<button onclick={() => openPopup(chat.id)}>
-									<X size="14" />
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-
-			<!-- Yesterday -->
-			{#if filteredAndGroupedChats.yesterday.length > 0}
-				<div class="day-title">Yesterday</div>
-				<div class="chats">
-					{#each filteredAndGroupedChats.yesterday as chat}
-						<div class="chat">
-							<span>{chat.title}</span>
-							<div class="buttons">
-								<button onclick={() => patchChat(chat, true)}>
-									<Pin size="14" />
-								</button>
-								<button onclick={() => openPopup(chat.id)}>
-									<X size="14" />
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-
-			<!-- Last 7 Days -->
-			{#if filteredAndGroupedChats.last7Days.length > 0}
-				<div class="day-title">Last 7 Days</div>
-				<div class="chats">
-					{#each filteredAndGroupedChats.last7Days as chat}
-						<div class="chat">
-							<span>{chat.title}</span>
-							<div class="buttons">
-								<button onclick={() => patchChat(chat, true)}>
-									<Pin size="14" />
-								</button>
-								<button onclick={() => openPopup(chat.id)}>
-									<X size="14" />
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-
-			<!-- Last 30 Days -->
-			{#if filteredAndGroupedChats.last30Days.length > 0}
-				<div class="day-title">Last 30 Days</div>
-				<div class="chats">
-					{#each filteredAndGroupedChats.last30Days as chat}
-						<div class="chat">
-							<span>{chat.title}</span>
-							<div class="buttons">
-								<button onclick={() => patchChat(chat, true)}>
-									<Pin size="14" />
-								</button>
-								<button onclick={() => openPopup(chat.id)}>
-									<X size="14" />
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-
-			<!-- Older -->
-			{#if filteredAndGroupedChats.older.length > 0}
-				<div class="day-title">Older</div>
-				<div class="chats">
-					{#each filteredAndGroupedChats.older as chat}
-						<div class="chat">
-							<span>{chat.title}</span>
-							<div class="buttons">
-								<button onclick={() => patchChat(chat, true)}>
-									<Pin size="14" />
-								</button>
-								<button onclick={() => openPopup(chat.id)}>
-									<X size="14" />
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
+			{/each}
 		</div>
 	</div>
 	<div class="foot">Login</div>
@@ -455,69 +463,5 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-	}
-
-	.chat {
-		position: relative;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		padding: 8px 8px;
-		border-radius: 8px;
-		cursor: pointer;
-		transition: background-color 0.15s ease-out;
-		overflow: hidden;
-		min-width: 0;
-	}
-
-	.chat span {
-		color: hsl(var(--secondary-foreground));
-		font-size: 14px;
-		font-weight: 500;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-		overflow: hidden;
-		flex: 1;
-		min-width: 0;
-	}
-
-	.chat:hover {
-		background-color: var(--sidebar-chat-hover);
-	}
-
-	.buttons {
-		position: relative;
-		top: 50%;
-		left: 100%;
-		transform: translateY(-50%);
-		flex-shrink: 0;
-
-		padding-right: 8px;
-		display: flex;
-		justify-content: flex-end;
-		gap: 4px;
-		transition: left 0.15s ease;
-	}
-
-	.buttons button {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-
-		background: none;
-		border: none;
-		border-radius: 4px;
-		padding: 4px;
-		cursor: pointer;
-		color: hsl(var(--secondary-foreground));
-		transition: background-color 0.15s ease-out;
-	}
-
-	.buttons button:hover {
-		background-color: hsl(var(--primary) / 0.5);
-	}
-
-	.chat:hover .buttons {
-		left: 0;
 	}
 </style>
