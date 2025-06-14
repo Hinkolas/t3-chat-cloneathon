@@ -91,14 +91,16 @@
 </script>
 
 {#if messages}
-	<div class="chat">
-		{#if !(messages.length == 0)}
-			{#each messages as message}
-				<div class="single-chat {message.role == 'user' ? 'user' : 'assistant'}">
-					{message.content}
-				</div>
-			{/each}
-		{/if}
+	<div class="chat-wrapper">
+		<div class="chat">
+			{#if !(messages.length == 0)}
+				{#each messages as message}
+					<div class="single-chat {message.role == 'user' ? 'user' : 'assistant'}">
+						{message.content}
+					</div>
+				{/each}
+			{/if}
+		</div>
 	</div>
 {/if}
 <div class="input-wrapper">
@@ -160,11 +162,19 @@
 </div>
 
 <style>
+	.chat-wrapper {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		overflow-y: auto;
+	}
+
 	.chat {
+		height: 100%;
 		width: 100%;
 		max-width: 768px;
 		margin: 0 auto;
-		overflow: hidden;
 		padding: 40px 16px;
 		display: flex;
 		flex-direction: column;
