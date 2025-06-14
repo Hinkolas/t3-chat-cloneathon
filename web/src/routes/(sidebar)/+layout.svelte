@@ -34,7 +34,7 @@
 		</button>
 		<Sidebar {chats} {sidebarCollapsed} {newChat} {toggleSidebar} />
 		<div class="content">
-            <slot />
+			<slot />
 		</div>
 	{/if}
 </div>

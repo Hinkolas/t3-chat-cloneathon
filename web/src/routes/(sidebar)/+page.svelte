@@ -145,7 +145,7 @@
 
 <div class="chat">
 	{#if message.length == 0}
-		<div class="placeholder" transition:scale={{ duration: 100, start: .95 }}>
+		<div class="placeholder" transition:scale={{ duration: 100, start: 0.95 }}>
 			<div class="title">How can I help you?</div>
 			<div class="buttons">
 				{#each Object.entries(buttonData) as [key, button]}
