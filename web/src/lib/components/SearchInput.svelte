@@ -1,12 +1,18 @@
 <script lang="ts">
-	let { value = $bindable(), onInputFunction, placeholder } = $props();
+	let { value = $bindable(), onInputFunction = () => {}, placeholder } = $props();
 
 	import { Search } from '@lucide/svelte';
+
+	function handleInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		value = target.value;
+		onInputFunction?.(event);
+	}
 </script>
 
 <div class="search-container">
 	<Search size="16" />
-	<input oninput={onInputFunction} bind:value {placeholder} type="text" />
+	<input oninput={handleInput} bind:value {placeholder} type="text" />
 </div>
 
 <style>
