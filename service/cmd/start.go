@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -49,14 +48,6 @@ var startCmd = &cobra.Command{
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Why are you checking? Don't you trust me?"})
 		})
-
-		// TODO: Maybe replace with postgres in production
-		db, err := sql.Open("sqlite3", "data.db")
-		if err != nil {
-			panic(err)
-		}
-
-		app.Database = db
 
 		authService, err := auth.NewService(app)
 		if err != nil {

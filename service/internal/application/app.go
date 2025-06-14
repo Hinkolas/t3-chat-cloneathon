@@ -34,6 +34,12 @@ type App struct {
 
 func NewApp(config Config) (*App, error) {
 
+	// TODO: Maybe replace with postgres in production
+	db, err := sql.Open("sqlite3", "data.db")
+	if err != nil {
+		panic(err)
+	}
+
 	// Open the log file in append mode, create if it doesn't exist
 	logFile, err := os.OpenFile(config.LogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -83,10 +89,11 @@ func NewApp(config Config) (*App, error) {
 	}
 
 	return &App{
-		Config:  config,
-		LogFile: logFile,
-		Logger:  logger,
-		Router:  router,
+		Config:   config,
+		LogFile:  logFile,
+		Logger:   logger,
+		Router:   router,
+		Database: db,
 	}, nil
 
 }
