@@ -104,7 +104,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	sub := stream.Subscribe(10)
 
 	for c := range sub {
-		fmt.Fprint(w, "data: ")
+		fmt.Fprint(w, "event: message_delta\ndata: ")
 		if err := json.NewEncoder(w).Encode(c); err != nil {
 			panic("json encoding failed: " + err.Error())
 		}
@@ -114,7 +114,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 
 	stream.Close()
 
-	fmt.Fprintf(w, "data: [DONE]\n\n")
+	fmt.Fprintf(w, "event: message_end\ndata: {\"done\":true}\n\n")
 	flusher.Flush()
 
 }
