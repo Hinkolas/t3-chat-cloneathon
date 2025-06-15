@@ -44,6 +44,9 @@ export interface ChatHistoryData {
 
 export type ChatResponse = ChatData;
 
+export type AttachmentResponse = AttachmentData[];
+
+// TODO: add url attribute
 export interface AttachmentData {
 	id: string;
 	user_id?: string;
