@@ -93,6 +93,23 @@ var startCmd = &cobra.Command{
 			},
 		})
 
+		chatService.AddModel("gemini-2.0-flash", llm.Model{
+			Title:       "Gemini 2.0 Flash",
+			Description: "Google's flagship model, known for speed and accuracy (and also web search!). Not quite as smart as Claude 3.5 Sonnet, but WAY faster and cheaper. Also has an insanely large context window (it can handle a lot of data).",
+			Icon:        "gemini",
+			Name:        "gemini-2.0-flash",
+			Provider:    llm.Gemini,
+			Features: llm.ModelFeatures{
+				HasVision:    true,
+				HasPDF:       true,
+				HasWebSearch: true,
+				HasFast:      true,
+			},
+			Flags: llm.ModelFlags{
+				IsFree: true,
+			},
+		})
+
 		chatService.Handle(app.Router)
 
 		if err = app.Start(); err != nil {
