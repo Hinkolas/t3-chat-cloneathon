@@ -66,7 +66,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		Stream:              true,
 		Reasoning:           body.Reasoning,
 		Stop:                nil,
-		Messages:            messages, // TODO: consider to split history and new message for better compatibility
+		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
 	}
 
 	stream, err := s.mr.StreamCompletion(req)
@@ -77,8 +77,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add stream to stream pool and return id
-	// streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano())
-	streamID := fmt.Sprintf("stream_123")
+	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
 	s.sp.Add(streamID, stream)
 
 	s.log.Debug("stream was started sucessfully", "chat_id", chatID, "stream_id", streamID)
@@ -120,7 +119,6 @@ func (s *Service) GetStream(w http.ResponseWriter, r *http.Request) {
 
 	// Flush all received chunks to the client
 	for c := range sub {
-		fmt.Printf("%v: receive chunk\n", time.Now().UnixMicro())
 		fmt.Fprint(w, "event: message_delta\ndata: ")
 		if err := json.NewEncoder(w).Encode(c); err != nil {
 			panic("json encoding failed: " + err.Error())
