@@ -3,7 +3,6 @@ package chat
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
@@ -25,7 +24,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	var body ChatCompletionRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		slog.Debug("failed to decode request body", "error", err)
+		s.log.Debug("failed to decode request body", "error", err)
 		w.WriteHeader(http.StatusBadRequest)
 		if err := json.NewEncoder(w).Encode(map[string]string{
 			"error": fmt.Errorf("failed to decode request body: %w", err).Error(),
@@ -39,7 +38,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	messages := make([]chat.Message, 0)
 	rows, err := s.db.Query("SELECT role, content, reasoning FROM messages WHERE chat_id = ? AND user_id = ? ORDER BY created_at ASC", chatID, userID)
 	if err != nil {
-		slog.Debug("failed to get chat history from database", "error", err)
+		s.log.Debug("failed to get chat history from database", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -48,7 +47,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var message chat.Message
 		if err := rows.Scan(&message.Role, &message.Content, &message.Reasoning); err != nil {
-			slog.Debug("failed to scan message from database", "error", err)
+			s.log.Debug("failed to scan message from database", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -56,7 +55,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rows.Err(); err != nil {
-		slog.Debug("failed to get chat history from database", "error", err)
+		s.log.Debug("failed to get chat history from database", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -77,11 +76,11 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 		Messages:            messages,
 	}
 
-	slog.Debug("starting completion stream", "chat_id", chatID, "content", body.Content)
+	s.log.Debug("starting completion stream", "chat_id", chatID, "content", body.Content)
 
 	stream, err := s.mr.StreamCompletion(req)
 	if err != nil {
-		slog.Debug("failed to start the completion stream", "error", err)
+		s.log.Debug("failed to start the completion stream", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		if err := json.NewEncoder(w).Encode(map[string]string{
 			"error": err.Error(),
@@ -98,7 +97,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		slog.Debug("streaming not supported")
+		s.log.Debug("streaming not supported")
 		w.WriteHeader(http.StatusInternalServerError)
 		if err := json.NewEncoder(w).Encode(map[string]string{
 			"error": "streaming not supported",
@@ -126,6 +125,6 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "event: message_end\ndata: {\"done\":true}\n\n")
 	flusher.Flush()
 
-	slog.Debug("streaming completed successfully")
+	s.log.Debug("streaming completed successfully")
 
 }
