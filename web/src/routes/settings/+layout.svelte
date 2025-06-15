@@ -81,9 +81,13 @@
 	.body {
 		display: flex;
 		gap: 48px;
+		flex: 1;
+		min-height: 0;
 	}
 
 	.content {
+		width: 100%;
+		height: 100%; 
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
