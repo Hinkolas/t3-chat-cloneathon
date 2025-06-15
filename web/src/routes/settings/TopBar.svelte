@@ -57,6 +57,7 @@
 		background-color: #312737;
 		padding: 4px;
 		border-radius: 8px;
+		width: max-content;
 	}
 
 	.tab {

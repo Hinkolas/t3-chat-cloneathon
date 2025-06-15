@@ -196,6 +196,7 @@
 	}
 
 	async function sendMessage(message: string) {
+		const tempMessage = message;
 		const url = 'http://localhost:3141';
 
 		const userChat: MessageData = {
@@ -203,7 +204,7 @@
 			chat_id: data.chat.id,
 			role: 'user',
 			model: selectedModelKey,
-			content: message,
+			content: tempMessage,
 			reasoning: '',
 			created_at: 0,
 			updated_at: 0
@@ -220,7 +221,7 @@
 				},
 				body: JSON.stringify({
 					model: selectedModelKey,
-					content: message,
+					content: tempMessage,
 					reasoning: 0
 				})
 			});
@@ -326,6 +327,14 @@
 			placeholder="Type your message here..."
 			name="message"
 			id="Message"
+			onkeydown={(e) => {
+				if (e.key === 'Enter' && !e.shiftKey) {
+					e.preventDefault();
+					if (message.length == 0) return;
+					sendMessage(message);
+					message = ''; // TODO: handle in sendMessage with state
+				}
+			}}
 		></textarea>
 		<div class="buttons">
 			<div class="button-group">
@@ -363,7 +372,7 @@
 					class={message.length == 0 ? '' : 'active'}
 					onclick={() => {
 						sendMessage(message);
-						message = '';
+						message = ''; // TODO: hanlde in sendMessage with state
 					}}
 					disabled={message.length == 0}
 					id="SendButton"
@@ -382,16 +391,14 @@
 		display: flex;
 		justify-content: center;
 		overflow-y: auto;
-		/* Remove margin-bottom */
 	}
 
 	.chat {
-		height: auto; /* Change from height: 100% */
+		height: auto;
 		width: 100%;
 		max-width: 768px;
 		margin: 0 auto;
 		padding: 40px 16px;
-		padding-bottom: 200px; /* Add this instead of margin-bottom */
 		display: flex;
 		flex-direction: column;
 		gap: 48px;
@@ -784,8 +791,12 @@
 		background-color: hsl(var(--primary) / 0.4);
 	}
 
-	#SendButton:hover {
+	#SendButton:hover:not(:disabled) {
 		background-color: hsl(var(--primary) / 0.8);
+	}
+
+	#SendButton:disabled {
+		cursor: not-allowed;
 	}
 
 	@media (hover: none) and (pointer: coarse) {

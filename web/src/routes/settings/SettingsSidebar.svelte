@@ -35,7 +35,8 @@
 
 <style>
 	.container {
-		width: 270px;
+		width: 100%;
+		max-width: 270px;
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
