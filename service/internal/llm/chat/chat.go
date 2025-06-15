@@ -1,7 +1,7 @@
 package chat
 
 // type ChatProvider interface {
-// 	ChatCompletion(ctx context.Context, req Request) (io.Reader, error)
+// 	StreamCompletion(ctx context.Context, req Request) (io.Reader, error)
 // }
 
 // Request types

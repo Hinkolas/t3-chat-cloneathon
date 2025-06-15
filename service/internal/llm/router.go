@@ -32,6 +32,7 @@ func (mr *ModelRouter) ListModels() map[string]Model {
 	return mr.models
 }
 
+// TODO: Add Provider interface definition for the llm providers.
 func (mr *ModelRouter) StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
 	// Get the model that was requested.
