@@ -1,8 +1,5 @@
 <script>
-	import {  Upload, Trash2, Download, Pin } from '@lucide/svelte';
-
-    
-
+	import { Upload, Trash2, Download, Pin } from '@lucide/svelte';
 </script>
 
 <div class="container">

@@ -16,6 +16,7 @@
 		filterChatsBySearchTerm,
 		type GroupedChats
 	} from '$lib/utils/chatUtils';
+	import { onMount } from 'svelte';
 
 	let chatSearchTerm: string = $state('');
 	let activeContextMenuId = $state<string | null>(null);
@@ -153,7 +154,17 @@
 
 		return sections.filter((section) => section.chats.length > 0);
 	});
+
+	let innerWidth = $state(0);
+
+	onMount(() => {
+		if (innerWidth <= 1024) {
+			toggleSidebar();
+		}
+	});
 </script>
+
+<svelte:window bind:innerWidth />
 
 {#if !sidebarCollapsed}
 	<div

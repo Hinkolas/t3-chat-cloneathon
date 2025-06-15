@@ -76,3 +76,22 @@ export const showInputPopup = (data: Omit<InputPopup, 'show' | 'type'>) => {
 export const hidePopup = () => {
 	popup.update((state) => ({ ...state, show: false }));
 };
+
+// Handling Sidebar State
+export interface SidebarData {
+	collapsed: boolean;
+}
+const initialSidebarState: SidebarData = {
+	collapsed: false
+};
+
+export let sidebarState = writable<SidebarData>(initialSidebarState);
+
+export const closeSidebar = () => {
+	console.log('collapse sidebar');
+	sidebarState.update((state) => ({ ...state, collapsed: true }));
+};
+
+export const openSidebar = () => {
+	sidebarState.update((state) => ({ ...state, collapsed: false }));
+};

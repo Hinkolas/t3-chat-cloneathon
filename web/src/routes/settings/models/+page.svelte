@@ -26,7 +26,7 @@
 		} else {
 			const filtered: ModelsResponse = {};
 
-			Object.entries(data.models).forEach(([modelId, model] : [string, ModelData]) => {
+			Object.entries(data.models).forEach(([modelId, model]: [string, ModelData]) => {
 				const hasAllFeatures = Array.from(activeFilters).every((filter) => {
 					return model.features && model.features[filter as keyof ModelFeatures] === true;
 				});
@@ -217,7 +217,7 @@
 									<FeatureTag {feature} wText={true} />
 								{/each}
 							</div>
-                            <!-- TODO: Copy Serach URL function and animation -->
+							<!-- TODO: Copy Serach URL function and animation -->
 							<button class="search-url-button">
 								<Link size="14" />
 								Search URL
