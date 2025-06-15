@@ -32,6 +32,29 @@ type App struct {
 	Database *sql.DB
 }
 
+func (app *App) loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		app.Logger.Debug("Request received",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"remote_addr", r.RemoteAddr,
+			"user_agent", r.UserAgent(),
+			"query", r.URL.RawQuery,
+		)
+
+		next.ServeHTTP(w, r)
+
+		duration := time.Since(start)
+		app.Logger.Debug("Request completed",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"duration", duration.String(),
+		)
+	})
+}
+
 func NewApp(config Config) (*App, error) {
 
 	// TODO: Maybe replace with postgres in production
@@ -101,6 +124,9 @@ func NewApp(config Config) (*App, error) {
 func (app *App) Start() error {
 
 	fmt.Println("Starting app...")
+
+	// Add logging middleware to router
+	app.Router.Use(app.loggingMiddleware)
 
 	// Setup CORS middleware
 	// TODO: use proper cors settings in production
