@@ -23,12 +23,33 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 	)
 
 	request := anthropic.MessageNewParams{
-		Model:       anthropic.ModelClaude4Sonnet20250514,
-		MaxTokens:   1024,
-		Temperature: anthropic.Float(0.0),
-		Messages: []anthropic.MessageParam{
-			anthropic.NewUserMessage(anthropic.NewTextBlock(req.Messages[0].Content)),
-		},
+		Model:     anthropic.Model(req.Model),
+		MaxTokens: int64(req.MaxCompletionTokens),
+		Messages:  make([]anthropic.MessageParam, len(req.Messages)),
+	}
+
+	// Add temperature to the ollama request options
+	if req.Temperature >= 0 && req.Temperature <= 1 {
+		request.Temperature = anthropic.Float(req.Temperature)
+	}
+
+	if req.Reasoning > 0 {
+		request.Thinking = anthropic.ThinkingConfigParamUnion{
+			OfEnabled: &anthropic.ThinkingConfigEnabledParam{
+				BudgetTokens: int64(req.Reasoning),
+				Type:         "enabled",
+			},
+		}
+	}
+
+	// Convert universal format to ollama message format
+	for i, message := range req.Messages {
+		request.Messages[i] = anthropic.MessageParam{}
+		if message.Role == "user" {
+			request.Messages[i] = anthropic.NewUserMessage(anthropic.NewTextBlock(message.Content))
+		} else if message.Role == "assistant" {
+			request.Messages[i] = anthropic.NewAssistantMessage(anthropic.NewTextBlock(message.Content))
+		}
 	}
 
 	s := stream.New()
