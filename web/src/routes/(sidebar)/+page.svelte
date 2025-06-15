@@ -184,6 +184,14 @@
 			placeholder="Type your message here..."
 			name="message"
 			id="Message"
+			onkeydown={(e) => {
+				if (e.key === 'Enter' && !e.shiftKey) {
+					e.preventDefault();
+					if (message.length == 0) return;
+					sendMessage(message);
+					message = ''; // TODO: handle in sendMessage with state
+				}
+			}}
 		></textarea>
 		<div class="buttons">
 			<div class="button-group">
@@ -496,8 +504,12 @@
 		background-color: hsl(var(--primary) / 0.4);
 	}
 
-	#SendButton:hover {
+	#SendButton:hover:not(:disabled) {
 		background-color: hsl(var(--primary) / 0.8);
+	}
+
+	#SendButton:disabled {
+		cursor: not-allowed;
 	}
 
 	@media (hover: none) and (pointer: coarse) {

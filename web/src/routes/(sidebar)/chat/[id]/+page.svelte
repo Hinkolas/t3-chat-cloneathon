@@ -328,11 +328,11 @@
 			name="message"
 			id="Message"
 			onkeydown={(e) => {
-				if (e.key === 'Enter') {
+				if (e.key === 'Enter' && !e.shiftKey) {
 					e.preventDefault();
 					if (message.length == 0) return;
 					sendMessage(message);
-					message = ''; // TODO: hanlde in sendMessage with state
+					message = ''; // TODO: handle in sendMessage with state
 				}
 			}}
 		></textarea>
@@ -791,8 +791,12 @@
 		background-color: hsl(var(--primary) / 0.4);
 	}
 
-	#SendButton:hover {
+	#SendButton:hover:not(:disabled) {
 		background-color: hsl(var(--primary) / 0.8);
+	}
+
+	#SendButton:disabled {
+		cursor: not-allowed;
 	}
 
 	@media (hover: none) and (pointer: coarse) {
