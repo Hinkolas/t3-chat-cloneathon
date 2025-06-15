@@ -78,8 +78,6 @@ export function filterChatsBySearchTerm(chats: ChatData[], searchTerm: string): 
 	if (searchTerm.trim() === '') {
 		return chats;
 	}
-	
-	return chats.filter((chat) =>
-		chat.title.toLowerCase().includes(searchTerm.toLowerCase())
-	);
+
+	return chats.filter((chat) => chat.title.toLowerCase().includes(searchTerm.toLowerCase()));
 }
