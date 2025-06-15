@@ -403,7 +403,7 @@ VALUES
         'msg-4-2',
         'user-123',
         'test-chat-4',
-        '_assistant',
+        'assistant',
         'qwen3',
         'Bodyweight exercises like push-ups, squats, planks, and lunges are highly effective. You can also try jumping jacks and burpees for cardio.',
         'The user is asking for fitness methods without equipment. I will focus on bodyweight exercises as they are accessible and effective for both strength and cardiovascular fitness, requiring no external tools.',
