@@ -25,6 +25,6 @@ func (s *Service) Handle(r *mux.Router) {
 	// router.HandleFunc("/{id}/", s.UploadAttachment).Methods("POST")
 
 	router = r.PathPrefix("/v1/streams").Subrouter()
-	router.HandleFunc("/{id}/", s.GetStream).Methods("GET")
+	router.HandleFunc("/{id}/", s.OpenStream).Methods("GET")
 
 }
