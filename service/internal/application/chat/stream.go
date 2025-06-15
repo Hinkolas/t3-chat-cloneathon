@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
 	"github.com/gorilla/mux"
@@ -15,22 +16,14 @@ type ChatCompletionRequest struct {
 	Reasoning int32  `json:"reasoning"`
 }
 
-func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
+func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	userID := "user-123" // TODO: Replace with context from auth middleware
 
-	w.Header().Set("Content-Type", "application/json")
-
 	var body ChatCompletionRequest
-
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		s.log.Debug("failed to decode request body", "error", err)
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(map[string]string{
-			"error": fmt.Errorf("failed to decode request body: %w", err).Error(),
-		}); err != nil {
-			panic("json encoding failed: " + err.Error())
-		}
+		http.Error(w, "failed to decode request body", http.StatusBadRequest)
 		return
 	}
 
@@ -38,8 +31,8 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 	messages := make([]chat.Message, 0)
 	rows, err := s.db.Query("SELECT role, content, reasoning FROM messages WHERE chat_id = ? AND user_id = ? ORDER BY created_at ASC", chatID, userID)
 	if err != nil {
-		s.log.Debug("failed to get chat history from database", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		s.log.Debug("failed to send query to database", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError) // TODO: Improve error handling
 		return
 	}
 	defer rows.Close()
@@ -48,7 +41,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 		var message chat.Message
 		if err := rows.Scan(&message.Role, &message.Content, &message.Reasoning); err != nil {
 			s.log.Debug("failed to scan message from database", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError) // TODO: Improve error handling
 			return
 		}
 		messages = append(messages, message)
@@ -56,7 +49,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 
 	if err := rows.Err(); err != nil {
 		s.log.Debug("failed to get chat history from database", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError) // TODO: Improve error handling
 		return
 	}
 
@@ -73,22 +66,34 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 		Stream:              true,
 		Reasoning:           body.Reasoning,
 		Stop:                nil,
-		Messages:            messages,
+		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
 	}
-
-	s.log.Debug("starting completion stream", "chat_id", chatID, "content", body.Content)
 
 	stream, err := s.mr.StreamCompletion(req)
 	if err != nil {
-		s.log.Debug("failed to start the completion stream", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		if err := json.NewEncoder(w).Encode(map[string]string{
-			"error": err.Error(),
-		}); err != nil {
-			panic("json encoding failed: " + err.Error())
-		}
+		s.log.Warn("failed to start a stream", "error", err)
+		http.Error(w, "failed to start a stream", http.StatusInternalServerError)
 		return
 	}
+
+	// Add stream to stream pool and return id
+	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
+	s.sp.Add(streamID, stream)
+
+	s.log.Debug("stream was started sucessfully", "chat_id", chatID, "stream_id", streamID)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(map[string]string{
+		"stream_id": streamID,
+	}); err != nil {
+		s.log.Error("failed to encode response", "error", err)
+	}
+
+}
+
+func (s *Service) GetStream(w http.ResponseWriter, r *http.Request) {
+
+	streamID := mux.Vars(r)["id"]
 
 	// Set headers for Server-Sent Events
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -97,20 +102,22 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		s.log.Debug("streaming not supported")
-		w.WriteHeader(http.StatusInternalServerError)
-		if err := json.NewEncoder(w).Encode(map[string]string{
-			"error": "streaming not supported",
-		}); err != nil {
-			panic("json encoding failed: " + err.Error())
-		}
+		s.log.Debug("streaming not supported", "stream_id", streamID)
+		http.Error(w, "streaming not supported", http.StatusNotFound)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 
 	// Subscribe to the stream
-	sub := stream.Subscribe(10)
+	sub, ok := s.sp.Subscribe(streamID)
+	if !ok {
+		s.log.Debug("stream not found", "stream_id", streamID)
+		http.Error(w, "stream not found", http.StatusNotFound)
+		return
+	}
 
+	// Flush all received chunks to the client
 	for c := range sub {
 		fmt.Fprint(w, "event: message_delta\ndata: ")
 		if err := json.NewEncoder(w).Encode(c); err != nil {
@@ -119,12 +126,9 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "\n")
 		flusher.Flush()
 	}
-
-	stream.Close()
-
 	fmt.Fprintf(w, "event: message_end\ndata: {\"done\":true}\n\n")
 	flusher.Flush()
 
-	s.log.Debug("streaming completed successfully")
+	s.log.Debug("streaming completed successfully", "stream_id", streamID)
 
 }

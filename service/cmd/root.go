@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -17,9 +18,16 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	// TODO: Initial cli setup logic
+
+	// TODO: move this to the porper place
+	err := godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file: " + err.Error())
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
+
 }

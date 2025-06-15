@@ -54,17 +54,19 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 			})
 
 			if err != nil {
+				fmt.Println("Gemini stream failed!") // TODO: Remove this debug statement
 				s.Fail(err)
 				return
 			}
 
 		}
 
+		fmt.Println("Gemini stream completed!") // TODO: Remove this debug statement
 		s.Close()
 
 	}()
 
-	fmt.Println("Gemini completion started!") // TODO: Remove this debug statement
+	fmt.Println("Gemini stream started!") // TODO: Remove this debug statement
 
 	return s, nil
 

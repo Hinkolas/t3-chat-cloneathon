@@ -1,5 +1,7 @@
 package llm
 
+import "fmt"
+
 type ModelProvider string
 
 const (
@@ -8,6 +10,23 @@ const (
 	Gemini    ModelProvider = "gemini"
 	Ollama    ModelProvider = "ollama"
 )
+
+func (p *ModelProvider) UnmarshalText(text []byte) error {
+	s := string(text)
+	switch s {
+	case "openai":
+		*p = OpenAI
+	case "anthropic":
+		*p = Anthropic
+	case "ollama":
+		*p = Ollama
+	case "gemini":
+		*p = Gemini
+	default:
+		return fmt.Errorf("unknown provider %q", s)
+	}
+	return nil
+}
 
 type ModelFeatures struct {
 	HasVision          bool `json:"has_vision,omitempty"`
