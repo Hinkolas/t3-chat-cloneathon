@@ -32,7 +32,7 @@ func (mr *ModelRouter) ListModels() map[string]Model {
 	return mr.models
 }
 
-func (mr *ModelRouter) ChatCompletion(req chat.Request) (*stream.Stream, error) {
+func (mr *ModelRouter) StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
 	// Get the model that was requested.
 	// Return error if model does not exists.
@@ -47,9 +47,9 @@ func (mr *ModelRouter) ChatCompletion(req chat.Request) (*stream.Stream, error) 
 	// Route the request to the corrosponding model provider.
 	switch model.Provider {
 	case Anthropic:
-		return anthropic.ChatCompletion(req) // Handle request with Ollama
+		return anthropic.StreamCompletion(req) // Handle request with Ollama
 	case Ollama:
-		return ollama.ChatCompletion(req) // Handle request with Anthropic
+		return ollama.StreamCompletion(req) // Handle request with Anthropic
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedModel, model.Provider) // THIS SHOULD NEVER HAPPEN!!!
 	}

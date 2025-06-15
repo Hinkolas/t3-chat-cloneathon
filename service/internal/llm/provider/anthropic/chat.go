@@ -11,7 +11,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
-func ChatCompletion(req chat.Request) (*stream.Stream, error) {
+func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
 	// TODO: replace with a global application client pool
 	httpClient := &http.Client{

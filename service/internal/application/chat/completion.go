@@ -72,7 +72,7 @@ func (s *Service) StreamMessage(w http.ResponseWriter, r *http.Request) {
 		Messages:            messages,
 	}
 
-	stream, err := s.mr.ChatCompletion(req)
+	stream, err := s.mr.StreamCompletion(req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if err := json.NewEncoder(w).Encode(map[string]string{
