@@ -60,6 +60,7 @@ CREATE TABLE
         message_id TEXT NOT NULL,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
+        src TEXT NOT NULL,
         created_at INTEGER NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
         FOREIGN KEY (message_id) REFERENCES messages (id) ON DELETE CASCADE
@@ -1486,7 +1487,7 @@ VALUES
     );
 
 INSERT INTO
-    attachments (id, user_id, message_id, name, type, created_at)
+    attachments (id, user_id, message_id, name, type, src, created_at)
 VALUES
     (
         'att-1-1-1',
@@ -1494,6 +1495,7 @@ VALUES
         'msg-1-1',
         'morning_routine_inspiration.jpeg',
         'image/jpeg',
+        'http://127.0.0.1:3141/v1/attachments/att-1-1-1/',
         1748791016000
     ),
     (
@@ -1502,6 +1504,7 @@ VALUES
         'msg-1-3',
         'morning_routine_tracker.pdf',
         'application/pdf',
+        'http://127.0.0.1:3141/v1/attachments/att-1-3-1/',
         1748791056000
     ),
     (
@@ -1510,6 +1513,7 @@ VALUES
         'msg-3-1',
         'garden_layout_sketch.png',
         'image/png',
+        'http://127.0.0.1:3141/v1/attachments/att-3-1-1/',
         1748891016000
     ),
     (
@@ -1518,6 +1522,7 @@ VALUES
         'msg-3-3',
         'gardening_tool_list.docx',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'http://127.0.0.1:3141/v1/attachments/att-3-3-1/',
         1748891056000
     ),
     (
@@ -1526,6 +1531,7 @@ VALUES
         'msg-5-1',
         'current_expenses_spreadsheet.xlsx',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'http://127.0.0.1:3141/v1/attachments/att-5-1-1/',
         1748991016000
     ),
     (
@@ -1534,6 +1540,7 @@ VALUES
         'msg-5-3',
         'budget_template.pdf',
         'application/pdf',
+        'http://127.0.0.1:3141/v1/attachments/att-5-3-1/',
         1748991056000
     ),
     (
@@ -1542,6 +1549,7 @@ VALUES
         'msg-7-1',
         'leaky_faucet_photo.jpeg',
         'image/jpeg',
+        'http://127.0.0.1:3141/v1/attachments/att-7-1-1/',
         1749091016000
     ),
     (
@@ -1550,6 +1558,7 @@ VALUES
         'msg-7-3',
         'diy_repair_manual_cover.png',
         'image/png',
+        'http://127.0.0.1:3141/v1/attachments/att-7-3-1/',
         1749091056000
     ),
     (
@@ -1558,6 +1567,7 @@ VALUES
         'msg-9-1',
         'investment_portfolio_chart.svg',
         'image/svg+xml',
+        'http://127.0.0.1:3141/v1/attachments/att-9-1-1/',
         1749191016000
     ),
     (
@@ -1566,6 +1576,7 @@ VALUES
         'msg-9-3',
         'market_outlook_report.pdf',
         'application/pdf',
+        'http://127.0.0.1:3141/v1/attachments/att-9-3-1/',
         1749191056000
     ),
     (
@@ -1574,6 +1585,7 @@ VALUES
         'msg-11-1',
         'meal_plan_example.pdf',
         'application/pdf',
+        'http://127.0.0.1:3141/v1/attachments/att-11-1-1/',
         1749309416000
     ),
     (
@@ -1582,6 +1594,7 @@ VALUES
         'msg-11-3',
         'dietary_guidelines.pdf',
         'application/pdf',
+        'http://127.0.0.1:3141/v1/attachments/att-11-3-1/',
         1749309456000
     ),
     (
@@ -1590,6 +1603,7 @@ VALUES
         'msg-13-1',
         'living_room_before_photo.jpeg',
         'image/jpeg',
+        'http://127.0.0.1:3141/v1/attachments/att-13-1-1/',
         1749409997000
     ),
     (
@@ -1598,6 +1612,7 @@ VALUES
         'msg-13-3',
         'lighting_fixture_options.png',
         'image/png',
+        'http://127.0.0.1:3141/v1/attachments/att-13-3-1/',
         1749410037000
     ),
     (
@@ -1606,6 +1621,7 @@ VALUES
         'msg-15-1',
         'cat_scratch_post_ideas.jpeg',
         'image/jpeg',
+        'http://127.0.0.1:3141/v1/attachments/att-15-1-1/',
         1749509997000
     ),
     (
@@ -1614,6 +1630,7 @@ VALUES
         'msg-15-3',
         'dog_feeding_chart.pdf',
         'application/pdf',
+        'http://127.0.0.1:3141/v1/attachments/att-15-3-1/',
         1749510037000
     ),
     (
@@ -1622,6 +1639,7 @@ VALUES
         'msg-17-1',
         'coding_challenge_platform_screenshot.png',
         'image/png',
+        'http://127.0.0.1:3141/v1/attachments/att-17-1-1/',
         1749609997000
     ),
     (
@@ -1630,6 +1648,7 @@ VALUES
         'msg-17-3',
         'project_idea_flowchart.svg',
         'image/svg+xml',
+        'http://127.0.0.1:3141/v1/attachments/att-17-3-1/',
         1749610037000
     ),
     (
@@ -1638,6 +1657,7 @@ VALUES
         'msg-19-1',
         'camera_settings_diagram.jpeg',
         'image/jpeg',
+        'http://127.0.0.1:3141/v1/attachments/att-19-1-1/',
         1749709997000
     ),
     (
@@ -1646,6 +1666,7 @@ VALUES
         'msg-19-3',
         'composition_rule_of_thirds.png',
         'image/png',
+        'http://127.0.0.1:3141/v1/attachments/att-19-3-1/',
         1749710037000
     );
 
