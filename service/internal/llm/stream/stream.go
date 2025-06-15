@@ -54,7 +54,12 @@ func (s *Stream) Subscribe(buffer int) <-chan Chunk {
 	s.mu.Lock()
 	// replay buffered chunks
 	for _, c := range s.chunks {
-		ch <- c
+		select {
+		case ch <- c:
+		default:
+			// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
+			fmt.Println("subscriber is slow, blocking on replay")
+		}
 	}
 	s.subs = append(s.subs, ch)
 	s.mu.Unlock()
@@ -91,8 +96,8 @@ func (s *Stream) emit(chunk Chunk) {
 		select {
 		case ch <- chunk:
 		default:
-			// drop if subscriber is slow
-			fmt.Println("Subscriber is slow, dropping chunk")
+			// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
+			fmt.Println("subscriber is slow, blocking on chunk")
 		}
 	}
 }

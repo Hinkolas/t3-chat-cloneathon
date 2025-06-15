@@ -55,6 +55,7 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 	respFunc := func(resp api.ChatResponse) error {
 
 		if resp.Done {
+			fmt.Println("Ollama stream completed!") // TODO: Remove this debug statement
 			s.Close()
 		} else {
 			s.Publish(stream.Chunk{
@@ -71,10 +72,13 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
 		err := client.Chat(context.TODO(), request, respFunc) // TODO: replace with a proper context
 		if err != nil {
+			fmt.Println("Ollama stream failed!") // TODO: Remove this debug statement
 			s.Fail(err)
 		}
 
 	}()
+
+	fmt.Println("Ollama stream started!") // TODO: Remove this debug statement
 
 	return s, nil
 
