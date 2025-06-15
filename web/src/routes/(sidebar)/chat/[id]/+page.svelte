@@ -243,50 +243,44 @@
 			};
 
 			messages.push(assistantChat);
+			const assistantChatIndex = messages.length - 1;
+			let accumulatedContent = '';
 
-			const reader = response.body!.getReader();
-			const decoder = new TextDecoder();
-			let buffer = '';
-			let currentEvent = '';
+			const res = await response.json();
+			const streamId = res.stream_id;
 
-			const assistantChatIndex = messages.length - 1; // Store the index
+			console.log(streamId);
 
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
+			// Connect to stream
 
-				buffer += decoder.decode(value, { stream: true });
+			const eventSource = new EventSource(`${url}/v1/streams/${streamId}/`);
 
-				const lines = buffer.split('\n');
-				buffer = lines.pop() || '';
+			eventSource.onopen = () => {
+				console.log('opened');
+				// connectionStatus.set('connected');
+			};
 
-				for (const line of lines) {
-					if (line.startsWith('event: ')) {
-						currentEvent = line.slice(7).trim();
-					} else if (line.startsWith('data: ')) {
-						try {
-							const jsonData = line.slice(6).trim();
-							if (!jsonData) continue;
+			eventSource.addEventListener('message_delta', (event) => {
+				const data = JSON.parse(event.data);
+				accumulatedContent += data.content;
+				
+				messages[assistantChatIndex] = {
+					...messages[assistantChatIndex],
+					content: accumulatedContent
+				};
+				messages = [...messages];
+				// Console.log;
+			});
 
-							const parsedData = JSON.parse(jsonData);
+			eventSource.addEventListener('message_end', (event) => {
+				console.log('MESSAGE END');
+				eventSource.close();
+			});
 
-							if (currentEvent === 'message_delta' && parsedData.content) {
-								accumulatedContent += parsedData.content;
-
-								messages[assistantChatIndex] = {
-									...messages[assistantChatIndex],
-									content: accumulatedContent
-								};
-								messages = [...messages];
-							} else if (currentEvent === 'message_end') {
-								// TODO: handle Message End
-							}
-						} catch (parseError) {
-							console.warn('Failed to parse JSON:', parseError, 'Line:', line);
-						}
-					}
-				}
-			}
+			// eventSource.onerror = () => {
+			// 	console.log("error stream")
+			// 	// connectionStatus.set('error');
+			// };
 		} catch (error) {
 			console.log('Error:', error);
 		}
