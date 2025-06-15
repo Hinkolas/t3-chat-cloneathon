@@ -33,8 +33,6 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 			messages[i].Role = genai.RoleModel
 		} else if message.Role == "user" {
 			messages[i].Role = genai.RoleUser
-		} else {
-			panic(fmt.Sprintf("unknown role %s", message.Role))
 		}
 	}
 
