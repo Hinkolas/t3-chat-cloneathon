@@ -1,12 +1,71 @@
-package ollama
+package gemini
 
 import (
-	"errors"
+	"context"
+	"fmt"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/stream"
+	"google.golang.org/genai"
 )
 
 func StreamCompletion(req chat.Request) (*stream.Stream, error) {
-	return nil, errors.New("not implemented")
+
+	ctx := context.TODO()
+
+	// TODO: replace with a proper context
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{
+		Backend: genai.BackendGeminiAPI,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	messages := make([]*genai.Content, len(req.Messages)-1)
+	// Convert universal format to gemini message format
+	for i, message := range req.Messages[:len(req.Messages)-1] {
+		messages[i] = &genai.Content{
+			Parts: []*genai.Part{
+				{Text: message.Content},
+			},
+		}
+		if message.Role == "assistant" {
+			messages[i].Role = genai.RoleModel
+		} else if message.Role == "user" {
+			messages[i].Role = genai.RoleUser
+		} else {
+			panic(fmt.Sprintf("unknown role %s", message.Role))
+		}
+	}
+
+	chat, err := client.Chats.Create(ctx, req.Model, nil, messages)
+	if err != nil {
+		return nil, err
+	}
+
+	s := stream.New()
+
+	go func() {
+
+		for result, err := range chat.SendMessageStream(ctx, genai.Part{Text: req.Messages[len(req.Messages)-1].Content}) {
+
+			s.Publish(stream.Chunk{
+				Content: result.Text(),
+			})
+
+			if err != nil {
+				s.Fail(err)
+				return
+			}
+
+		}
+
+		s.Close()
+
+	}()
+
+	fmt.Println("Gemini completion started!") // TODO: Remove this debug statement
+
+	return s, nil
+
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/provider/anthropic"
+	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/provider/gemini"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/provider/ollama"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/stream"
 )
@@ -47,6 +48,8 @@ func (mr *ModelRouter) StreamCompletion(req chat.Request) (*stream.Stream, error
 
 	// Route the request to the corrosponding model provider.
 	switch model.Provider {
+	case Gemini:
+		return gemini.StreamCompletion(req) // Handle request with Gemini
 	case Anthropic:
 		return anthropic.StreamCompletion(req) // Handle request with Ollama
 	case Ollama:
