@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ModelsResponse, ModelData } from '$lib/types';
+	import type { ModelsResponse, ModelData, MessageData } from '$lib/types';
 
 	interface Props {
 		data: {
@@ -24,6 +24,7 @@
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import { scale } from 'svelte/transition';
+	import { goto } from '$app/navigation';
 
 	interface ButtonData {
 		icon: typeof Icon;
@@ -80,6 +81,7 @@
 
 	let activeTab: string = $state('create');
 	let currentSuggestions: string[] = $derived(buttonData[activeTab]?.suggestions || []);
+	let selectedModelKey: string = $state(Object.keys(data.models)[0]);
 
 	function toggleModelSelection() {
 		if (modelSelectionOpen) {
@@ -107,7 +109,15 @@
 		filteredModels = Object.fromEntries(filteredEntries);
 	}
 
-	function changeModel() {
+	function changeModel(model: ModelData) {
+		// Find the key by comparing model properties instead of object reference
+		const modelKey = Object.entries(data.models).find(
+			([key, modelData]) => modelData.name === model.name && modelData.title === model.title
+		)?.[0];
+
+		if (modelKey) {
+			selectedModelKey = modelKey;
+		}
 		closeModelSelection();
 	}
 
@@ -138,7 +148,37 @@
 		activeTab = tab;
 	}
 
-	function sendMessage(message: string) {}
+	async function sendMessage(message: string) {
+		const tempMessage = message;
+		const url = 'http://localhost:3141';
+
+		try {
+			const response = await fetch(`${url}/v1/chats/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					model: selectedModelKey,
+					content: tempMessage,
+					reasoning: 0
+				})
+			});
+
+			if (!response.ok) {
+				console.log('error');
+				throw new Error('Failed to send message');
+			}
+
+			const res = await response.json();
+
+			console.log(res);
+
+			goto(`/chat/${res.chat_id}/`)
+		} catch (error) {
+			console.log('Error:', error);
+		}
+	}
 
 	onMount(() => {
 		autoResize();
@@ -212,7 +252,7 @@
 						onclick={toggleModelSelection}
 						class="selection-button non-selectable {modelSelectionOpen ? 'active' : ''}"
 					>
-						<span>Gemini 2.5 Flash</span>
+						<span>{data.models[selectedModelKey].title}</span>
 						<ChevronDown size={iconSize} />
 					</button>
 				</div>
