@@ -174,7 +174,7 @@
 	<div class="head">
 		<div class="title">Chat</div>
 		<div class="newChatButton">
-			<button onclick={newChat}>New Chat</button>
+			<a href="/" onclick={newChat}>New Chat</a>
 		</div>
 		<div class="search-container">
 			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
@@ -295,7 +295,7 @@
 		padding-inline: 16px;
 	}
 
-	.newChatButton button {
+	.newChatButton a {
 		all: unset;
 		box-sizing: border-box;
 		padding: 8px 16px;
@@ -315,7 +315,7 @@
 		transition: background-color 0.15s ease;
 	}
 
-	.newChatButton:hover button {
+	.newChatButton:hover a {
 		background-color: hsl(var(--primary) / 0.8);
 	}
 
