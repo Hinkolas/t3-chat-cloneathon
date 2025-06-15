@@ -28,6 +28,7 @@
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models);
 	let messages: MessageData[] = $state(data.chat.messages);
+	let selectedModelKey: string = $state(Object.keys(data.models)[0]);
 
 	$effect(() => {
 		messages = data.chat.messages;
@@ -159,7 +160,15 @@
 		filteredModels = Object.fromEntries(filteredEntries);
 	}
 
-	function changeModel() {
+	function changeModel(model: ModelData) {
+		// Find the key by comparing model properties instead of object reference
+		const modelKey = Object.entries(data.models).find(
+			([key, modelData]) => modelData.name === model.name && modelData.title === model.title
+		)?.[0];
+
+		if (modelKey) {
+			selectedModelKey = modelKey;
+		}
 		closeModelSelection();
 	}
 
@@ -193,7 +202,7 @@
 			id: '', //TODO: add id
 			chat_id: data.chat.id,
 			role: 'user',
-			model: 'qwen3',
+			model: selectedModelKey,
 			content: message,
 			reasoning: '',
 			created_at: 0,
@@ -210,7 +219,7 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					model: 'qwen3',
+					model: selectedModelKey,
 					content: message,
 					reasoning: 0
 				})
@@ -225,7 +234,7 @@
 				id: '', //TODO: add id
 				chat_id: data.chat.id,
 				role: 'assistant',
-				model: 'qwen3',
+				model: selectedModelKey,
 				content: '',
 				reasoning: '',
 				created_at: 0,
@@ -269,7 +278,7 @@
 								};
 								messages = [...messages];
 							} else if (currentEvent === 'message_end') {
-								onMessageComplete(accumulatedContent);
+								// TODO: handle Message End
 							}
 						} catch (parseError) {
 							console.warn('Failed to parse JSON:', parseError, 'Line:', line);
@@ -280,14 +289,6 @@
 		} catch (error) {
 			console.log('Error:', error);
 		}
-	}
-
-	function updateMessageDisplay(content: string) {
-		console.log('Updating display with:', content);
-	}
-
-	function onMessageComplete(finalContent: string) {
-		console.log('Final message:', finalContent);
 	}
 
 	onMount(() => {
@@ -344,7 +345,7 @@
 						onclick={toggleModelSelection}
 						class="selection-button non-selectable {modelSelectionOpen ? 'active' : ''}"
 					>
-						<span>Gemini 2.5 Flash</span>
+						<span>{data.models[selectedModelKey].title}</span>
 						<ChevronDown size={iconSize} />
 					</button>
 				</div>
@@ -380,7 +381,7 @@
 		display: flex;
 		justify-content: center;
 		overflow-y: auto;
-		margin-bottom: 200px;
+		padding-bottom: 200px;
 	}
 
 	.chat {
@@ -392,7 +393,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 48px;
-		margin-bottom: 200px;
 	}
 
 	.single-chat {
