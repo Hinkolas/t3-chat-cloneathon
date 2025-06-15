@@ -26,12 +26,14 @@
 	}
 
 	// Context menu actions
-	function handlePin() {
+	function handlePin(e: Event) {
+		e.preventDefault();
 		patchChat(chat, !chat.is_pinned);
 		onContextMenuOpen(null); // Close menu
 	}
 
-	function handleDelete() {
+	function handleDelete(e: Event) {
+		e.preventDefault();
 		openPopup(chat.id);
 		onContextMenuOpen(null); // Close menu
 	}
@@ -56,14 +58,22 @@
 <a href="/chat/{chat.id}" class="chat" oncontextmenu={handleContextMenu}>
 	<span>{chat.title}</span>
 	<div class="buttons">
-		<button onclick={() => patchChat(chat, !chat.is_pinned)}>
+		<button
+			onclick={(e) => {
+				handlePin(e);
+			}}
+		>
 			{#if chat.is_pinned}
 				<PinOff size="14" />
 			{:else}
 				<Pin size="14" />
 			{/if}
 		</button>
-		<button onclick={() => openPopup(chat.id)}>
+		<button
+			onclick={(e) => {
+				handleDelete(e);
+			}}
+		>
 			<X size="14" />
 		</button>
 	</div>

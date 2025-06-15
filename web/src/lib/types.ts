@@ -22,6 +22,7 @@ export interface ModelData {
 	title: string;
 	description: string;
 	icon: string;
+	name: string;
 	provider: string;
 	features: ModelFeatures;
 	flags: ModelFlags;

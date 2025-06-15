@@ -1,10 +1,9 @@
 <script lang="ts">
-	import type { ChatResponse, ModelsResponse, ChatHistoryResponse } from '$lib//types';
+	import type { ModelsResponse, ChatHistoryResponse } from '$lib//types';
 	interface Props {
 		data: {
 			models: ModelsResponse;
 			chats: ChatHistoryResponse;
-			// add other properties of data here if needed
 		};
 	}
 	let { data }: Props = $props();

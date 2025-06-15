@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { ChatData, ModelsResponse, ModelData, MessageData } from '$lib/types';
+	import type { ModelsResponse, ModelData } from '$lib/types';
 
 	interface Props {
 		data: {
 			models: ModelsResponse;
 		};
-		sendMessage: (message: string) => void;
 	}
 
-	let { data, sendMessage }: Props = $props();
+	let { data }: Props = $props();
 
 	import {
 		ArrowUp,
@@ -24,72 +23,8 @@
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
-	import { fade, scale } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 
-	const iconSize = 16;
-
-	let textarea: HTMLElement;
-	let message = $state('');
-	let modelSelectionOpen = $state(false);
-	let modelSearchTerm: string = $state('');
-	let filteredModels: ModelsResponse = $state(data.models);
-
-	function toggleModelSelection() {
-		if (modelSelectionOpen) {
-			closeModelSelection();
-		} else {
-			modelSelectionOpen = true;
-		}
-	}
-
-	function closeModelSelection() {
-		modelSelectionOpen = false;
-
-		setTimeout(() => {
-			modelSearchTerm = '';
-			filteredModels = data.models;
-		}, 150);
-	}
-
-	function modelSearchFilter() {
-		const filteredEntries = Object.entries(data.models).filter(
-			([modelId, model]: [string, ModelData]) =>
-				model.title.toLowerCase().includes(modelSearchTerm.toLowerCase())
-		);
-
-		filteredModels = Object.fromEntries(filteredEntries);
-	}
-
-	onMount(() => {
-		autoResize();
-	});
-
-	function changeModel() {
-		closeModelSelection();
-	}
-
-	function autoResize() {
-		if (textarea) {
-			textarea.style.height = 'auto';
-			textarea.style.height = textarea.scrollHeight + 'px';
-		}
-	}
-
-	function clickOutside(node: Element) {
-		const handleClick = (event: Event) => {
-			if (!node.contains(<Node>event.target)) {
-				node.dispatchEvent(new CustomEvent('outsideclick'));
-			}
-		};
-
-		document.addEventListener('click', handleClick, true);
-
-		return {
-			destroy() {
-				document.removeEventListener('click', handleClick, true);
-			}
-		};
-	}
 	interface ButtonData {
 		icon: typeof Icon;
 		label: string;
@@ -135,12 +70,79 @@
 		}
 	};
 
+	const iconSize = 16;
+
+	let textarea: HTMLElement;
+	let message = $state('');
+	let modelSelectionOpen = $state(false);
+	let modelSearchTerm: string = $state('');
+	let filteredModels: ModelsResponse = $state(data.models);
+
 	let activeTab: string = $state('create');
 	let currentSuggestions: string[] = $derived(buttonData[activeTab]?.suggestions || []);
+
+	function toggleModelSelection() {
+		if (modelSelectionOpen) {
+			closeModelSelection();
+		} else {
+			modelSelectionOpen = true;
+		}
+	}
+
+	function closeModelSelection() {
+		modelSelectionOpen = false;
+
+		setTimeout(() => {
+			modelSearchTerm = '';
+			filteredModels = data.models;
+		}, 150);
+	}
+
+	function modelSearchFilter() {
+		const filteredEntries = Object.entries(data.models).filter(
+			([modelId, model]: [string, ModelData]) =>
+				model.title.toLowerCase().includes(modelSearchTerm.toLowerCase())
+		);
+
+		filteredModels = Object.fromEntries(filteredEntries);
+	}
+
+	function changeModel() {
+		closeModelSelection();
+	}
+
+	function autoResize() {
+		if (textarea) {
+			textarea.style.height = 'auto';
+			textarea.style.height = textarea.scrollHeight + 'px';
+		}
+	}
+
+	function clickOutside(node: Element) {
+		const handleClick = (event: Event) => {
+			if (!node.contains(<Node>event.target)) {
+				node.dispatchEvent(new CustomEvent('outsideclick'));
+			}
+		};
+
+		document.addEventListener('click', handleClick, true);
+
+		return {
+			destroy() {
+				document.removeEventListener('click', handleClick, true);
+			}
+		};
+	}
 
 	function setActiveTab(tab: string) {
 		activeTab = tab;
 	}
+
+	function sendMessage(message: string) {}
+
+	onMount(() => {
+		autoResize();
+	});
 </script>
 
 <div class="chat">

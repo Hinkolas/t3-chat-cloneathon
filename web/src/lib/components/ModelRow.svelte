@@ -3,9 +3,10 @@
 
 	import FeatureTag from '$lib/components/FeatureTag.svelte';
 	import ModelIcon from '$lib/components/ModelIcon.svelte';
+
 </script>
 
-<button onclick={changeModel} class="model">
+<button onclick={() => {changeModel(model)}} class="model">
 	<div class="details">
 		<div class="provider-icon">
 			<ModelIcon {model} size="16" />

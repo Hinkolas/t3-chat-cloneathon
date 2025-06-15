@@ -6,10 +6,9 @@
 			chat: ChatData;
 			models: ModelsResponse;
 		};
-		sendMessage: (message: string) => void;
 	}
 
-	let { data, sendMessage }: Props = $props();
+	let { data }: Props = $props();
 
 	import { ArrowUp, ChevronDown, Globe, Paperclip } from '@lucide/svelte';
 	import { onMount } from 'svelte';
@@ -19,6 +18,7 @@
 	import MarkdownIt from 'markdown-it';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
 	import 'highlight.js/styles/github-dark.css';
+	import { ChatApiService } from '$lib/utils/chatApi';
 
 	const iconSize = 16;
 
@@ -28,6 +28,14 @@
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models);
 	let messages: MessageData[] = $state(data.chat.messages);
+	let selectedModelKey: string = $state(Object.keys(data.models)[0]);
+
+	$effect(() => {
+		messages = data.chat.messages;
+		filteredModels = data.models;
+		modelSearchTerm = '';
+		modelSelectionOpen = false;
+	});
 
 	// Initialize markdown-it
 	const md = new MarkdownIt({
@@ -38,7 +46,7 @@
 		typographer: true
 	}).use(markdownItHighlightjs);
 
-	// Custom renderer for code blocks with topbar
+	// Custom render for code topbar
 	const defaultFenceRenderer =
 		md.renderer.rules.fence ||
 		function (
@@ -84,12 +92,10 @@
 		</div>`;
 	};
 
-	// Function to render markdown
 	function renderMarkdown(content: string): string {
 		return md.render(content);
 	}
 
-	// Handle copy button clicks
 	function handleCopyClick(event: Event) {
 		const target = event.target as HTMLElement;
 		const button = target.closest('.copy-code-btn') as HTMLButtonElement;
@@ -128,13 +134,6 @@
 		}
 	}
 
-	$effect(() => {
-		messages = data.chat.messages;
-		filteredModels = data.models;
-		modelSearchTerm = '';
-		modelSelectionOpen = false;
-	});
-
 	function toggleModelSelection() {
 		if (modelSelectionOpen) {
 			closeModelSelection();
@@ -161,11 +160,15 @@
 		filteredModels = Object.fromEntries(filteredEntries);
 	}
 
-	onMount(() => {
-		autoResize();
-	});
+	function changeModel(model: ModelData) {
+		// Find the key by comparing model properties instead of object reference
+		const modelKey = Object.entries(data.models).find(
+			([key, modelData]) => modelData.name === model.name && modelData.title === model.title
+		)?.[0];
 
-	function changeModel() {
+		if (modelKey) {
+			selectedModelKey = modelKey;
+		}
 		closeModelSelection();
 	}
 
@@ -191,6 +194,106 @@
 			}
 		};
 	}
+
+	async function sendMessage(message: string) {
+		const url = 'http://localhost:3141';
+
+		const userChat: MessageData = {
+			id: '', //TODO: add id
+			chat_id: data.chat.id,
+			role: 'user',
+			model: selectedModelKey,
+			content: message,
+			reasoning: '',
+			created_at: 0,
+			updated_at: 0
+		};
+		messages.push(userChat);
+
+		let accumulatedContent = '';
+
+		try {
+			const response = await fetch(`${url}/v1/chats/${data.chat.id}/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					model: selectedModelKey,
+					content: message,
+					reasoning: 0
+				})
+			});
+
+			if (!response.ok) {
+				console.log('error');
+				throw new Error('Failed to send message');
+			}
+
+			const assistantChat: MessageData = {
+				id: '', //TODO: add id
+				chat_id: data.chat.id,
+				role: 'assistant',
+				model: selectedModelKey,
+				content: '',
+				reasoning: '',
+				created_at: 0,
+				updated_at: 0
+			};
+
+			messages.push(assistantChat);
+
+			const reader = response.body!.getReader();
+			const decoder = new TextDecoder();
+			let buffer = '';
+			let currentEvent = '';
+
+			const assistantChatIndex = messages.length - 1; // Store the index
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+
+				const lines = buffer.split('\n');
+				buffer = lines.pop() || '';
+
+				for (const line of lines) {
+					if (line.startsWith('event: ')) {
+						currentEvent = line.slice(7).trim();
+					} else if (line.startsWith('data: ')) {
+						try {
+							const jsonData = line.slice(6).trim();
+							if (!jsonData) continue;
+
+							const parsedData = JSON.parse(jsonData);
+
+							if (currentEvent === 'message_delta' && parsedData.content) {
+								accumulatedContent += parsedData.content;
+
+								messages[assistantChatIndex] = {
+									...messages[assistantChatIndex],
+									content: accumulatedContent
+								};
+								messages = [...messages];
+							} else if (currentEvent === 'message_end') {
+								// TODO: handle Message End
+							}
+						} catch (parseError) {
+							console.warn('Failed to parse JSON:', parseError, 'Line:', line);
+						}
+					}
+				}
+			}
+		} catch (error) {
+			console.log('Error:', error);
+		}
+	}
+
+	onMount(() => {
+		autoResize();
+	});
 </script>
 
 {#if messages}
@@ -210,6 +313,7 @@
 					</div>
 				{/each}
 			{/if}
+			<div class="chat-spacer"></div>
 		</div>
 	</div>
 {/if}
@@ -242,7 +346,7 @@
 						onclick={toggleModelSelection}
 						class="selection-button non-selectable {modelSelectionOpen ? 'active' : ''}"
 					>
-						<span>Gemini 2.5 Flash</span>
+						<span>{data.models[selectedModelKey].title}</span>
 						<ChevronDown size={iconSize} />
 					</button>
 				</div>
@@ -278,17 +382,24 @@
 		display: flex;
 		justify-content: center;
 		overflow-y: auto;
+		/* Remove margin-bottom */
 	}
 
 	.chat {
-		height: 100%;
+		height: auto; /* Change from height: 100% */
 		width: 100%;
 		max-width: 768px;
 		margin: 0 auto;
 		padding: 40px 16px;
+		padding-bottom: 200px; /* Add this instead of margin-bottom */
 		display: flex;
 		flex-direction: column;
 		gap: 48px;
+	}
+
+	.chat-spacer {
+		min-height: 130px;
+		width: 100%;
 	}
 
 	.single-chat {
