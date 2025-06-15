@@ -17,7 +17,7 @@ type ChatCompletionRequest struct {
 	Reasoning int32  `json:"reasoning"`
 }
 
-func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
+func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	userID := "user-123" // TODO: Replace with context from auth middleware
 
@@ -147,6 +147,147 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(map[string]string{
+		"stream_id": streamID,
+	}); err != nil {
+		s.log.Error("failed to encode response", "error", err)
+	}
+
+}
+
+func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
+
+	userID := "user-123" // TODO: Replace with context from auth middleware
+
+	var body ChatCompletionRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		s.log.Debug("failed to decode request body", "error", err)
+		http.Error(w, "failed to decode request body", http.StatusBadRequest)
+		return
+	}
+
+	now := time.Now()
+	newChat := Chat{
+		ID:     fmt.Sprintf("chat_%d", time.Now().UnixNano()),
+		UserID: userID,
+
+		Title:    "New Chat",
+		Model:    body.Model,
+		IsPinned: false,
+
+		LastMessageAt: now.UnixMilli(),
+		CreatedAt:     now.UnixMilli(),
+		UpdatedAt:     now.UnixMilli(),
+	}
+
+	_, err := s.db.Exec("INSERT INTO chats (id, user_id, title, model, is_pinned, is_streaming, last_message_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		newChat.ID, newChat.UserID,
+		newChat.Title, newChat.Model,
+		newChat.IsPinned, false,
+		newChat.LastMessageAt, newChat.CreatedAt, newChat.UpdatedAt,
+	)
+	if err != nil {
+		s.log.Warn("failed to insert chat into database", "error", err)
+		fmt.Println(err)
+		http.Error(w, "failed to insert chat into database", http.StatusInternalServerError)
+		return
+	}
+
+	messages := []chat.Message{
+		{
+			Role:    "user",
+			Content: body.Content,
+		},
+	}
+
+	req := chat.Request{
+		Model:               body.Model,
+		Temperature:         0,
+		MaxCompletionTokens: 1024,
+		TopP:                1.0,
+		Stream:              true,
+		Reasoning:           body.Reasoning,
+		Stop:                nil,
+		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
+	}
+
+	message := Message{
+		ID:     fmt.Sprintf("msg_%d", now.UnixNano()),
+		ChatID: newChat.ID,
+		UserID: userID,
+
+		Role:  "user",
+		Model: req.Model,
+
+		Content:   body.Content,
+		Reasoning: "",
+
+		CreatedAt: now.UnixMilli(),
+		UpdatedAt: now.UnixMilli(),
+	}
+
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID,
+		message.Role, message.Model,
+		message.Content, message.Reasoning,
+		message.CreatedAt, message.UpdatedAt,
+	)
+	if err != nil {
+		s.log.Warn("failed to insert message into database", "error", err)
+		fmt.Println(err)
+		http.Error(w, "failed to insert message into database", http.StatusInternalServerError)
+		return
+	}
+
+	compl, err := s.mr.StreamCompletion(req)
+	if err != nil {
+		s.log.Warn("failed to start a stream", "error", err)
+		http.Error(w, "failed to start a stream", http.StatusInternalServerError)
+		return
+	}
+
+	compl.OnClose(func(chunks []stream.Chunk) error {
+
+		message := Message{
+			ID:     fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+			ChatID: newChat.ID,
+			UserID: userID,
+
+			Role:  "assistant",
+			Model: req.Model,
+
+			Content:   "",
+			Reasoning: "",
+
+			CreatedAt: time.Now().UnixMilli(),
+			UpdatedAt: time.Now().UnixMilli(),
+		}
+
+		// TODO: Maybe use string builder instead
+		for _, chunk := range chunks {
+			message.Content += chunk.Content
+			message.Reasoning += chunk.Thinking // TODO: Rename chunk Thinking -> Reasonsing
+		}
+
+		_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			message.ID, message.ChatID, message.UserID,
+			message.Role, message.Model,
+			message.Content, message.Reasoning,
+			message.CreatedAt, message.UpdatedAt,
+		)
+
+		return err
+
+	})
+
+	// Add stream to stream pool and return id
+	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
+	s.sp.Add(streamID, compl)
+
+	s.log.Debug("stream was started sucessfully", "chat_id", newChat.ID, "stream_id", streamID)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(map[string]string{
+		"chat_id":   newChat.ID,
 		"stream_id": streamID,
 	}); err != nil {
 		s.log.Error("failed to encode response", "error", err)
