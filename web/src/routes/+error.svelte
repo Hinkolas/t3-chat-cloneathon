@@ -1,6 +1,6 @@
 <script>
 	import { Skull, Zap } from '@lucide/svelte';
-    import { page } from '$app/state';
+	import { page } from '$app/state';
 
 	const errorMessages = [
 		'Oops! The hamsters powering our servers took a coffee break ☕',
@@ -16,10 +16,10 @@
 </script>
 
 <div class="error-container">
-    <div class="error-detail">
-        <div class="status">{page.status}</div>
-        <div class="message">{page.error?.message}</div>
-    </div>
+	<div class="error-detail">
+		<div class="status">{page.status}</div>
+		<div class="message">{page.error?.message}</div>
+	</div>
 	<div class="error-icon">
 		<Skull size="120" />
 	</div>
@@ -43,7 +43,7 @@
 
 <style>
 	.error-container {
-        position: relative;
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -56,13 +56,13 @@
 		animation: fadeIn 0.5s ease-out;
 	}
 
-    .error-detail {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: #88888866;
-    }
+	.error-detail {
+		position: absolute;
+		bottom: 20px;
+		left: 50%;
+		transform: translateX(-50%);
+		color: #88888866;
+	}
 
 	.error-icon {
 		margin-bottom: 2rem;

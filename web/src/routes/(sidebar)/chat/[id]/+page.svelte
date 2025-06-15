@@ -18,7 +18,6 @@
 	import MarkdownIt from 'markdown-it';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
 	import 'highlight.js/styles/github-dark.css';
-	import { ChatApiService } from '$lib/utils/chatApi';
 
 	const iconSize = 16;
 
@@ -28,13 +27,14 @@
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models);
 	let messages: MessageData[] = $state(data.chat.messages);
-	let selectedModelKey: string = $state(Object.keys(data.models)[0]);
+	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models)[0]);
 
 	$effect(() => {
 		messages = data.chat.messages;
 		filteredModels = data.models;
 		modelSearchTerm = '';
 		modelSelectionOpen = false;
+		selectedModelKey = data.chat.model || Object.keys(data.models)[0];
 	});
 
 	// Initialize markdown-it
@@ -211,8 +211,6 @@
 		};
 		messages.push(userChat);
 
-		let accumulatedContent = '';
-
 		try {
 			const response = await fetch(`${url}/v1/chats/${data.chat.id}/`, {
 				method: 'POST',
@@ -263,7 +261,7 @@
 			eventSource.addEventListener('message_delta', (event) => {
 				const data = JSON.parse(event.data);
 				accumulatedContent += data.content;
-				
+
 				messages[assistantChatIndex] = {
 					...messages[assistantChatIndex],
 					content: accumulatedContent
@@ -276,11 +274,6 @@
 				console.log('MESSAGE END');
 				eventSource.close();
 			});
-
-			// eventSource.onerror = () => {
-			// 	console.log("error stream")
-			// 	// connectionStatus.set('error');
-			// };
 		} catch (error) {
 			console.log('Error:', error);
 		}

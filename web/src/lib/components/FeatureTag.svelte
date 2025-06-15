@@ -1,7 +1,17 @@
 <script lang="ts">
 	let { feature, wText = false } = $props();
 
-	import { Globe, Eye, Brain, CircleHelp, Icon, Settings2, FileText, Zap, ImagePlus } from '@lucide/svelte';
+	import {
+		Globe,
+		Eye,
+		Brain,
+		CircleHelp,
+		Icon,
+		Settings2,
+		FileText,
+		Zap,
+		ImagePlus
+	} from '@lucide/svelte';
 
 	interface Feature {
 		title: string;

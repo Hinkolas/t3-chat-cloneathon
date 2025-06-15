@@ -38,7 +38,7 @@
 	viewBox={providerViewbox[model.icon]}
 	xmlns="http://www.w3.org/2000/svg"
 	fill="currentColor"
-	fill-rule="{model.icon == 'gemma' ? 'evenodd' : 'inherit'}"
+	fill-rule={model.icon == 'gemma' ? 'evenodd' : 'inherit'}
 	width={size}
 	height={size}
 >

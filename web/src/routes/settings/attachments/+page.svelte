@@ -42,18 +42,17 @@
 
 	// Delete selected attachments
 	function deleteSelected() {
-		if (selectedAttachments.size === 0) return;
-
-		// Remove selected attachments from filteredAttachments
-		const newAttachments = { ...filteredAttachments };
-		for (const id of selectedAttachments) {
-			delete newAttachments[id];
-		}
-		filteredAttachments = newAttachments;
-
-		// Clear selection
-		selectedAttachments.clear();
-		selectedAttachments = new Set(selectedAttachments);
+		// TODO: delete selected files
+		// if (selectedAttachments.size === 0) return;
+		// // Remove selected attachments from filteredAttachments
+		// const newAttachments = { ...filteredAttachments };
+		// for (const id of selectedAttachments) {
+		// 	delete newAttachments[id];
+		// }
+		// filteredAttachments = newAttachments;
+		// // Clear selection
+		// selectedAttachments.clear();
+		// selectedAttachments = new Set(selectedAttachments);
 	}
 
 	function deleteAttachment(id: string) {
@@ -121,7 +120,7 @@
 					<div class="buttons">
 						<button
 							onclick={(e) => {
-                                e.stopPropagation();
+								e.stopPropagation();
 								deleteAttachment(attachment.id);
 							}}
 						>
