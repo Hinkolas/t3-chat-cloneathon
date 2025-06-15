@@ -313,6 +313,7 @@
 					</div>
 				{/each}
 			{/if}
+			<div class="chat-spacer"></div>
 		</div>
 	</div>
 {/if}
@@ -381,18 +382,24 @@
 		display: flex;
 		justify-content: center;
 		overflow-y: auto;
-		padding-bottom: 200px;
+		/* Remove margin-bottom */
 	}
 
 	.chat {
-		height: 100%;
+		height: auto; /* Change from height: 100% */
 		width: 100%;
 		max-width: 768px;
 		margin: 0 auto;
 		padding: 40px 16px;
+		padding-bottom: 200px; /* Add this instead of margin-bottom */
 		display: flex;
 		flex-direction: column;
 		gap: 48px;
+	}
+
+	.chat-spacer {
+		min-height: 130px;
+		width: 100%;
 	}
 
 	.single-chat {
