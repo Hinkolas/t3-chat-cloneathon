@@ -82,6 +82,7 @@ type Chat struct {
 type Message struct {
 	ID     string `json:"id"`
 	ChatID string `json:"chat_id,omitempty"`
+	UserID string `json:"user_id,omitempty"`
 	// StreamID string `json:"stream_id"`
 
 	Role      string `json:"role"`
@@ -105,7 +106,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
         SELECT
             c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
             m.id, m.role, m.model, m.content, m.reasoning, m.created_at, m.updated_at,
-            a.id, a.name, a.type, a.created_at
+            a.id, a.name, a.type, a.src, a.created_at
         FROM chats c
         LEFT JOIN messages m ON c.id = m.chat_id
         LEFT JOIN attachments a ON m.id = a.message_id
@@ -133,13 +134,13 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			mID, mRole, mModel, mContent, mReasoning sql.NullString
 			mCreatedAt, mUpdatedAt, aCreatedAt       sql.NullInt64
 			// Attachment fields (nullable)
-			aID, aName, aType sql.NullString
+			aID, aName, aType, aSrc sql.NullString
 		)
 
 		err := rows.Scan(
 			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
 			&mID, &mRole, &mModel, &mContent, &mReasoning, &mCreatedAt, &mUpdatedAt,
-			&aID, &aName, &aType, &aCreatedAt,
+			&aID, &aName, &aType, &aSrc, &aCreatedAt,
 		)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -186,6 +187,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 					ID:        aID.String,
 					Name:      aName.String,
 					Type:      aType.String,
+					Src:       aSrc.String,
 					CreatedAt: aCreatedAt.Int64,
 				}
 

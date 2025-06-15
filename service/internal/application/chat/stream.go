@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
+	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/stream"
 	"github.com/gorilla/mux"
 )
 
@@ -69,16 +70,78 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
 	}
 
-	stream, err := s.mr.StreamCompletion(req)
+	message := Message{
+		ID:     fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+		ChatID: chatID,
+		UserID: userID,
+
+		Role:  "user",
+		Model: req.Model,
+
+		Content:   body.Content,
+		Reasoning: "",
+
+		CreatedAt: time.Now().UnixMilli(),
+		UpdatedAt: time.Now().UnixMilli(),
+	}
+
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID,
+		message.Role, message.Model,
+		message.Content, message.Reasoning,
+		message.CreatedAt, message.UpdatedAt,
+	)
+	if err != nil {
+		s.log.Warn("failed to insert message into database", "error", err)
+		fmt.Println(err)
+		http.Error(w, "failed to insert message into database", http.StatusInternalServerError)
+		return
+	}
+
+	compl, err := s.mr.StreamCompletion(req)
 	if err != nil {
 		s.log.Warn("failed to start a stream", "error", err)
 		http.Error(w, "failed to start a stream", http.StatusInternalServerError)
 		return
 	}
 
+	compl.OnClose(func(chunks []stream.Chunk) error {
+
+		message := Message{
+			ID:     fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+			ChatID: chatID,
+			UserID: userID,
+
+			Role:  "assistant",
+			Model: req.Model,
+
+			Content:   "",
+			Reasoning: "",
+
+			CreatedAt: time.Now().UnixMilli(),
+			UpdatedAt: time.Now().UnixMilli(),
+		}
+
+		// TODO: Maybe use string builder instead
+		for _, chunk := range chunks {
+			message.Content += chunk.Content
+			message.Reasoning += chunk.Thinking // TODO: Rename chunk Thinking -> Reasonsing
+		}
+
+		_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			message.ID, message.ChatID, message.UserID,
+			message.Role, message.Model,
+			message.Content, message.Reasoning,
+			message.CreatedAt, message.UpdatedAt,
+		)
+
+		return err
+
+	})
+
 	// Add stream to stream pool and return id
 	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
-	s.sp.Add(streamID, stream)
+	s.sp.Add(streamID, compl)
 
 	s.log.Debug("stream was started sucessfully", "chat_id", chatID, "stream_id", streamID)
 	w.Header().Set("Content-Type", "application/json")

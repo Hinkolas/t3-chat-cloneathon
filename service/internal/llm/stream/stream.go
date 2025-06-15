@@ -24,12 +24,17 @@ type Stream struct {
 
 	pub  chan Chunk   // where callers Publish
 	subs []chan Chunk // subscriber channels
+
+	closeFunc CloseFunc
 }
+
+type CloseFunc func([]Chunk) error
 
 // New returns a Stream that’s ready to Start() / Publish().
 func New() *Stream {
 	s := &Stream{
-		pub: make(chan Chunk),
+		pub:       make(chan Chunk),
+		closeFunc: func([]Chunk) error { return nil },
 	}
 	// start a goroutine that fans-out anything sent on inCh
 	s.wg.Add(1)
@@ -41,6 +46,12 @@ func New() *Stream {
 		s.finish()
 	}()
 	return s
+}
+
+func (s *Stream) OnClose(closeFunc func([]Chunk) error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.closeFunc = closeFunc
 }
 
 // Publish sends one chunk into the stream. Blocks if no buffer on inCh.
@@ -121,5 +132,8 @@ func (s *Stream) finish() {
 			close(ch)
 		}
 		s.subs = nil
+		if err := s.closeFunc(s.chunks); err != nil {
+			s.setError(err)
+		}
 	})
 }

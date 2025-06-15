@@ -13,6 +13,7 @@ type Attachment struct {
 	MessageID string `json:"message_id,omitempty"`
 	Name      string `json:"name"`
 	Type      string `json:"type"`
+	Src       string `json:"src"`
 	CreatedAt int64  `json:"created_at"`
 }
 
@@ -22,7 +23,7 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
 	attachments := make([]Attachment, 0)
 
-	rows, err := s.db.Query("SELECT id, message_id, name, type, created_at FROM attachments WHERE user_id = ?", userID)
+	rows, err := s.db.Query("SELECT id, message_id, name, type, src, created_at FROM attachments WHERE user_id = ?", userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -31,7 +32,7 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var attachment Attachment
-		if err := rows.Scan(&attachment.ID, &attachment.MessageID, &attachment.Name, &attachment.Type, &attachment.CreatedAt); err != nil {
+		if err := rows.Scan(&attachment.ID, &attachment.MessageID, &attachment.Name, &attachment.Type, &attachment.Src, &attachment.CreatedAt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -61,7 +62,7 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 //         SELECT
 //             c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
 //             m.id, m.role, m.model, m.content, m.reasoning, m.created_at, m.updated_at,
-//             a.id, a.name, a.type
+//             a.id, a.name, a.type, a.src
 //         FROM chats c
 //         LEFT JOIN messages m ON c.id = m.chat_id
 //         LEFT JOIN attachments a ON m.id = a.message_id
@@ -89,13 +90,13 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 // 			mID, mRole, mModel, mContent, mReasoning sql.NullString
 // 			mCreatedAt, mUpdatedAt                   sql.NullInt64
 // 			// Attachment fields (nullable)
-// 			aID, aName, aType sql.NullString
+// 			aID, aName, aType, aSrc sql.NullString
 // 		)
 
 // 		err := rows.Scan(
 // 			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
 // 			&mID, &mRole, &mModel, &mContent, &mReasoning, &mCreatedAt, &mUpdatedAt,
-// 			&aID, &aName, &aType,
+// 			&aID, &aName, &aType, &aSrc,
 // 		)
 // 		if err != nil {
 // 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -142,6 +143,7 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 // 					ID:   aID.String,
 // 					Name: aName.String,
 // 					Type: aType.String,
+// 					Src:  aSrc.String,
 // 				}
 
 // 				// Find the message in chat.Messages and add attachment
