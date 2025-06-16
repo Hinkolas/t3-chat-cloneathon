@@ -13,7 +13,6 @@ export const load = (async ({ params, url, fetch }) => {
 			console.error('Server error fetching chat:', chatResponse.statusText);
 			throw redirect(302, '/');
 		}
-		console.log('Chat response status:', chatResponse.status);
 		const chat: ChatResponse = await chatResponse.json();
 
 		// Fetch models
