@@ -107,18 +107,6 @@ func (app *App) Start() error {
 		Addr:    ":3141",
 	}
 
-	// // Set ReadTimeout for server
-	// if app.Config.Server.WriteTimeout > 0 {
-	// 	server.WriteTimeout = time.Duration(app.Config.Server.WriteTimeout) * time.Second
-	// }
-
-	// // Set WriteTimeout for server
-	// if app.Config.Server.ReadTimeout > 0 {
-	// 	server.WriteTimeout = time.Duration(app.Config.Server.ReadTimeout) * time.Second
-	// }
-
-	// TODO: connect to database
-
 	return server.ListenAndServe()
 
 }
