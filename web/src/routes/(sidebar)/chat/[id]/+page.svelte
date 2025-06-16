@@ -10,13 +10,7 @@
 
 	let { data }: Props = $props();
 
-	import {
-		ArrowUp,
-		Brain,
-		ChevronDown,
-		Globe,
-		Paperclip
-	} from '@lucide/svelte';
+	import { ArrowUp, Brain, ChevronDown, Globe, Paperclip } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
@@ -42,6 +36,21 @@
 		modelSearchTerm = '';
 		modelSelectionOpen = false;
 		selectedModelKey = data.chat.model || Object.keys(data.models)[0];
+	});
+
+	let activeStreams = new Set<string>();
+
+	$effect(() => {
+		messages.forEach((message, index) => {
+			if (
+				message.status === 'streaming' &&
+				message.stream_id &&
+				!activeStreams.has(message.stream_id)
+			) {
+				activeStreams.add(message.stream_id);
+				startStreamingForMessage(message.stream_id, index);
+			}
+		});
 	});
 
 	// Initialize markdown-it
@@ -211,6 +220,8 @@
 			chat_id: data.chat.id,
 			role: 'user',
 			model: selectedModelKey,
+			status: 'done',
+			stream_id: '',
 			content: tempMessage,
 			reasoning: '',
 			created_at: 0,
@@ -236,11 +247,16 @@
 				throw new Error('Failed to send message');
 			}
 
+			const res = await response.json();
+			const streamId = res.stream_id;
+
 			const assistantChat: MessageData = {
 				id: '', //TODO: add id
 				chat_id: data.chat.id,
 				role: 'assistant',
+				status: 'streaming',
 				model: selectedModelKey,
+				stream_id: streamId,
 				content: '',
 				reasoning: '',
 				created_at: 0,
@@ -248,44 +264,65 @@
 			};
 
 			messages.push(assistantChat);
-			const assistantChatIndex = messages.length - 1;
-			let accumulatedContent = '';
-			let accumulatedReasoning = '';
-
-			const res = await response.json();
-			const streamId = res.stream_id;
-
-			const eventSource = new EventSource(`${url}/v1/streams/${streamId}/`);
-
-			eventSource.onopen = () => {
-				console.log('opened');
-			};
-
-			eventSource.addEventListener('message_delta', (event) => {
-				const data = JSON.parse(event.data);
-
-				if (data.content) {
-					accumulatedContent += data.content;
-				}
-				if (data.reasoning) {
-					accumulatedReasoning += data.reasoning;
-				}
-
-				messages[assistantChatIndex] = {
-					...messages[assistantChatIndex],
-					content: accumulatedContent,
-					reasoning: accumulatedReasoning
-				};
-				messages = [...messages];
-			});
-
-			eventSource.addEventListener('message_end', (event) => {
-				console.log('MESSAGE END');
-				eventSource.close();
-			});
 		} catch (error) {
 			console.log('Error:', error);
 		}
+	}
+
+	function startStreamingForMessage(stream_id: string, messageIndex: number) {
+		const url = 'http://localhost:3141';
+		let accumulatedContent = '';
+		let accumulatedReasoning = '';
+
+		const eventSource = new EventSource(`${url}/v1/streams/${stream_id}/`);
+
+		eventSource.onopen = () => {
+			console.log('Stream opened for message', messageIndex);
+		};
+
+		eventSource.addEventListener('message_delta', (event) => {
+			const data = JSON.parse(event.data);
+
+			if (data.content) {
+				console.log('Received content:', data.content);
+				accumulatedContent += data.content;
+			}
+			if (data.reasoning) {
+				console.log('Received reasoning:', data.content);
+				accumulatedReasoning += data.reasoning;
+			}
+
+			// Create a new messages array to trigger reactivity
+			const newMessages = [...messages];
+			newMessages[messageIndex] = {
+				...newMessages[messageIndex],
+				content: accumulatedContent,
+				reasoning: accumulatedReasoning
+			};
+			messages = newMessages;
+		});
+
+		eventSource.addEventListener('message_end', (event) => {
+			console.log('Stream ended for message', messageIndex);
+
+			// Create a new messages array and update status
+			const newMessages = [...messages];
+			newMessages[messageIndex] = {
+				...newMessages[messageIndex],
+				status: 'done'
+			};
+			messages = newMessages;
+
+			// Clean up
+			activeStreams.delete(stream_id);
+			eventSource.close();
+		});
+
+		eventSource.onerror = (error) => {
+			console.error('Stream error:', error);
+			activeStreams.delete(stream_id);
+			eventSource.close();
+		};
 	}
 
 	onMount(() => {
@@ -302,13 +339,13 @@
 		<div class="chat">
 			{#if !(messages.length == 0)}
 				{#each messages as message}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
 						class="single-chat {message.role == 'user' ? 'user' : 'assistant'}"
 						aria-label="Copy Codeblock"
 						role="button"
 						tabindex="0"
 						onclick={handleCopyClick}
+						onkeydown={() => {}}
 					>
 						{#if message.reasoning}
 							<div class="reasoning-box">
@@ -336,7 +373,13 @@
 								{/if}
 							</div>
 						{/if}
-						{@html renderMarkdown(message.content)}
+						{#if message.status === 'done'}
+							{@html renderMarkdown(message.content)}
+						{:else if message.status === 'streaming'}
+							{@html renderMarkdown(message.content)}
+							<!-- Optional: Add a typing indicator -->
+							<div class="typing-indicator">●●●</div>
+						{/if}
 					</div>
 				{/each}
 			{/if}
@@ -510,8 +553,8 @@
 	.reasoning-text {
 		padding: 16px;
 		border-radius: 8px;
-		color: #C7C3CF;
-		background-color: #1A1720;
+		color: #c7c3cf;
+		background-color: #1a1720;
 	}
 
 	.chevron-icon {

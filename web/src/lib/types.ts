@@ -61,6 +61,8 @@ export interface MessageData {
 	chat_id?: string;
 	role: string;
 	model: string;
+	status: string;
+	stream_id: string;
 	content: string;
 	reasoning?: string;
 	created_at: number;
@@ -73,8 +75,8 @@ export interface ChatData {
 	user_id: string;
 	title: string;
 	model: string;
+	status: string;
 	is_pinned: boolean;
-	is_streaming: boolean;
 	last_message_at: number;
 	created_at: number;
 	updated_at: number;
