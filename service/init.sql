@@ -52,12 +52,12 @@ INSERT INTO
         custom_user_name,
         custom_user_profession,
         custom_assistant_trait,
-        custom_context
+        custom_context,
         -- provider
         anthropic_api_key,
         openai_api_key,
         gemini_api_key,
-        ollama_base_url,
+        ollama_base_url
     )
 VALUES
     (
@@ -85,6 +85,7 @@ CREATE TABLE
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         last_message_at INTEGER NOT NULL,
+        shared_at INTEGER NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
 
