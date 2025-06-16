@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type CloseFunc func([]Chunk) error
+type CloseFunc func([]Chunk, error)
 
 type Chunk struct {
 	Reasoning string `json:"reasoning,omitempty"`
@@ -34,7 +34,7 @@ type Stream struct {
 func New() *Stream {
 	s := &Stream{
 		pub:       make(chan Chunk),
-		closeFunc: func([]Chunk) error { return nil },
+		closeFunc: func([]Chunk, error) {},
 	}
 	// start a goroutine that fans-out anything sent on inCh
 	s.wg.Add(1)
@@ -48,7 +48,7 @@ func New() *Stream {
 	return s
 }
 
-func (s *Stream) OnClose(closeFunc func([]Chunk) error) {
+func (s *Stream) OnClose(closeFunc func([]Chunk, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.closeFunc = closeFunc
@@ -85,7 +85,7 @@ func (s *Stream) Wait() error {
 
 func (s *Stream) Fail(err error) {
 	s.setError(err)
-	close(s.pub)
+	s.finish()
 }
 
 // Closes the stream and all subscriber channels. Should be called ofter stream is done.
@@ -128,12 +128,11 @@ func (s *Stream) finish() {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		s.done = true
+		close(s.pub)
 		for _, ch := range s.subs {
 			close(ch)
 		}
 		s.subs = nil
-		if err := s.closeFunc(s.chunks); err != nil {
-			s.setError(err)
-		}
+		s.closeFunc(s.chunks, s.err)
 	})
 }

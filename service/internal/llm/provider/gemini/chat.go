@@ -52,8 +52,7 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 			})
 
 			if err != nil {
-				fmt.Println("Gemini stream failed!") // TODO: Remove this debug statement
-				s.Fail(err)
+				s.Fail(fmt.Errorf("gemini: %w", err))
 				return
 			}
 
