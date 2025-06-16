@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
@@ -136,22 +135,15 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Add stream to stream pool and return id
 	s.sp.Add(streamID, compl)
-	compl.OnClose(func(chunks []stream.Chunk, serr error) {
+	compl.OnClose(func(chunk stream.Chunk, serr error) {
 
 		if serr != nil {
 			s.log.Error("stream failed", "stream_id", streamID, "error", serr)
 			return
 		}
 
-		var contentBuilder, reasoningBuilder strings.Builder
-
-		for _, chunk := range chunks {
-			contentBuilder.WriteString(chunk.Content)
-			reasoningBuilder.WriteString(chunk.Reasoning)
-		}
-
 		_, err := s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
-			contentBuilder.String(), reasoningBuilder.String(), "done", time.Now().UnixMilli(), message.ID,
+			chunk.Content, chunk.Reasoning, "done", time.Now().UnixMilli(), message.ID,
 		)
 
 		if err != nil {
@@ -291,22 +283,15 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Add stream to stream pool and return id
 	s.sp.Add(streamID, compl)
-	compl.OnClose(func(chunks []stream.Chunk, serr error) {
+	compl.OnClose(func(chunk stream.Chunk, serr error) {
 
 		if serr != nil {
 			s.log.Error("stream failed", "stream_id", streamID, "error", serr)
 			return
 		}
 
-		var contentBuilder, reasoningBuilder strings.Builder
-
-		for _, chunk := range chunks {
-			contentBuilder.WriteString(chunk.Content)
-			reasoningBuilder.WriteString(chunk.Reasoning)
-		}
-
 		_, err := s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
-			contentBuilder.String(), reasoningBuilder.String(), "done", time.Now().UnixMilli(), message.ID,
+			chunk.Content, chunk.Reasoning, "done", time.Now().UnixMilli(), message.ID,
 		)
 
 		if err != nil {
