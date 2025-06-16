@@ -22,6 +22,7 @@
 	let sidebarCollapsed: boolean = $derived($sidebarState.collapsed);
 	let chatSearchTerm: string = $state('');
 	let activeContextMenuId = $state<string | null>(null);
+	let url = $derived(page.url.pathname.split('/').pop());
 	const userLoggedIn: boolean = true; // TODO: change this to dynamic with Cookie's
 
 	// Filter and group chats
@@ -166,8 +167,6 @@
 			toggleSidebar();
 		}
 	});
-
-	let url = $derived(page.url.pathname.split('/').pop());
 </script>
 
 <svelte:window bind:innerWidth />

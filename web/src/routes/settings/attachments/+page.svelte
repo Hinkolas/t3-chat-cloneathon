@@ -111,7 +111,7 @@
 						<FileText size="24" />
 					</div>
 					<div class="infos">
-						<a href="https://localhost:3141/v1/files/{attachment.id}/" class="title">
+						<a href={attachment.src} target="_blank" class="title">
 							{attachment.name}
 							<ExternalLink size="16" />
 						</a>

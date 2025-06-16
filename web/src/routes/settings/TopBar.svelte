@@ -27,8 +27,8 @@
 			destination: '/settings/attachments'
 		},
 		{
-			title: 'Contact Us',
-			destination: '/settings/contact-us'
+			title: 'About Us',
+			destination: '/settings/about-us'
 		}
 	];
 

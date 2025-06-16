@@ -19,6 +19,7 @@
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
 	import 'highlight.js/styles/github-dark.css';
 	import { fade } from 'svelte/transition';
+	import { addChatId, removeChatId } from '$lib/store';
 
 	const iconSize = 16;
 
@@ -31,6 +32,14 @@
 	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models)[0]);
 
 	$effect(() => {
+		// When chat data changes, clean up previous streams
+		eventSources.forEach((eventSource, streamId) => {
+			eventSource.close();
+		});
+		eventSources.clear();
+		activeStreams.clear();
+
+		// Update the reactive state
 		messages = data.chat.messages;
 		filteredModels = data.models;
 		modelSearchTerm = '';
@@ -39,6 +48,19 @@
 	});
 
 	let activeStreams = new Set<string>();
+	let eventSources = new Map<string, EventSource>();
+
+	$effect(() => {
+		// Clean up when chat changes
+		return () => {
+			// Close all active EventSource connections
+			eventSources.forEach((eventSource, streamId) => {
+				eventSource.close();
+			});
+			eventSources.clear();
+			activeStreams.clear();
+		};
+	});
 
 	$effect(() => {
 		messages.forEach((message, index) => {
@@ -238,7 +260,7 @@
 				body: JSON.stringify({
 					model: selectedModelKey,
 					content: tempMessage,
-					reasoning_effort: reasoningOn ? 1024 : 0
+					reasoning_effort: reasoningEnabled ? 1024 : 0
 				})
 			});
 
@@ -276,13 +298,16 @@
 
 		const eventSource = new EventSource(`${url}/v1/streams/${stream_id}/`);
 
-		eventSource.onopen = () => {
-			// console.log('Stream opened for message', messageIndex);
-		};
+		// Store the EventSource instance
+		eventSources.set(stream_id, eventSource);
+		addChatId(data.chat.id);
+		console.log('added chat to loading state', data.chat.id);
+
+		eventSource.onopen = () => {};
 
 		eventSource.addEventListener('message_delta', (event) => {
 			const data = JSON.parse(event.data);
-			console.log(data);
+			
 			if (data.content) {
 				accumulatedContent += data.content;
 			}
@@ -301,7 +326,6 @@
 		});
 
 		eventSource.addEventListener('message_end', (event) => {
-
 			// Create a new messages array and update status
 			const newMessages = [...messages];
 			newMessages[messageIndex] = {
@@ -312,22 +336,28 @@
 
 			// Clean up
 			activeStreams.delete(stream_id);
+			eventSources.delete(stream_id);
 			eventSource.close();
+			removeChatId(data.chat.id);
+			console.log('removed chat to from state', data.chat.id);
 		});
 
 		eventSource.onerror = (error) => {
 			console.error('Stream error:', error);
 			activeStreams.delete(stream_id);
+			eventSources.delete(stream_id);
 			eventSource.close();
 		};
 	}
 
 	onMount(() => {
 		autoResize();
+		console.log(data.chat);
 	});
 
 	let reasoningStates: Record<string, boolean> = $state({});
-	let reasoningOn: boolean = $state(false);
+	let reasoningEnabled = $state(false);
+	let webSearchEnabled = $state(false);
 </script>
 
 {#if messages}
@@ -428,9 +458,9 @@
 				{#if data.models[selectedModelKey].features.has_reasoning}
 					<button
 						class="reasoning-button-feature"
-						class:active={reasoningOn}
+						class:active={reasoningEnabled}
 						onclick={() => {
-							reasoningOn = !reasoningOn;
+							reasoningEnabled = !reasoningEnabled;
 						}}
 					>
 						<Brain size={iconSize} />
@@ -440,9 +470,9 @@
 				{#if data.models[selectedModelKey].features.has_web_search}
 					<button
 						class="reasoning-button-feature"
-						class:active={reasoningOn}
+						class:active={webSearchEnabled}
 						onclick={() => {
-							reasoningOn = !reasoningOn;
+							webSearchEnabled = !webSearchEnabled;
 						}}
 					>
 						<Globe size={iconSize} />
@@ -859,7 +889,8 @@
 	}
 
 	.reasoning-button-feature.active {
-		background-color: hsl(var(--primary) / 0.5);
+		border: 1px solid hsl(var(--primary) / 0.3);
+		background-color: hsl(var(--primary) / 0.3);
 	}
 
 	.selection-container {
