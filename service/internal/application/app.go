@@ -22,7 +22,7 @@ type App struct {
 func NewApp(config Config) (*App, error) {
 
 	// TODO: Maybe replace with postgres in production
-	db, err := sql.Open("sqlite3", "data.db")
+	db, err := sql.Open("sqlite3", "data/app.db")
 	if err != nil {
 		panic(err)
 	}

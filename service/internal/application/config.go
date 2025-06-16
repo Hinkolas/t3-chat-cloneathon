@@ -13,7 +13,7 @@ func LoadConfig(cfgFile string) (*Config, error) {
 
 	// Define default config values
 	v.SetDefault("server|host", ":3141")
-	v.SetDefault("logging|log_file_path", "./app.log")
+	v.SetDefault("logging|log_file_path", "data/app.log")
 	v.SetDefault("logging|log_format", "text")
 
 	// Tell viper where to look for the config file
