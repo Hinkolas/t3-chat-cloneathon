@@ -87,8 +87,8 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: now.UnixMilli(),
 	}
 
-	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		message.ID, message.ChatID, message.UserID,
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, stream_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID, message.StreamID,
 		message.Role, message.Status, message.Model,
 		message.Content, message.Reasoning,
 		message.CreatedAt, message.UpdatedAt,
@@ -108,10 +108,12 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now = time.Now()
+	streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
 	message = Message{
 		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
 		ChatID:    chatID,
 		UserID:    userID,
+		StreamID:  streamID,
 		Role:      "assistant",
 		Status:    "streaming",
 		Model:     req.Model,
@@ -119,8 +121,8 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: now.UnixMilli(),
 	}
 
-	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		message.ID, message.ChatID, message.UserID,
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, stream_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID, message.StreamID,
 		message.Role, message.Status, message.Model,
 		message.Content, message.Reasoning,
 		message.CreatedAt, message.UpdatedAt,
@@ -132,6 +134,8 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Add stream to stream pool and return id
+	s.sp.Add(streamID, compl)
 	compl.OnClose(func(chunks []stream.Chunk) error {
 
 		var contentBuilder, reasoningBuilder strings.Builder
@@ -148,10 +152,6 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return err
 
 	})
-
-	// Add stream to stream pool and return id
-	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
-	s.sp.Add(streamID, compl)
 
 	s.log.Debug("stream was started sucessfully", "chat_id", chatID, "stream_id", streamID)
 	w.Header().Set("Content-Type", "application/json")
@@ -176,8 +176,9 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
+	chatID := fmt.Sprintf("chat_%d", time.Now().UnixNano())
 	newChat := Chat{
-		ID:            fmt.Sprintf("chat_%d", time.Now().UnixNano()),
+		ID:            chatID,
 		UserID:        userID,
 		Title:         fmt.Sprintf("New Chat %d", time.Now().Unix()), // TODO: Generate title based on the first message using a lightweight model
 		Model:         body.Model,
@@ -233,8 +234,8 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: now.UnixMilli(),
 	}
 
-	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		message.ID, message.ChatID, message.UserID,
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, stream_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID, message.StreamID,
 		message.Role, message.Status, message.Model,
 		message.Content, message.Reasoning,
 		message.CreatedAt, message.UpdatedAt,
@@ -254,10 +255,12 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now = time.Now()
+	streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
 	message = Message{
 		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
-		ChatID:    newChat.ID,
+		ChatID:    chatID,
 		UserID:    userID,
+		StreamID:  streamID,
 		Role:      "assistant",
 		Status:    "streaming",
 		Model:     req.Model,
@@ -265,8 +268,8 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: now.UnixMilli(),
 	}
 
-	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		message.ID, message.ChatID, message.UserID,
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, stream_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID, message.StreamID,
 		message.Role, message.Status, message.Model,
 		message.Content, message.Reasoning,
 		message.CreatedAt, message.UpdatedAt,
@@ -278,6 +281,8 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Add stream to stream pool and return id
+	s.sp.Add(streamID, compl)
 	compl.OnClose(func(chunks []stream.Chunk) error {
 
 		var contentBuilder, reasoningBuilder strings.Builder
@@ -294,10 +299,6 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return err
 
 	})
-
-	// Add stream to stream pool and return id
-	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
-	s.sp.Add(streamID, compl)
 
 	s.log.Debug("stream was started sucessfully", "chat_id", newChat.ID, "stream_id", streamID)
 	w.Header().Set("Content-Type", "application/json")
