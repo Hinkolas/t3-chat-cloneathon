@@ -64,8 +64,7 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 			event := completion.Current()
 			err := message.Accumulate(event)
 			if err != nil {
-				fmt.Println("Anthropic stream failed!") // TODO: Remove this debug statement
-				s.Fail(err)
+				s.Fail(fmt.Errorf("anthropic: %w", err))
 				return
 			}
 
@@ -85,8 +84,7 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 		}
 
 		if err := completion.Err(); err != nil {
-			fmt.Println("Anthropic stream failed!") // TODO: Remove this debug statement
-			s.Fail(err)
+			s.Fail(fmt.Errorf("anthropic: %w", err))
 		} else {
 			fmt.Println("Anthropic stream completed!") // TODO: Remove this debug statement
 			s.Close()

@@ -72,8 +72,7 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
 		err := client.Chat(context.TODO(), request, respFunc) // TODO: replace with a proper context
 		if err != nil {
-			fmt.Println("Ollama stream failed!") // TODO: Remove this debug statement
-			s.Fail(err)
+			s.Fail(fmt.Errorf("ollama: %w", err))
 		}
 
 	}()
