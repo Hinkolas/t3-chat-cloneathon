@@ -33,20 +33,42 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "stream not found", http.StatusNotFound)
 		return
 	}
+	defer sub.Cancel()
 
-	// Flush all received chunks to the client
-	for c := range sub {
-		fmt.Fprint(w, "event: message_delta\ndata: ")
-		if err := json.NewEncoder(w).Encode(c); err != nil {
-			panic("json encoding failed: " + err.Error())
+	ctx := r.Context()
+
+	for {
+		select {
+		case <-ctx.Done():
+			// client disconnected
+			s.log.Debug("stream: client closed connection", "stream_id", streamID)
+			return
+
+		case chunk, more := <-sub.Channel():
+			if !more {
+				// publisher closed the stream
+				s.log.Debug("stream: provider closed the stream", "stream_id", streamID)
+				return
+			}
+			// write the SSE event
+			if _, err := fmt.Fprint(w,
+				"event: message_delta\n",
+				"data: ",
+			); err != nil {
+				s.log.Debug("stream: write failed", "err", err)
+				return
+			}
+			if err := json.NewEncoder(w).Encode(chunk); err != nil {
+				s.log.Debug("stream: json encoding failed", "err", err)
+				return
+			}
+			if _, err := fmt.Fprint(w, "\n"); err != nil {
+				s.log.Debug("stream: write failed", "err", err)
+				return
+			}
+			flusher.Flush()
 		}
-		fmt.Fprint(w, "\n")
-		flusher.Flush()
 	}
-	fmt.Fprintf(w, "event: message_end\ndata: {\"done\":true}\n\n")
-	flusher.Flush()
-
-	s.log.Debug("streaming completed successfully", "stream_id", streamID)
 
 }
 

@@ -36,6 +36,19 @@ type Stream struct {
 	closeFunc CloseFunc // callback for cleanup after finish
 }
 
+type Subscription struct {
+	ch     chan Chunk
+	cancel func()
+}
+
+func (s *Subscription) Cancel() {
+	s.cancel()
+}
+
+func (s *Subscription) Channel() <-chan Chunk {
+	return s.ch
+}
+
 // New returns a Stream that’s ready to Start() / Publish().
 func New() *Stream {
 	s := &Stream{
@@ -67,22 +80,13 @@ func (s *Stream) Publish(c Chunk) {
 }
 
 // Subscribe returns a channel on which the caller will receive _all_ past and future chunks
-func (s *Stream) Subscribe(buffer int) <-chan Chunk {
+func (s *Stream) Subscribe(buffer int) Subscription {
 	ch := make(chan Chunk, buffer)
 	s.mu.Lock()
-	// replay buffered chunks
-	// for _, c := range s.chunks {
-	// 	select {
-	// 	case ch <- c:
-	// 	default:
-	// 		// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
-	// 		fmt.Println("subscriber is slow, blocking on replay")
-	// 	}
-	// }
 	ch <- s.cache
 	s.subs = append(s.subs, ch)
 	s.mu.Unlock()
-	return ch
+	return Subscription{ch, func() { s.unsubscribe(ch) }}
 }
 
 // Wait blocks until the stream is done. It returns any error.
@@ -118,6 +122,20 @@ func (s *Stream) emit(chunk Chunk) {
 		default:
 			// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
 			fmt.Println("subscriber is slow, blocking on chunk")
+		}
+	}
+}
+
+// unsubscribe removes ch from s.subs and closes it.
+func (s *Stream) unsubscribe(ch chan Chunk) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// find & remove
+	for i, c := range s.subs {
+		if c == ch {
+			s.subs = append(s.subs[:i], s.subs[i+1:]...)
+			close(ch)
+			return
 		}
 	}
 }
