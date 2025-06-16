@@ -1,7 +1,6 @@
 package anthropic
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -12,6 +11,8 @@ import (
 )
 
 func StreamCompletion(req chat.Request) (*stream.Stream, error) {
+
+	s := stream.New()
 
 	// TODO: replace with a global application client pool
 	httpClient := &http.Client{
@@ -53,11 +54,9 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 		}
 	}
 
-	s := stream.New()
-
 	go func() {
 
-		completion := client.Messages.NewStreaming(context.TODO(), request)
+		completion := client.Messages.NewStreaming(s.Context(), request)
 
 		message := anthropic.Message{}
 		for completion.Next() {
