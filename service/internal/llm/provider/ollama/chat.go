@@ -1,7 +1,6 @@
 package ollama
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -54,8 +53,11 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
 	respFunc := func(resp api.ChatResponse) error {
 
+		// if the stream has been canceled, abort the Chat loop
+		if err := s.Context().Err(); err != nil {
+			return err
+		}
 		if resp.Done {
-			fmt.Println("Ollama stream completed!") // TODO: Remove this debug statement
 			s.Close()
 		} else {
 			s.Publish(stream.Chunk{
@@ -63,14 +65,13 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 				Content:   resp.Message.Content,
 			})
 		}
-
 		return nil
 
 	}
 
 	go func() {
 
-		err := client.Chat(context.TODO(), request, respFunc) // TODO: replace with a proper context
+		err := client.Chat(s.Context(), request, respFunc) // TODO: replace with a proper context
 		if err != nil {
 			s.Fail(fmt.Errorf("ollama: %w", err))
 		}
