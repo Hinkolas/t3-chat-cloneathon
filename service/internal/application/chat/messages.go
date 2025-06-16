@@ -65,7 +65,7 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 	req := chat.Request{
 		Model:               body.Model,
 		Temperature:         0,
-		MaxCompletionTokens: 1024,
+		MaxCompletionTokens: 8192,
 		TopP:                1.0,
 		Stream:              true,
 		ReasoningEffort:     body.ReasoningEffort,
@@ -74,16 +74,12 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	message := Message{
-		ID:     fmt.Sprintf("msg_%d", time.Now().UnixNano()),
-		ChatID: chatID,
-		UserID: userID,
-
-		Role:  "user",
-		Model: req.Model,
-
+		ID:        fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+		ChatID:    chatID,
+		UserID:    userID,
+		Role:      "user",
+		Model:     req.Model,
 		Content:   body.Content,
-		Reasoning: "",
-
 		CreatedAt: time.Now().UnixMilli(),
 		UpdatedAt: time.Now().UnixMilli(),
 	}
@@ -111,16 +107,11 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 	compl.OnClose(func(chunks []stream.Chunk) error {
 
 		message := Message{
-			ID:     fmt.Sprintf("msg_%d", time.Now().UnixNano()),
-			ChatID: chatID,
-			UserID: userID,
-
-			Role:  "assistant",
-			Model: req.Model,
-
-			Content:   "",
-			Reasoning: "",
-
+			ID:        fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+			ChatID:    chatID,
+			UserID:    userID,
+			Role:      "assistant",
+			Model:     req.Model,
 			CreatedAt: time.Now().UnixMilli(),
 			UpdatedAt: time.Now().UnixMilli(),
 		}
@@ -170,13 +161,11 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	newChat := Chat{
-		ID:     fmt.Sprintf("chat_%d", time.Now().UnixNano()),
-		UserID: userID,
-
-		Title:    "New Chat",
-		Model:    body.Model,
-		IsPinned: false,
-
+		ID:            fmt.Sprintf("chat_%d", time.Now().UnixNano()),
+		UserID:        userID,
+		Title:         fmt.Sprintf("New Chat %d", time.Now().Unix()), // TODO: Generate title based on the first message using a lightweight model
+		Model:         body.Model,
+		IsPinned:      false,
 		LastMessageAt: now.UnixMilli(),
 		CreatedAt:     now.UnixMilli(),
 		UpdatedAt:     now.UnixMilli(),
@@ -250,19 +239,15 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	compl.OnClose(func(chunks []stream.Chunk) error {
 
+		now := time.Now()
 		message := Message{
-			ID:     fmt.Sprintf("msg_%d", time.Now().UnixNano()),
-			ChatID: newChat.ID,
-			UserID: userID,
-
-			Role:  "assistant",
-			Model: req.Model,
-
-			Content:   "",
-			Reasoning: "",
-
-			CreatedAt: time.Now().UnixMilli(),
-			UpdatedAt: time.Now().UnixMilli(),
+			ID:        fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+			ChatID:    newChat.ID,
+			UserID:    userID,
+			Role:      "assistant",
+			Model:     req.Model,
+			CreatedAt: now.UnixMilli(),
+			UpdatedAt: now.UnixMilli(),
 		}
 
 		// TODO: Maybe use string builder instead
@@ -283,7 +268,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Add stream to stream pool and return id
-	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
+	streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
 	s.sp.Add(streamID, compl)
 
 	s.log.Debug("stream was started sucessfully", "chat_id", newChat.ID, "stream_id", streamID)
