@@ -35,6 +35,9 @@
 	let reasoningEnabled = $state(false);
 	let webSearchEnabled = $state(false);
 
+	let activeStreams = new Set<string>();
+	let eventSources = new Map<string, EventSource>();
+
 	$effect(() => {
 		// When chat data changes, clean up previous streams
 		eventSources.forEach((eventSource, streamId) => {
@@ -51,22 +54,8 @@
 		selectedModelKey = data.chat.model || Object.keys(data.models)[0];
 	});
 
-	let activeStreams = new Set<string>();
-	let eventSources = new Map<string, EventSource>();
-
 	$effect(() => {
-		// Clean up when chat changes
-		return () => {
-			// Close all active EventSource connections
-			eventSources.forEach((eventSource, streamId) => {
-				eventSource.close();
-			});
-			eventSources.clear();
-			activeStreams.clear();
-		};
-	});
-
-	$effect(() => {
+		// Monitor messages for streaming status
 		messages.forEach((message, index) => {
 			if (
 				message.status === 'streaming' &&
@@ -77,6 +66,18 @@
 				startStreamingForMessage(message.stream_id, index);
 			}
 		});
+	});
+
+	$effect(() => {
+		// Clean up when component unmounts
+		return () => {
+			// Close all active EventSource connections
+			eventSources.forEach((eventSource, streamId) => {
+				eventSource.close();
+			});
+			eventSources.clear();
+			activeStreams.clear();
+		};
 	});
 
 	// Initialize markdown-it
@@ -254,16 +255,42 @@
 		event.stopPropagation();
 	}
 
-	// Updated remove file function
-	function removeFile(index: number) {
-		uploadedFiles = uploadedFiles.filter((_, i) => i !== index);
-		uploadError = null;
-	}
+	// Updated remove file function with server DELETE
+	async function removeFile(index: number) {
+		const file = uploadedFiles[index];
+		if (!file) return;
 
-	// Clear all uploaded files
-	function clearAllFiles() {
-		uploadedFiles = [];
-		uploadError = null;
+		// Try to find the attachment id from the server (if you have it)
+		// For this example, let's assume the server returns the uploaded file info with an id,
+		// but since we only have the File object, you may need to adapt this if you store attachment ids.
+		// Here, we'll assume the file name is unique per chat for demo purposes.
+
+		try {
+			// Fetch the list of attachments to find the id (adapt as needed)
+			const url = 'http://localhost:3141';
+			const res = await fetch(`${url}/v1/attachments/`);
+			if (!res.ok) throw new Error('Failed to fetch attachments');
+			const attachments = await res.json();
+
+			const attachment = attachments.find(
+				(att: any) => att.filename === file.name && att.size === file.size
+			);
+
+			if (!attachment) throw new Error('Attachment not found on server');
+
+			// Delete the attachment
+			const delRes = await fetch(`${url}/v1/attachments/${attachment.id}/`, {
+				method: 'DELETE'
+			});
+			if (!delRes.ok) throw new Error('Failed to delete attachment');
+
+			// Remove from local state if successful
+			uploadedFiles = uploadedFiles.filter((_, i) => i !== index);
+			uploadError = null;
+		} catch (error) {
+			console.error('Error removing file:', error);
+			uploadError = error instanceof Error ? error.message : 'Failed to remove file';
+		}
 	}
 
 	// Helper function to format file size
@@ -447,56 +474,77 @@
 		let accumulatedContent = '';
 		let accumulatedReasoning = '';
 
+		// Check if EventSource already exists
+		if (eventSources.has(stream_id)) {
+			console.warn(`EventSource already exists for stream ${stream_id}`);
+			return;
+		}
+
 		const eventSource = new EventSource(`${url}/v1/streams/${stream_id}/`);
 
 		// Store the EventSource instance
 		eventSources.set(stream_id, eventSource);
 
 		eventSource.onopen = () => {
+			console.log(`Stream ${stream_id} connected`);
 			addChatId(data.chat.id);
 		};
 
 		eventSource.addEventListener('message_delta', (event) => {
-			const data = JSON.parse(event.data);
+			try {
+				const data = JSON.parse(event.data);
 
-			if (data.content) {
-				accumulatedContent += data.content;
-			}
-			if (data.reasoning) {
-				accumulatedReasoning += data.reasoning;
-			}
+				if (data.content) {
+					accumulatedContent += data.content;
+				}
+				if (data.reasoning) {
+					accumulatedReasoning += data.reasoning;
+				}
 
-			// Create a new messages array to trigger reactivity
-			const newMessages = [...messages];
-			newMessages[messageIndex] = {
-				...newMessages[messageIndex],
-				content: accumulatedContent,
-				reasoning: accumulatedReasoning
-			};
-			messages = newMessages;
+				// Create a new messages array to trigger reactivity
+				const newMessages = [...messages];
+				newMessages[messageIndex] = {
+					...newMessages[messageIndex],
+					content: accumulatedContent,
+					reasoning: accumulatedReasoning
+				};
+				messages = newMessages;
+			} catch (error) {
+				console.error('Error parsing message_delta:', error, 'Raw data:', event.data);
+			}
 		});
 
 		eventSource.addEventListener('message_end', (event) => {
-			// Create a new messages array and update status
-			const newMessages = [...messages];
-			newMessages[messageIndex] = {
-				...newMessages[messageIndex],
-				status: 'done'
-			};
-			messages = newMessages;
 
-			// Clean up
-			activeStreams.delete(stream_id);
-			eventSources.delete(stream_id);
-			eventSource.close();
-			removeChatId(data.chat.id);
+			console.log('Received message_end event');
+			try {
+				// Create a new messages array and update status
+				const newMessages = [...messages];
+				newMessages[messageIndex] = {
+					...newMessages[messageIndex],
+					status: 'done'
+				};
+				messages = newMessages;
+
+				console.log('EVENT: DONE!');
+
+				// Clean up
+				activeStreams.delete(stream_id);
+				eventSources.delete(stream_id);
+				eventSource.close();
+				removeChatId(data.chat.id);
+			} catch (error) {
+				console.error('Error handling message_end:', error);
+			}
 		});
 
 		eventSource.onerror = (error) => {
-			console.error('Stream error:', error);
-			activeStreams.delete(stream_id);
-			eventSources.delete(stream_id);
-			eventSource.close();
+			console.error('EventSource error details:', {
+				error,
+				readyState: eventSource.readyState,
+				url: eventSource.url,
+				stream_id
+			});
 		};
 	}
 
@@ -1228,7 +1276,13 @@
 		}
 	}
 
-	.uploaded-files {
+	/* File upload styles */
+	.upload-container {
+		border-radius: 8px;
+	}
+
+	.uploaded-files,
+	.uploading-file {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 8px;
@@ -1238,36 +1292,169 @@
 	.file-item {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 12px;
 		background-color: hsl(var(--primary) / 0.1);
 		border: 1px solid hsl(var(--primary) / 0.3);
-		border-radius: 6px;
-		padding: 4px 8px;
-		font-size: 12px;
+		border-radius: 8px;
+		padding: 8px 12px;
+		font-size: 14px;
+		transition: all 0.2s ease;
+		width: max-content;
+	}
+
+	.file-item.uploaded {
+		background-color: hsl(var(--primary) / 0.15);
+		border-color: hsl(var(--primary) / 0.4);
+	}
+
+	.file-item.uploading {
+		background-color: rgba(255, 165, 0, 0.1);
+		border-color: rgba(255, 165, 0, 0.3);
+		animation: pulse 2s infinite;
+	}
+
+	.file-icon {
+		font-size: 14px;
+		min-width: 14px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.file-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.file-name {
 		color: hsl(var(--secondary-foreground));
-		max-width: 150px;
+		font-weight: 500;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		max-width: 120px;
+	}
+
+	.file-size {
+		color: #888;
+		font-size: 12px;
 	}
 
 	.remove-file {
 		all: unset;
 		cursor: pointer;
 		color: #888;
-		font-size: 16px;
+		font-size: 18px;
 		line-height: 1;
-		padding: 0 2px;
-		border-radius: 2px;
-		transition: color 0.15s ease;
+		padding: 4px;
+		border-radius: 4px;
+		transition: all 0.15s ease;
+		min-width: 16px;
+		height: 16px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.remove-file:hover {
 		color: #ff6b6b;
 		background-color: rgba(255, 107, 107, 0.1);
+	}
+
+	.upload-progress {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 24px;
+	}
+
+	.spinner,
+	.button-spinner {
+		width: 16px;
+		height: 16px;
+		border: 2px solid #333;
+		border-top: 2px solid hsl(var(--primary));
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	.button-spinner {
+		width: 12px;
+		height: 12px;
+		border-width: 1.5px;
+		margin-left: 4px;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.7;
+		}
+	}
+
+	.upload-error {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background-color: rgba(255, 107, 107, 0.1);
+		border: 1px solid rgba(255, 107, 107, 0.3);
+		border-radius: 8px;
+		padding: 12px;
+		color: #ff6b6b;
+		font-size: 14px;
+	}
+
+	.error-icon {
+		font-size: 16px;
+		min-width: 16px;
+	}
+
+	.error-message {
+		flex: 1;
+	}
+
+	.dismiss-error {
+		all: unset;
+		cursor: pointer;
+		color: #ff6b6b;
+		font-size: 16px;
+		line-height: 1;
+		padding: 2px 4px;
+		border-radius: 4px;
+		transition: background-color 0.15s ease;
+	}
+
+	.dismiss-error:hover {
+		background-color: rgba(255, 107, 107, 0.2);
+	}
+
+	button.has-file {
+		background-color: hsl(var(--primary) / 0.2);
+		border-color: hsl(var(--primary) / 0.4);
+	}
+
+	button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	button:disabled:hover {
+		background-color: transparent;
 	}
 
 	.drag-overlay {
@@ -1304,40 +1491,6 @@
 		color: hsl(var(--secondary-foreground));
 	}
 
-	/* Additional CSS for multiple files functionality */
-	/* Add these styles to your existing CSS */
-
-	.files-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 8px 0;
-		margin-bottom: 8px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.files-count {
-		font-size: 12px;
-		color: #888;
-		font-weight: 500;
-	}
-
-	.clear-all-btn {
-		all: unset;
-		font-size: 11px;
-		color: #ff6b6b;
-		cursor: pointer;
-		padding: 4px 8px;
-		border-radius: 4px;
-		transition: background-color 0.15s ease;
-		border: 1px solid rgba(255, 107, 107, 0.3);
-	}
-
-	.clear-all-btn:hover {
-		background-color: rgba(255, 107, 107, 0.1);
-	}
-
-	/* Update drag content for multiple files */
 	.drag-content small {
 		display: block;
 		margin-top: 8px;
@@ -1345,13 +1498,11 @@
 		color: #888;
 	}
 
-	/* Ensure uploaded files container can handle multiple files */
 	.uploaded-files {
 		max-height: 200px;
 		overflow-y: auto;
 	}
 
-	/* Scrollbar styling for uploaded files */
 	.uploaded-files::-webkit-scrollbar {
 		width: 4px;
 	}
