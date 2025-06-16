@@ -55,6 +55,7 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 					s.log.Debug("stream: write failed", "err", err)
 					return
 				}
+				flusher.Flush()
 				return
 			}
 			// write the SSE event
