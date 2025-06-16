@@ -136,7 +136,12 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Add stream to stream pool and return id
 	s.sp.Add(streamID, compl)
-	compl.OnClose(func(chunks []stream.Chunk) error {
+	compl.OnClose(func(chunks []stream.Chunk, serr error) {
+
+		if serr != nil {
+			s.log.Error("stream failed", "stream_id", streamID, "error", serr)
+			return
+		}
 
 		var contentBuilder, reasoningBuilder strings.Builder
 
@@ -145,11 +150,14 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 			reasoningBuilder.WriteString(chunk.Reasoning)
 		}
 
-		_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+		_, err := s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
 			contentBuilder.String(), reasoningBuilder.String(), "done", time.Now().UnixMilli(), message.ID,
 		)
 
-		return err
+		if err != nil {
+			s.log.Error("storing stream content failed", "stream_id", streamID, "error", err)
+			return
+		}
 
 	})
 
@@ -213,7 +221,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	req := chat.Request{
 		Model:               body.Model,
 		Temperature:         0,
-		MaxCompletionTokens: 1024,
+		MaxCompletionTokens: 8192,
 		TopP:                1.0,
 		Stream:              true,
 		ReasoningEffort:     body.ReasoningEffort,
@@ -283,7 +291,12 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Add stream to stream pool and return id
 	s.sp.Add(streamID, compl)
-	compl.OnClose(func(chunks []stream.Chunk) error {
+	compl.OnClose(func(chunks []stream.Chunk, serr error) {
+
+		if serr != nil {
+			s.log.Error("stream failed", "stream_id", streamID, "error", serr)
+			return
+		}
 
 		var contentBuilder, reasoningBuilder strings.Builder
 
@@ -292,11 +305,14 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 			reasoningBuilder.WriteString(chunk.Reasoning)
 		}
 
-		_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+		_, err := s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
 			contentBuilder.String(), reasoningBuilder.String(), "done", time.Now().UnixMilli(), message.ID,
 		)
 
-		return err
+		if err != nil {
+			s.log.Error("storing stream content failed", "stream_id", streamID, "error", err)
+			return
+		}
 
 	})
 
