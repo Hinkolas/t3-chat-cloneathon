@@ -14,8 +14,6 @@
 		ArrowUp,
 		Brain,
 		ChevronDown,
-		ChevronRight,
-		DotSquare,
 		Globe,
 		Paperclip
 	} from '@lucide/svelte';
@@ -26,7 +24,7 @@
 	import MarkdownIt from 'markdown-it';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
 	import 'highlight.js/styles/github-dark.css';
-	import { fade, scale } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 
 	const iconSize = 16;
 
@@ -360,6 +358,7 @@
 					e.preventDefault();
 					if (message.length == 0) return;
 					sendMessage(message);
+					autoResize();
 					message = ''; // TODO: handle in sendMessage with state
 				}
 			}}
@@ -421,6 +420,7 @@
 					class={message.length == 0 ? '' : 'active'}
 					onclick={() => {
 						sendMessage(message);
+						autoResize();
 						message = ''; // TODO: hanlde in sendMessage with state
 					}}
 					disabled={message.length == 0}
@@ -475,7 +475,6 @@
 		margin-left: auto;
 		padding: 16px;
 		width: fit-content;
-		max-width: 80%;
 	}
 
 	.single-chat.assistant {

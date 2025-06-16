@@ -87,8 +87,11 @@ const initialSidebarState: SidebarData = {
 
 export let sidebarState = writable<SidebarData>(initialSidebarState);
 
+export const toggleSidebar = () => {
+	sidebarState.update((state) => ({ ...state, collapsed: !state.collapsed }));
+};
+
 export const closeSidebar = () => {
-	console.log("collapse sidebar");
 	sidebarState.update((state) => ({ ...state, collapsed: true }));
 };
 

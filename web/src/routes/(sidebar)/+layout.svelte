@@ -12,13 +12,9 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Error from '$lib/components/Error.svelte';
+	import { toggleSidebar } from '$lib/store';
 
 	let chats = $state(data.chats);
-	let sidebarCollapsed = $state(false);
-
-	function toggleSidebar() {
-		sidebarCollapsed = !sidebarCollapsed;
-	}
 
 	function newChat() {}
 </script>
@@ -31,7 +27,7 @@
 		<button onclick={toggleSidebar} class="sidebar-button">
 			<PanelLeft size="16" />
 		</button>
-		<Sidebar {chats} {sidebarCollapsed} {newChat} {toggleSidebar} />
+		<Sidebar {chats} {newChat} />
 		<div class="content">
 			<slot />
 		</div>
