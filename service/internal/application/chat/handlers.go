@@ -21,11 +21,12 @@ func (s *Service) Handle(r *mux.Router) {
 
 	router = r.PathPrefix("/v1/attachments").Subrouter()
 	router.HandleFunc("/", s.ListAttachments).Methods("GET")
-	router.HandleFunc("/", s.UploadAttachment).Methods("POST")  // TODO: test
-	router.HandleFunc("/{id}/", s.GetAttachment).Methods("GET") // TODO: test
+	router.HandleFunc("/", s.UploadAttachment).Methods("POST")
+	router.HandleFunc("/{id}/", s.GetAttachment).Methods("GET")
 	router.HandleFunc("/{id}/", s.DeleteAttachment).Methods("DELETE")
 
 	router = r.PathPrefix("/v1/streams").Subrouter()
 	router.HandleFunc("/{id}/", s.OpenStream).Methods("GET")
+	router.HandleFunc("/{id}/", s.CancelStream).Methods("DELETE")
 
 }
