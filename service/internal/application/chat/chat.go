@@ -80,10 +80,10 @@ type Chat struct {
 }
 
 type Message struct {
-	ID     string `json:"id"`
-	ChatID string `json:"chat_id,omitempty"`
-	UserID string `json:"user_id,omitempty"`
-	// StreamID string `json:"stream_id"`
+	ID       string `json:"id"`
+	ChatID   string `json:"chat_id,omitempty"`
+	UserID   string `json:"user_id,omitempty"`
+	StreamID string `json:"stream_id"`
 
 	Role      string `json:"role"`
 	Model     string `json:"model"`
@@ -106,7 +106,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	query := `
         SELECT
             c.id, c.user_id, c.title, c.model, c.is_pinned, c.status, c.last_message_at, c.created_at, c.updated_at,
-            m.id, m.role, m.model, m.content, m.reasoning, m.status, m.created_at, m.updated_at,
+            m.id, m.stream_id, m.role, m.model, m.content, m.reasoning, m.status, m.created_at, m.updated_at,
             a.id, a.name, a.type, a.src, a.created_at
         FROM chats c
         LEFT JOIN messages m ON c.id = m.chat_id
@@ -132,15 +132,15 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			cIsPinned                              int
 			cLastMessageAt, cCreatedAt, cUpdatedAt int64
 			// Message fields (nullable)
-			mID, mRole, mModel, mContent, mReasoning, mStatus sql.NullString
-			mCreatedAt, mUpdatedAt, aCreatedAt                sql.NullInt64
+			mID, mStreamID, mRole, mModel, mContent, mReasoning, mStatus sql.NullString
+			mCreatedAt, mUpdatedAt, aCreatedAt                           sql.NullInt64
 			// Attachment fields (nullable)
 			aID, aName, aType, aSrc sql.NullString
 		)
 
 		err := rows.Scan(
 			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cStatus, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
-			&mID, &mRole, &mModel, &mContent, &mReasoning, &mStatus, &mCreatedAt, &mUpdatedAt,
+			&mID, &mStreamID, &mRole, &mModel, &mContent, &mReasoning, &mStatus, &mCreatedAt, &mUpdatedAt,
 			&aID, &aName, &aType, &aSrc, &aCreatedAt,
 		)
 		if err != nil {
@@ -170,6 +170,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			if !exists {
 				message = &Message{
 					ID:          mID.String,
+					StreamID:    mStreamID.String,
 					Role:        mRole.String,
 					Model:       mModel.String,
 					Content:     mContent.String,
