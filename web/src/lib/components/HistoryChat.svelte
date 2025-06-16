@@ -1,9 +1,17 @@
 <script lang="ts">
-	import { closeSidebar } from '$lib/store';
+	import { closeSidebar, sidebarState } from '$lib/store';
 	import { X, PinOff, Pin, TextCursor } from '@lucide/svelte';
 	import { scale } from 'svelte/transition';
 
-	let { chat, isCurrent, patchChat, openPopup, renameChat, activeContextMenuId, onContextMenuOpen } = $props();
+	let {
+		chat,
+		isCurrent,
+		patchChat,
+		openPopup,
+		renameChat,
+		activeContextMenuId,
+		onContextMenuOpen
+	} = $props();
 
 	// Context menu state
 	let showContextMenu = $derived(activeContextMenuId === chat.id);
@@ -11,6 +19,7 @@
 	let contextMenuY = $state(0);
 	let contextMenuRef = $state<HTMLDivElement>();
 
+	let isStreaming = $state(false);
 	let innerWidth = $state(0);
 
 	// Handle right-click
@@ -52,6 +61,18 @@
 			document.addEventListener('click', handleClickOutside);
 			return () => document.removeEventListener('click', handleClickOutside);
 		}
+
+		// TODO: only one at a time is updated because isStreaming is false 
+		$sidebarState.chatIds.forEach((id) => {
+			isStreaming = false;
+			if (id === chat.id) {
+				isStreaming = true;
+			}
+		});
+
+		if ($sidebarState.chatIds.length === 0) {
+			isStreaming = false;
+		}
 	});
 </script>
 
@@ -69,6 +90,7 @@
 	class:active={isCurrent}
 >
 	<span>{chat.title}</span>
+	<div class="loading" class:active={isStreaming}></div>
 	<div class="buttons">
 		<button
 			onclick={(e) => {
@@ -143,6 +165,30 @@
 		overflow: hidden;
 		flex: 1;
 		min-width: 0;
+	}
+
+	.loading {
+		/* Hidden by default */
+		display: none;
+		width: 16px;
+		height: 16px;
+		border: 2px solid #9D989C;
+		border-top: 2px solid hsl(var(--primary)/.5);
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	.loading.active {
+		display: inline-block;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.chat:hover {

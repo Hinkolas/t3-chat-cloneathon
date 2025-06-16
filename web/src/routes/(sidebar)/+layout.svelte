@@ -34,7 +34,6 @@
 			}
 			const newChats: ChatHistoryResponse = await chatHistoryResponse.json();
 
-			console.log(newChats);
 			chats = newChats;
 		} catch (err) {
 			console.error('Load function error:', err);

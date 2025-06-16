@@ -81,13 +81,29 @@ export const hidePopup = () => {
 export interface SidebarData {
 	collapsed: boolean;
 	refresh: boolean;
+	chatIds: string[];
 }
 const initialSidebarState: SidebarData = {
 	collapsed: false,
-	refresh: false
+	refresh: false,
+	chatIds: []
 };
 
 export let sidebarState = writable<SidebarData>(initialSidebarState);
+
+export const addChatId = (chatId: string) => {
+	sidebarState.update((state) => ({
+		...state,
+		chatIds: [...state.chatIds, chatId]
+	}));
+};
+
+export const removeChatId = (chatId: string) => {
+	sidebarState.update((state) => ({
+		...state,
+		chatIds: state.chatIds.filter((id) => id !== chatId)
+	}));
+};
 
 export const toggleSidebar = () => {
 	sidebarState.update((state) => ({ ...state, collapsed: !state.collapsed }));
