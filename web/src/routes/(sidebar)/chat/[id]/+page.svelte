@@ -27,9 +27,9 @@
 	let message = $state('');
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
-	let filteredModels: ModelsResponse = $state(data.models);
+	let filteredModels: ModelsResponse = $state(data.models || {});
 	let messages: MessageData[] = $state(data.chat.messages);
-	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models)[0]);
+	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models)[0] || 'Empty');
 
 	let reasoningStates: Record<string, boolean> = $state({});
 	let reasoningEnabled = $state(false);
@@ -259,12 +259,6 @@
 	async function removeFile(index: number) {
 		const file = uploadedFiles[index];
 		if (!file) return;
-
-		// Try to find the attachment id from the server (if you have it)
-		// For this example, let's assume the server returns the uploaded file info with an id,
-		// but since we only have the File object, you may need to adapt this if you store attachment ids.
-		// Here, we'll assume the file name is unique per chat for demo purposes.
-
 		try {
 			// Fetch the list of attachments to find the id (adapt as needed)
 			const url = 'http://localhost:3141';
