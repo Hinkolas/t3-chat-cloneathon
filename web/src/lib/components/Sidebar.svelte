@@ -69,7 +69,6 @@
 
 						try {
 							await ChatApiService.updateChatTitle(chat.id, newTitle);
-							console.log(`Chat renamed from "${oldTitle}" to "${newTitle}"`);
 							chats = [...chats];
 						} catch (error) {
 							chat.title = oldTitle;

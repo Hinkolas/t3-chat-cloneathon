@@ -31,6 +31,10 @@
 	let messages: MessageData[] = $state(data.chat.messages);
 	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models)[0]);
 
+	let reasoningStates: Record<string, boolean> = $state({});
+	let reasoningEnabled = $state(false);
+	let webSearchEnabled = $state(false);
+
 	$effect(() => {
 		// When chat data changes, clean up previous streams
 		eventSources.forEach((eventSource, streamId) => {
@@ -132,6 +136,153 @@
 
 	function renderMarkdown(content: string): string {
 		return md.render(content);
+	}
+
+	let fileInput: HTMLInputElement;
+	let uploadedFiles: File[] = $state([]);
+	let uploadingFile: File | null = $state(null);
+	let uploadError: string | null = $state(null);
+	let isDragOver = $state(false);
+
+	// Complete uploadFile function
+	async function uploadFile(file: File): Promise<boolean> {
+		const url: string = 'http://localhost:3141';
+
+		// Set uploading state
+		uploadingFile = file;
+		uploadError = null;
+
+		try {
+			const formData = new FormData();
+			formData.append('file', file);
+			formData.append('chat_id', data.chat.id);
+
+			const response = await fetch(`${url}/v1/attachments/`, {
+				method: 'POST',
+				body: formData
+			});
+
+			if (!response.ok) {
+				throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+			}
+
+			const result = await response.json();
+
+			// Reset uploading state
+			uploadingFile = null;
+
+			// Add to uploaded files if successful (append, don't replace)
+			uploadedFiles = [...uploadedFiles, file];
+
+			console.log('File uploaded successfully:', result);
+			return true;
+		} catch (error) {
+			console.error('Error uploading file:', error);
+			uploadingFile = null;
+			uploadError = error instanceof Error ? error.message : 'Upload failed';
+			return false;
+		}
+	}
+
+	// Upload multiple files sequentially
+	async function uploadMultipleFiles(files: FileList | File[]): Promise<void> {
+		const fileArray = Array.from(files);
+
+		for (const file of fileArray) {
+			// Check if file is already uploaded (by name and size)
+			const isDuplicate = uploadedFiles.some(
+				(uploadedFile) => uploadedFile.name === file.name && uploadedFile.size === file.size
+			);
+
+			if (!isDuplicate) {
+				await uploadFile(file);
+			}
+		}
+	}
+
+	// Updated file select handler - handles multiple files
+	async function handleFileSelect(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const files = target.files;
+
+		if (files && files.length > 0) {
+			// Upload all selected files
+			await uploadMultipleFiles(files);
+
+			// Reset the input
+			target.value = '';
+		}
+	}
+
+	// Function to trigger file input
+	function triggerFileUpload() {
+		fileInput?.click();
+	}
+
+	// Drag and drop handlers
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		isDragOver = true;
+	}
+
+	function handleDragLeave(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		// Only set isDragOver to false if we're leaving the window entirely
+		if (!event.relatedTarget) {
+			isDragOver = false;
+		}
+	}
+
+	// Updated drag and drop handler - handles multiple files
+	async function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		isDragOver = false;
+
+		const files = event.dataTransfer?.files;
+		if (files && files.length > 0) {
+			// Upload all dropped files
+			await uploadMultipleFiles(files);
+		}
+	}
+
+	// Prevent default drag behaviors on the entire window
+	function preventDefaults(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	// Updated remove file function
+	function removeFile(index: number) {
+		uploadedFiles = uploadedFiles.filter((_, i) => i !== index);
+		uploadError = null;
+	}
+
+	// Clear all uploaded files
+	function clearAllFiles() {
+		uploadedFiles = [];
+		uploadError = null;
+	}
+
+	// Helper function to format file size
+	function formatFileSize(bytes: number): string {
+		if (bytes === 0) return '0 Bytes';
+		const k = 1024;
+		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+	}
+
+	// Helper function to get file type icon
+	function getFileIcon(file: File): string {
+		const type = file.type;
+		if (type.startsWith('image/')) return '🖼️';
+		if (type === 'application/pdf') return '📄';
+		if (type.includes('document') || type.includes('word')) return '📝';
+		if (type === 'text/plain') return '📄';
+		return '📁';
 	}
 
 	function handleCopyClick(event: Event) {
@@ -300,14 +451,14 @@
 
 		// Store the EventSource instance
 		eventSources.set(stream_id, eventSource);
-		addChatId(data.chat.id);
-		console.log('added chat to loading state', data.chat.id);
 
-		eventSource.onopen = () => {};
+		eventSource.onopen = () => {
+			addChatId(data.chat.id);
+		};
 
 		eventSource.addEventListener('message_delta', (event) => {
 			const data = JSON.parse(event.data);
-			
+
 			if (data.content) {
 				accumulatedContent += data.content;
 			}
@@ -339,7 +490,6 @@
 			eventSources.delete(stream_id);
 			eventSource.close();
 			removeChatId(data.chat.id);
-			console.log('removed chat to from state', data.chat.id);
 		});
 
 		eventSource.onerror = (error) => {
@@ -352,15 +502,43 @@
 
 	onMount(() => {
 		autoResize();
-		console.log(data.chat);
-	});
 
-	let reasoningStates: Record<string, boolean> = $state({});
-	let reasoningEnabled = $state(false);
-	let webSearchEnabled = $state(false);
+		// Add drag and drop event listeners to the entire window
+		window.addEventListener('dragenter', preventDefaults);
+		window.addEventListener('dragover', handleDragOver);
+		window.addEventListener('dragleave', handleDragLeave);
+		window.addEventListener('drop', handleDrop);
+
+		// Cleanup function
+		return () => {
+			window.removeEventListener('dragenter', preventDefaults);
+			window.removeEventListener('dragover', handleDragOver);
+			window.removeEventListener('dragleave', handleDragLeave);
+			window.removeEventListener('drop', handleDrop);
+		};
+	});
 </script>
 
 {#if messages}
+	<input
+		bind:this={fileInput}
+		type="file"
+		multiple
+		style="display: none;"
+		onchange={handleFileSelect}
+		accept="image/*,.pdf,.doc,.docx,.txt"
+	/>
+
+	{#if isDragOver}
+		<div class="drag-overlay" transition:fade={{ duration: 150 }}>
+			<div class="drag-content">
+				<div class="drag-icon">📁</div>
+				<p>Drop files here to upload</p>
+				<small>Multiple files supported</small>
+			</div>
+		</div>
+	{/if}
+
 	<div class="chat-wrapper">
 		<div class="chat">
 			{#if !(messages.length == 0)}
@@ -415,6 +593,58 @@
 {/if}
 <div class="input-wrapper">
 	<div class="input-container">
+		<!-- Show uploading file -->
+		{#if uploadingFile}
+			<div class="upload-container">
+				<div class="uploading-file">
+					<div class="file-item uploading">
+						<span class="file-icon">{getFileIcon(uploadingFile)}</span>
+						<div class="file-info">
+							<span class="file-name">{uploadingFile.name}</span>
+							<span class="file-size">{formatFileSize(uploadingFile.size)}</span>
+						</div>
+						<div class="upload-progress">
+							<div class="spinner"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Show uploaded files -->
+		{#if uploadedFiles.length > 0 && !uploadingFile}
+			<div class="upload-container">
+				<div class="uploaded-files">
+					{#each uploadedFiles as file, index}
+						<div class="file-item uploaded">
+							<span class="file-icon">{getFileIcon(file)}</span>
+							<div class="file-info">
+								<span class="file-name">{file.name}</span>
+							</div>
+							<button
+								class="remove-file"
+								onclick={() => removeFile(index)}
+								aria-label="Remove file"
+							>
+								×
+							</button>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<!-- Show upload error -->
+		{#if uploadError}
+			<div class="upload-container">
+				<div class="upload-error">
+					<span class="error-icon">⚠️</span>
+					<span class="error-message">{uploadError}</span>
+					<button class="dismiss-error" onclick={() => (uploadError = null)}>×</button>
+				</div>
+			</div>
+		{/if}
+
 		<textarea
 			bind:this={textarea}
 			bind:value={message}
@@ -479,9 +709,20 @@
 						Search
 					</button>
 				{/if}
-				<button>
+				<button
+					onclick={triggerFileUpload}
+					class:has-file={uploadedFiles.length > 0}
+					disabled={!!uploadingFile}
+				>
 					<Paperclip size={iconSize} />
-					Attach
+					{#if uploadedFiles.length > 0}
+						Attach ({uploadedFiles.length})
+					{:else}
+						Attach
+					{/if}
+					{#if uploadingFile}
+						<div class="button-spinner"></div>
+					{/if}
 				</button>
 			</div>
 			<div class="button-group">
@@ -985,5 +1226,147 @@
 		.selection-button.active {
 			background-color: #88888811;
 		}
+	}
+
+	.uploaded-files {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 8px 12px;
+	}
+
+	.file-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		background-color: hsl(var(--primary) / 0.1);
+		border: 1px solid hsl(var(--primary) / 0.3);
+		border-radius: 6px;
+		padding: 4px 8px;
+		font-size: 12px;
+	}
+
+	.file-name {
+		color: hsl(var(--secondary-foreground));
+		max-width: 150px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.remove-file {
+		all: unset;
+		cursor: pointer;
+		color: #888;
+		font-size: 16px;
+		line-height: 1;
+		padding: 0 2px;
+		border-radius: 2px;
+		transition: color 0.15s ease;
+	}
+
+	.remove-file:hover {
+		color: #ff6b6b;
+		background-color: rgba(255, 107, 107, 0.1);
+	}
+
+	.drag-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0, 0, 0, 0.8);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		pointer-events: none;
+	}
+
+	.drag-content {
+		text-align: center;
+		color: white;
+		padding: 40px;
+		border: 2px dashed hsl(var(--primary));
+		border-radius: 12px;
+		background-color: rgba(0, 0, 0, 0.5);
+	}
+
+	.drag-icon {
+		font-size: 48px;
+		margin-bottom: 16px;
+	}
+
+	.drag-content p {
+		font-size: 18px;
+		margin: 0;
+		color: hsl(var(--secondary-foreground));
+	}
+
+	/* Additional CSS for multiple files functionality */
+	/* Add these styles to your existing CSS */
+
+	.files-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 8px 0;
+		margin-bottom: 8px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.files-count {
+		font-size: 12px;
+		color: #888;
+		font-weight: 500;
+	}
+
+	.clear-all-btn {
+		all: unset;
+		font-size: 11px;
+		color: #ff6b6b;
+		cursor: pointer;
+		padding: 4px 8px;
+		border-radius: 4px;
+		transition: background-color 0.15s ease;
+		border: 1px solid rgba(255, 107, 107, 0.3);
+	}
+
+	.clear-all-btn:hover {
+		background-color: rgba(255, 107, 107, 0.1);
+	}
+
+	/* Update drag content for multiple files */
+	.drag-content small {
+		display: block;
+		margin-top: 8px;
+		font-size: 14px;
+		color: #888;
+	}
+
+	/* Ensure uploaded files container can handle multiple files */
+	.uploaded-files {
+		max-height: 200px;
+		overflow-y: auto;
+	}
+
+	/* Scrollbar styling for uploaded files */
+	.uploaded-files::-webkit-scrollbar {
+		width: 4px;
+	}
+
+	.uploaded-files::-webkit-scrollbar-track {
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 2px;
+	}
+
+	.uploaded-files::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.3);
+		border-radius: 2px;
+	}
+
+	.uploaded-files::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.5);
 	}
 </style>

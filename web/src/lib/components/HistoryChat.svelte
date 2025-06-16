@@ -62,10 +62,10 @@
 			return () => document.removeEventListener('click', handleClickOutside);
 		}
 
+		// TODO: only one at a time is updated because isStreaming is false 
 		$sidebarState.chatIds.forEach((id) => {
 			isStreaming = false;
 			if (id === chat.id) {
-				console.log(`${id} equals ${chat.id}`);
 				isStreaming = true;
 			}
 		});
