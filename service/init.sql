@@ -66,17 +66,24 @@ CREATE TABLE
         FOREIGN KEY (message_id) REFERENCES messages (id) ON DELETE CASCADE
     );
 
+-- Create indexes for more efficient querying
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions (user_id);
-
 CREATE INDEX IF NOT EXISTS idx_chats_user_id ON chats (user_id);
-
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages (user_id);
-
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages (chat_id);
-
 CREATE INDEX IF NOT EXISTS idx_attachments_message_id ON attachments (message_id);
-
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id_created_at ON messages (chat_id, created_at);
+
+-- Create triggers for automatic updates
+CREATE TRIGGER update_chat_last_message_at
+AFTER INSERT ON messages
+FOR EACH ROW
+BEGIN
+    UPDATE chats 
+    SET last_message_at = NEW.created_at 
+    WHERE id = NEW.chat_id;
+END;
+
 
 INSERT INTO
     chats (
