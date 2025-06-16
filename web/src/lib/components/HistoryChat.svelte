@@ -19,7 +19,7 @@
 	let contextMenuY = $state(0);
 	let contextMenuRef = $state<HTMLDivElement>();
 
-	let isStreaming = $state(false);
+	let isStreaming = $derived(false);
 	let innerWidth = $state(0);
 
 	// Handle right-click
@@ -55,24 +55,13 @@
 		onContextMenuOpen(null);
 	}
 
-	// Add global click listener when context menu is open
 	$effect(() => {
 		if (showContextMenu) {
 			document.addEventListener('click', handleClickOutside);
 			return () => document.removeEventListener('click', handleClickOutside);
 		}
 
-		// TODO: only one at a time is updated because isStreaming is false 
-		$sidebarState.chatIds.forEach((id) => {
-			isStreaming = false;
-			if (id === chat.id) {
-				isStreaming = true;
-			}
-		});
-
-		if ($sidebarState.chatIds.length === 0) {
-			isStreaming = false;
-		}
+		isStreaming = $sidebarState.chatIds.includes(chat.id);
 	});
 </script>
 

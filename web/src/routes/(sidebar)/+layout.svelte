@@ -40,8 +40,6 @@
 			console.error('Load function error:', err);
 		}
 	}
-
-	console.log('Sidebar layout loaded with models:', data.models);
 </script>
 
 <div class="container">

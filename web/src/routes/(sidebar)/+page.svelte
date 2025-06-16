@@ -132,7 +132,6 @@
 			const uploaded: UploadedFileWithId = { file, id: result.id };
 			uploadedFiles = [...uploadedFiles, uploaded];
 
-			console.log('File uploaded successfully:', result);
 			return uploaded;
 		} catch (error) {
 			console.error('Error uploading file:', error);

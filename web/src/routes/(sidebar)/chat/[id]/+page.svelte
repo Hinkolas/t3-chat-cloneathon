@@ -180,7 +180,6 @@
 			// Add to uploaded files if successful (append, don't replace)
 			uploadedFiles = [...uploadedFiles, file];
 
-			console.log('File uploaded successfully:', result);
 			return true;
 		} catch (error) {
 			console.error('Error uploading file:', error);
@@ -485,7 +484,6 @@
 		eventSources.set(stream_id, eventSource);
 
 		eventSource.onopen = () => {
-			console.log(`Stream ${stream_id} connected`);
 			addChatId(data.chat.id);
 		};
 
@@ -514,7 +512,6 @@
 		});
 
 		eventSource.addEventListener('message_end', (event) => {
-			console.log('Received message_end event');
 			try {
 				// Create a new messages array and update status
 				const newMessages = [...messages];
@@ -523,8 +520,6 @@
 					status: 'done'
 				};
 				messages = newMessages;
-
-				console.log('EVENT: DONE!');
 
 				// Clean up
 				activeStreams.delete(stream_id);
