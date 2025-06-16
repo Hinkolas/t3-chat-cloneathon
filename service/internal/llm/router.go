@@ -34,7 +34,7 @@ func (mr *ModelRouter) ListModels() map[string]Model {
 }
 
 // TODO: Add Provider interface definition for the llm providers.
-func (mr *ModelRouter) StreamCompletion(req chat.Request) (*stream.Stream, error) {
+func (mr *ModelRouter) StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
 	// Get the model that was requested.
 	// Return error if model does not exists.
@@ -49,11 +49,11 @@ func (mr *ModelRouter) StreamCompletion(req chat.Request) (*stream.Stream, error
 	// Route the request to the corrosponding model provider.
 	switch model.Provider {
 	case Gemini:
-		return gemini.StreamCompletion(req) // Handle request with Gemini
+		return gemini.StreamCompletion(req, opt) // Handle request with Gemini
 	case Anthropic:
-		return anthropic.StreamCompletion(req) // Handle request with Ollama
+		return anthropic.StreamCompletion(req, opt) // Handle request with Ollama
 	case Ollama:
-		return ollama.StreamCompletion(req) // Handle request with Anthropic
+		return ollama.StreamCompletion(req, opt) // Handle request with Anthropic
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrUnsupportedModel, model.Provider) // THIS SHOULD NEVER HAPPEN!!!
 	}

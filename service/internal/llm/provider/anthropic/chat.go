@@ -10,7 +10,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
-func StreamCompletion(req chat.Request) (*stream.Stream, error) {
+func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
 	s := stream.New()
 

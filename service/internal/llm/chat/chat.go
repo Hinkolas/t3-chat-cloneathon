@@ -17,3 +17,9 @@ type Message struct {
 	Content   string `json:"content"`
 	Reasoning string `json:"reasoning"`
 }
+
+type Options struct {
+	ApiKey  string `json:"api_key,omitempty"`
+	BaseUrl string `json:"base_url,omitempty"`
+	System  string `json:"system,omitempty"` // System prompt for the chat.
+}
