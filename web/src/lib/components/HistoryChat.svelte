@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { closeSidebar } from '$lib/store';
 	import { X, PinOff, Pin, TextCursor } from '@lucide/svelte';
 	import { scale } from 'svelte/transition';
 
@@ -10,18 +11,20 @@
 	let contextMenuY = $state(0);
 	let contextMenuRef = $state<HTMLDivElement>();
 
+	let innerWidth = $state(0);
+
 	// Handle right-click
 	function handleContextMenu(event: MouseEvent) {
 		event.preventDefault();
 		contextMenuX = event.clientX;
 		contextMenuY = event.clientY;
-		onContextMenuOpen(chat.id); // Tell parent this menu is now active
+		onContextMenuOpen(chat.id);
 	}
 
 	// Close context menu when clicking outside
 	function handleClickOutside(event: MouseEvent) {
 		if (contextMenuRef && !contextMenuRef.contains(event.target as Node)) {
-			onContextMenuOpen(null); // Close all menus
+			onContextMenuOpen(null);
 		}
 	}
 
@@ -29,18 +32,18 @@
 	function handlePin(e: Event) {
 		e.preventDefault();
 		patchChat(chat, !chat.is_pinned);
-		onContextMenuOpen(null); // Close menu
+		onContextMenuOpen(null);
 	}
 
 	function handleDelete(e: Event) {
 		e.preventDefault();
 		openPopup(chat.id);
-		onContextMenuOpen(null); // Close menu
+		onContextMenuOpen(null);
 	}
 
 	function handleRename() {
 		renameChat(chat);
-		onContextMenuOpen(null); // Close menu
+		onContextMenuOpen(null);
 	}
 
 	// Add global click listener when context menu is open
@@ -52,10 +55,18 @@
 	});
 </script>
 
-<svelte:window on:keydown={(e) => e.key === 'Escape' && onContextMenuOpen(null)} />
+<svelte:window on:keydown={(e) => e.key === 'Escape' && onContextMenuOpen(null)} bind:innerWidth />
 
-<!-- TODO: Implement Link -->
-<a href="/chat/{chat.id}" class="chat" oncontextmenu={handleContextMenu}>
+<a
+	href="/chat/{chat.id}"
+	class="chat"
+	onclick={() => {
+		if (innerWidth <= 1024) {
+			closeSidebar();
+		}
+	}}
+	oncontextmenu={handleContextMenu}
+>
 	<span>{chat.title}</span>
 	<div class="buttons">
 		<button

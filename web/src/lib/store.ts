@@ -78,20 +78,29 @@ export const hidePopup = () => {
 };
 
 // Handling Sidebar State
-export interface SidebarData  {
+export interface SidebarData {
 	collapsed: boolean;
+	refresh: boolean;
 }
 const initialSidebarState: SidebarData = {
 	collapsed: false,
+	refresh: false
 };
 
 export let sidebarState = writable<SidebarData>(initialSidebarState);
 
+export const toggleSidebar = () => {
+	sidebarState.update((state) => ({ ...state, collapsed: !state.collapsed }));
+};
+
 export const closeSidebar = () => {
-	console.log("collapse sidebar");
 	sidebarState.update((state) => ({ ...state, collapsed: true }));
 };
 
 export const openSidebar = () => {
 	sidebarState.update((state) => ({ ...state, collapsed: false }));
+};
+
+export const refreshChatHistory = () => {
+	sidebarState.update((state) => ({ ...state, refresh: true }));
 };

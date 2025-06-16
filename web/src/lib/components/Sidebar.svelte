@@ -1,13 +1,15 @@
 <script lang="ts">
-	let { chats = $bindable(), sidebarCollapsed, newChat, toggleSidebar } = $props();
+	let { chats = $bindable() } = $props();
 
 	import { fade } from 'svelte/transition';
 	import SearchInput from '$lib/components/SearchInput.svelte';
-	import { Pin, LogOut } from '@lucide/svelte';
-	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
-	import { get } from 'svelte/store';
-	import type { ChatHistoryResponse, ChatHistoryData } from '$lib/types';
 	import HistoryChat from '$lib/components/HistoryChat.svelte';
+	import { Pin, LogOut } from '@lucide/svelte';
+	import { showConfirmationPopup, showRenamePopup, popup, closeSidebar } from '$lib/store';
+	
+	import type { ChatHistoryResponse, ChatHistoryData } from '$lib/types';
+	import { toggleSidebar, sidebarState} from '$lib/store';
+	import { get } from 'svelte/store';
 
 	// Import extracted services and utilities
 	import { ChatApiService } from '$lib/utils/chatApi';
@@ -18,6 +20,7 @@
 	} from '$lib/utils/chatUtils';
 	import { onMount } from 'svelte';
 
+	let sidebarCollapsed: boolean = $derived($sidebarState.collapsed);
 	let chatSearchTerm: string = $state('');
 	let activeContextMenuId = $state<string | null>(null);
 	const userLoggedIn: boolean = true; // TODO: change this to dynamic with Cookie's
@@ -185,7 +188,7 @@
 	<div class="head">
 		<div class="title">Chat</div>
 		<div class="newChatButton">
-			<a href="/" onclick={newChat}>New Chat</a>
+			<a href="/">New Chat</a>
 		</div>
 		<div class="search-container">
 			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
