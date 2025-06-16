@@ -36,19 +36,21 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 	// Subscribe to the stream
 
 	w.WriteHeader(http.StatusOK)
-	ctx := r.Context()
-
 	for {
 		select {
-		case <-ctx.Done():
+		case <-r.Context().Done():
 			// client disconnected
 			s.log.Debug("stream: client closed connection", "stream_id", streamID)
 			return
 
-		case chunk, more := <-sub.Read():
+		case chunk, more := <-sub.Data:
 			if !more {
 				// publisher closed the stream
 				s.log.Debug("stream: provider closed the stream", "stream_id", streamID)
+				fmt.Fprint(w, "event: message_end\n", "data: ")
+				json.NewEncoder(w).Encode(map[string]string{})
+				fmt.Fprint(w, "\n")
+				flusher.Flush()
 				return
 			}
 			// write the SSE event
@@ -68,6 +70,18 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			flusher.Flush()
+		case err, _ := <-sub.Err:
+			if err != nil {
+				s.log.Debug("stream: something went wrong", "stream_id", streamID, "error", err)
+				// send an error event
+				fmt.Fprint(w, "event: error\n", "data: ")
+				json.NewEncoder(w).Encode(map[string]string{
+					"error": err.Error(),
+				})
+				fmt.Fprint(w, "\n")
+				flusher.Flush()
+			}
+			return
 		}
 	}
 
