@@ -119,7 +119,7 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		// TODO: Maybe use string builder instead
 		for _, chunk := range chunks {
 			message.Content += chunk.Content
-			message.Reasoning += chunk.Reasoning // TODO: Rename chunk Thinking -> Reasonsing
+			message.Reasoning += chunk.Reasoning
 		}
 
 		_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
