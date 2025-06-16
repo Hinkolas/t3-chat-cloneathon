@@ -34,6 +34,7 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 	}
 
 	if req.ReasoningEffort > 0 {
+		request.Temperature = anthropic.Float(1)
 		request.Thinking = anthropic.ThinkingConfigParamUnion{
 			OfEnabled: &anthropic.ThinkingConfigEnabledParam{
 				BudgetTokens: int64(req.ReasoningEffort),
