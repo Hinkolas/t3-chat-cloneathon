@@ -30,7 +30,7 @@ type Stream struct {
 	err   error
 
 	pub       chan Chunk
-	subs      []subscriber
+	subs      []chan Chunk
 	closeFunc CloseFunc
 
 	// new fields for cancellation
@@ -38,20 +38,17 @@ type Stream struct {
 	cancel context.CancelFunc
 }
 
-type subscriber struct {
-	dataCh chan Chunk
-	errCh  chan error
-}
-
-// Subscribe returns data- and error-channels.
 type Subscription struct {
-	Data   <-chan Chunk
-	Err    <-chan error
+	ch     chan Chunk
 	cancel func()
 }
 
 func (s *Subscription) Cancel() {
 	s.cancel()
+}
+
+func (s *Subscription) Read() <-chan Chunk {
+	return s.ch
 }
 
 // New creates a Stream with a background context.
@@ -103,32 +100,23 @@ func (s *Stream) Publish(c Chunk) {
 
 // Subscribe returns a channel on which the caller will receive all past and future chunks
 func (s *Stream) Subscribe(buffer int) *Subscription {
-	dataCh := make(chan Chunk, buffer)
-	errCh := make(chan error, 1) // buffer=1 so we can send final err
+	ch := make(chan Chunk, buffer)
 	s.mu.Lock()
-	dataCh <- s.cache
-	s.subs = append(s.subs, subscriber{dataCh, errCh})
+	ch <- s.cache
+	s.subs = append(s.subs, ch)
 	s.mu.Unlock()
-
-	return &Subscription{
-		Data: dataCh,
-		Err:  errCh,
-		cancel: func() {
-			s.unsubscribe(dataCh, errCh)
-		},
-	}
+	return &Subscription{ch, func() { s.unsubscribe(ch) }}
 }
 
 // unsubscribe removes ch from s.subs and closes it.
-func (s *Stream) unsubscribe(dataCh chan Chunk, errCh chan error) {
+func (s *Stream) unsubscribe(ch chan Chunk) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for i, sb := range s.subs {
-		if sb.dataCh == dataCh && sb.errCh == errCh {
-			// drop from list
+	// find & remove
+	for i, c := range s.subs {
+		if c == ch {
 			s.subs = slices.Delete(s.subs, i, i+1)
-			close(errCh)
-			close(dataCh)
+			close(ch)
 			return
 		}
 	}
@@ -163,9 +151,9 @@ func (s *Stream) emit(chunk Chunk) {
 	s.mu.Unlock()
 
 	// fan-out to subscribers (best-effort)
-	for _, sub := range subs {
+	for _, ch := range subs {
 		select {
-		case sub.dataCh <- chunk:
+		case ch <- chunk:
 		default:
 			// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
 			fmt.Println("subscriber is slow, blocking on chunk")
@@ -187,13 +175,10 @@ func (s *Stream) finish() {
 	s.closeOnce.Do(func() {
 		s.mu.Lock()
 		defer s.mu.Unlock()
-
+		s.done = true
 		close(s.pub)
-		// first send the terminal error (or nil) to each subscriber
-		for _, sb := range s.subs {
-			sb.errCh <- s.err
-			close(sb.errCh)
-			close(sb.dataCh)
+		for _, ch := range s.subs {
+			close(ch)
 		}
 		s.subs = nil
 		s.closeFunc(s.cache, s.err)
