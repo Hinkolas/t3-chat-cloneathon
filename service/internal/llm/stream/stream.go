@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"sync"
@@ -20,20 +21,21 @@ func (c *Chunk) append(c2 Chunk) {
 
 // Stream represents one ongoing streaming process.
 type Stream struct {
-	// protected by mu
 	mu        sync.RWMutex
 	wg        sync.WaitGroup
 	closeOnce sync.Once
 
-	cache Chunk // accumulation of all chunks received so far
+	cache Chunk
+	done  bool
+	err   error
 
-	done bool  // true once the stream finishes
-	err  error // any terminal error
+	pub       chan Chunk
+	subs      []chan Chunk
+	closeFunc CloseFunc
 
-	pub  chan Chunk   // where callers Publish
-	subs []chan Chunk // subscriber channels
-
-	closeFunc CloseFunc // callback for cleanup after finish
+	// new fields for cancellation
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 type Subscription struct {
@@ -49,14 +51,21 @@ func (s *Subscription) Read() <-chan Chunk {
 	return s.ch
 }
 
-// New returns a Stream that’s ready to Start() / Publish().
+// New creates a Stream with a background context.
 func New() *Stream {
+	return NewWithContext(context.Background())
+}
+
+// NewWithContext creates a Stream using parent as its base context.
+func NewWithContext(parent context.Context) *Stream {
+	ctx, cancel := context.WithCancel(parent)
 	s := &Stream{
 		cache:     Chunk{},
 		pub:       make(chan Chunk),
 		closeFunc: func(Chunk, error) {},
+		ctx:       ctx,
+		cancel:    cancel,
 	}
-	// start a goroutine that fans-out anything sent on inCh
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -68,15 +77,25 @@ func New() *Stream {
 	return s
 }
 
-func (s *Stream) OnClose(closeFunc func(Chunk, error)) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.closeFunc = closeFunc
+// Context returns the Stream's context.
+func (s *Stream) Context() context.Context {
+	return s.ctx
 }
 
-// Publish sends one chunk into the stream. Blocks if no buffer on inCh.
+func (s *Stream) OnClose(fn CloseFunc) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.closeFunc = fn
+}
+
+// Publish sends a chunk unless the stream has been canceled.
 func (s *Stream) Publish(c Chunk) {
-	s.pub <- c
+	select {
+	case <-s.ctx.Done():
+		// stream was canceled, drop this chunk
+		return
+	case s.pub <- c:
+	}
 }
 
 // Subscribe returns a channel on which the caller will receive all past and future chunks
@@ -111,11 +130,13 @@ func (s *Stream) Wait() error {
 
 func (s *Stream) Fail(err error) {
 	s.setError(err)
+	s.cancel() // unblock any upstream readers
 	s.finish()
 }
 
 // Closes the stream and all subscriber channels. Should be called ofter stream is done.
 func (s *Stream) Close() {
+	s.cancel()
 	s.finish()
 }
 
