@@ -33,13 +33,13 @@ func (p *StreamPool) Remove(id string) {
 	delete(p.streams, id)
 }
 
-func (p *StreamPool) Subscribe(id string) (ch <-chan Chunk, ok bool) {
+func (p *StreamPool) Subscribe(id string) (sub Subscription, ok bool) {
 	var s *Stream
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	s, ok = p.streams[id]
 	if ok {
-		ch = s.Subscribe(10) // TODO: find a buffer size that works well
+		return s.Subscribe(10), true // TODO: find a buffer size that works well
 	}
 	return
 }

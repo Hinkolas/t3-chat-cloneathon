@@ -1,4 +1,5 @@
 models:
+  # Anthropic models
   claude-4-sonnet:
     title: "Claude 4 Sonnet"
     description: "The latest model from Anthropic. Claude 4 Sonnet is a significant upgrade to Claude 3.7 Sonnet, delivering superior coding and reasoning while responding more precisely to your instructions."
@@ -8,12 +9,39 @@ models:
     features:
       has_vision: true
       has_pdf: true
+      has_reasoning: true
+      has_effort_control: true
     flags:
       is_premium: true
       is_recommended: true
 
-  qwen3:
-    title: "Qwen3"
+  claude-4-opus:
+    title: "Claude 4 Opus"
+    description: "The ultimate high-capability model in the Claude 4 series, excelling in advanced reasoning, coding, and knowledge-intensive tasks with optimal precision."
+    icon: "anthropic"
+    name: "claude-opus-4-20250514"
+    provider: "anthropic"
+    features:
+      has_vision: true
+      has_pdf: true
+      has_reasoning: true
+      has_effort_control: true
+    flags:
+      is_premium: true
+
+  claude-3-5-haiku:
+    title: "Claude 3.5 Haiku"
+    description: "A lightweight, cost-effective variant of Claude 3.5 designed for fast, efficient text generation with a smaller memory footprint."
+    icon: "anthropic"
+    name: "claude-3-5-haiku-20241022"
+    provider: "anthropic"
+    features:
+      has_vision: true
+      has_pdf: true
+
+  # Ollama models
+  qwen3-30b:
+    title: "Qwen3 30b3a"
     description: "An open source mixture-of-experts (MoE) language model developed by Alibaba Cloud, activating only 3 billion parameters out of a total of 30B. It comes in various sizes and is licenced under the Apache 2.0 license."
     icon: "qwen"
     name: "qwen3:30b"
@@ -24,18 +52,33 @@ models:
       is_open_source: true
       is_free: true
 
-  gpt-4.1:
-    title: "GPT-4.1"
-    description: GPT-4.1 is a flagship large language model optimized for advanced instruction following, real-world software engineering, and long-context reasoning. It outperforms GPT-4o and GPT-4.5 across coding (54.6% SWE-bench Verified), instruction compliance (87.4% IFEval), and multimodal understanding benchmarks.
-    icon: "openai"
-    name: "gpt-4.1"
-    provider: "openai"
+  devstral-24b:
+    title: "Devstral 24B"
+    description: "An open-source 24B-parameter foundation model by Ollama, optimized for developer workflows and code generation."
+    icon: "mistral"
+    name: "devstral:24b"
+    provider: "ollama"
+    flags:
+      is_open_source: true
+      is_free: true
+
+  gemma3-27b:
+    title: "Gemma 3 27B"
+    description: "The latest 27B-parameter model from Ollama, offering robust reasoning and multilingual capabilities under an Apache 2.0 license."
+    icon: "gemini"
+    name: "gemma3:27b"
+    provider: "ollama"
     features:
       has_vision: true
+    flags:
+      is_open_source: true
+      is_free: true
+
+  # Google Gemini models
 
   gemini-2.5-flash:
     title: "Gemini 2.5 Flash"
-    description: "Google's latest fast model, known for speed and accuracy (and also web search!). Not quite as smart as Claude 3.5 Sonnet, but WAY faster and cheaper. Also has an insanely large context window (it can handle a lot of data)."
+    description: "A preview of Google's next-gen Flash model with faster inference, greater accuracy, expanded context support, and integrated web search."
     icon: "gemini"
     name: "gemini-2.5-flash-preview-05-20"
     provider: "gemini"
@@ -44,6 +87,34 @@ models:
       has_pdf: true
       has_search: true
       has_reasoning: true
-      has_effort_control: true
     flags:
-      is_fast: true
+      is_free: true
+      is_experimental: true
+      is_recommended: true
+
+  gemini-2.5-pro:
+    title: "Gemini 2.5 Pro"
+    description: "A preview professional-tier model offering the largest context window, advanced reasoning, and premium performance for enterprise use."
+    icon: "gemini"
+    name: "gemini-2.5-pro-preview-06-05"
+    provider: "gemini"
+    features:
+      has_pdf: true
+      has_vision: true
+      has_search: true
+      has_reasoning: true
+    flags:
+      is_experimental: true
+
+  gemini-2.0-flash-lite:
+    title: "Gemini 2.0 Flash Lite"
+    description: "A cost-effective, lightweight variant of Gemini 2.0 Flash offering fast responses with a reduced feature set."
+    icon: "gemini"
+    name: "gemini-2.0-flash-lite"
+    provider: "gemini"
+    features:
+      has_vision: true
+      has_pdf: true
+      has_fast: true
+    flags:
+      is_free: true
