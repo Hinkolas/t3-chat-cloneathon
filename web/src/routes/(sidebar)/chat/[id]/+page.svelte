@@ -10,7 +10,15 @@
 
 	let { data }: Props = $props();
 
-	import { ArrowUp, ChevronDown, Globe, Paperclip } from '@lucide/svelte';
+	import {
+		ArrowUp,
+		Brain,
+		ChevronDown,
+		ChevronRight,
+		DotSquare,
+		Globe,
+		Paperclip
+	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
@@ -18,6 +26,7 @@
 	import MarkdownIt from 'markdown-it';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
 	import 'highlight.js/styles/github-dark.css';
+	import { fade, scale } from 'svelte/transition';
 
 	const iconSize = 16;
 
@@ -220,7 +229,7 @@
 				body: JSON.stringify({
 					model: selectedModelKey,
 					content: tempMessage,
-					reasoning: 0
+					reasoning_effort: reasoningOn ? 256 : 0
 				})
 			});
 
@@ -243,31 +252,33 @@
 			messages.push(assistantChat);
 			const assistantChatIndex = messages.length - 1;
 			let accumulatedContent = '';
+			let accumulatedReasoning = '';
 
 			const res = await response.json();
 			const streamId = res.stream_id;
-
-			console.log(streamId);
-
-			// Connect to stream
 
 			const eventSource = new EventSource(`${url}/v1/streams/${streamId}/`);
 
 			eventSource.onopen = () => {
 				console.log('opened');
-				// connectionStatus.set('connected');
 			};
 
 			eventSource.addEventListener('message_delta', (event) => {
 				const data = JSON.parse(event.data);
-				accumulatedContent += data.content;
+
+				if (data.content) {
+					accumulatedContent += data.content;
+				}
+				if (data.reasoning) {
+					accumulatedReasoning += data.reasoning;
+				}
 
 				messages[assistantChatIndex] = {
 					...messages[assistantChatIndex],
-					content: accumulatedContent
+					content: accumulatedContent,
+					reasoning: accumulatedReasoning
 				};
 				messages = [...messages];
-				// Console.log;
 			});
 
 			eventSource.addEventListener('message_end', (event) => {
@@ -282,6 +293,10 @@
 	onMount(() => {
 		autoResize();
 	});
+
+	let reasoningStates: Record<string, boolean> = $state({});
+
+	let reasoningOn: boolean = $state(false);
 </script>
 
 {#if messages}
@@ -297,6 +312,32 @@
 						tabindex="0"
 						onclick={handleCopyClick}
 					>
+						{#if message.reasoning}
+							<div class="reasoning-box">
+								<button
+									onclick={() => {
+										const messageKey = message.id || messages.indexOf(message).toString();
+										reasoningStates[messageKey] = !reasoningStates[messageKey];
+										reasoningStates = { ...reasoningStates };
+									}}
+									class="reasoning-button"
+									><div
+										class="chevron-icon"
+										class:rotated={!reasoningStates[
+											message.id || messages.indexOf(message).toString()
+										]}
+									>
+										<ChevronDown size="14" />
+									</div>
+									Reasoning</button
+								>
+								{#if reasoningStates[message.id || messages.indexOf(message).toString()]}
+									<div transition:fade={{ duration: 100 }} class="reasoning-text">
+										{@html renderMarkdown(message.reasoning)}
+									</div>
+								{/if}
+							</div>
+						{/if}
 						{@html renderMarkdown(message.content)}
 					</div>
 				{/each}
@@ -346,12 +387,33 @@
 						<ChevronDown size={iconSize} />
 					</button>
 				</div>
-				<button>
-					<Globe size={iconSize} />
-					<span>Search</span>
-				</button>
+				{#if data.models[selectedModelKey].features.has_reasoning}
+					<button
+						class="reasoning-button-feature"
+						class:active={reasoningOn}
+						onclick={() => {
+							reasoningOn = !reasoningOn;
+						}}
+					>
+						<Brain size={iconSize} />
+						Reasoning
+					</button>
+				{/if}
+				{#if data.models[selectedModelKey].features.has_web_search}
+					<button
+						class="reasoning-button-feature"
+						class:active={reasoningOn}
+						onclick={() => {
+							reasoningOn = !reasoningOn;
+						}}
+					>
+						<Globe size={iconSize} />
+						Search
+					</button>
+				{/if}
 				<button>
 					<Paperclip size={iconSize} />
+					Attach
 				</button>
 			</div>
 			<div class="button-group">
@@ -420,6 +482,48 @@
 		width: 100%;
 		max-width: 100%;
 		padding: 8px 0;
+	}
+
+	.reasoning-box {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.reasoning-button {
+		all: unset;
+		font-size: 14px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 6px 10px;
+		padding-right: 12px;
+		width: max-content;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: background-color 0.1s ease;
+	}
+
+	.reasoning-button:hover {
+		background-color: hsl(var(--primary) / 0.2);
+	}
+
+	.reasoning-text {
+		padding: 16px;
+		border-radius: 8px;
+		color: #C7C3CF;
+		background-color: #1A1720;
+	}
+
+	.chevron-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: transform 0.2s ease;
+	}
+
+	.chevron-icon.rotated {
+		transform: rotate(-90deg);
 	}
 
 	/* Markdown styling */
@@ -714,6 +818,10 @@
 
 	button:hover {
 		background-color: var(--button-hover);
+	}
+
+	.reasoning-button-feature.active {
+		background-color: hsl(var(--primary) / 0.5);
 	}
 
 	.selection-container {

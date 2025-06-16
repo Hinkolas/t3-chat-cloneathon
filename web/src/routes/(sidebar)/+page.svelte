@@ -18,7 +18,8 @@
 		Newspaper,
 		Code,
 		GraduationCap,
-		Icon
+		Icon,
+		Brain
 	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
@@ -174,7 +175,7 @@
 
 			console.log(res);
 
-			goto(`/chat/${res.chat_id}/`)
+			goto(`/chat/${res.chat_id}/`);
 		} catch (error) {
 			console.log('Error:', error);
 		}
@@ -183,6 +184,8 @@
 	onMount(() => {
 		autoResize();
 	});
+
+	let reasoningOn: boolean = $state(false);
 </script>
 
 <div class="chat">
@@ -256,12 +259,33 @@
 						<ChevronDown size={iconSize} />
 					</button>
 				</div>
-				<button>
-					<Globe size={iconSize} />
-					<span>Search</span>
-				</button>
+				{#if data.models[selectedModelKey].features.has_reasoning}
+					<button
+						class="reasoning-button-feature"
+						class:active={reasoningOn}
+						onclick={() => {
+							reasoningOn = !reasoningOn;
+						}}
+					>
+						<Brain size={iconSize} />
+						Reasoning
+					</button>
+				{/if}
+				{#if data.models[selectedModelKey].features.has_web_search}
+					<button
+						class="reasoning-button-feature"
+						class:active={reasoningOn}
+						onclick={() => {
+							reasoningOn = !reasoningOn;
+						}}
+					>
+						<Globe size={iconSize} />
+						Search
+					</button>
+				{/if}
 				<button>
 					<Paperclip size={iconSize} />
+					Attach
 				</button>
 			</div>
 			<div class="button-group">
@@ -478,6 +502,10 @@
 
 	button:hover {
 		background-color: var(--button-hover);
+	}
+
+	.reasoning-button-feature.active {
+		background-color: hsl(var(--primary) / 0.5);
 	}
 
 	.selection-container {
