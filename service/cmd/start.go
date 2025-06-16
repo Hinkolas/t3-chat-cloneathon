@@ -44,7 +44,7 @@ var startCmd = &cobra.Command{
 		defer app.Close()
 
 		// Register basic endpoint to get application status
-		app.Router.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
+		app.Router.HandleFunc("/v1/health/", func(w http.ResponseWriter, r *http.Request) {
 			app.Logger.Info("Application is live and well!")
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Why are you checking? Don't you trust me?"})
