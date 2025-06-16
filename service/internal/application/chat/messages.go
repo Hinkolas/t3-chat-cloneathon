@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
@@ -97,6 +98,16 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		http.Error(w, "failed to insert message into database", http.StatusInternalServerError)
 		return
+	}
+
+	// TODO: Replace with a more elegant solution
+	// Update attachments with the message ID
+	if len(body.Attachments) > 0 {
+		err = s.updateAttachmentsMessageID(body.Attachments, message.ID, userID)
+		if err != nil {
+			s.log.Warn("failed to update attachments with message ID", "error", err)
+			// Note: Consider whether this should be a fatal error or just logged
+		}
 	}
 
 	compl, err := s.mr.StreamCompletion(req)
@@ -247,6 +258,16 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: Replace with a more elegant solution
+	// Update attachments with the message ID
+	if len(body.Attachments) > 0 {
+		err = s.updateAttachmentsMessageID(body.Attachments, message.ID, userID)
+		if err != nil {
+			s.log.Warn("failed to update attachments with message ID", "error", err)
+			// Note: Consider whether this should be a fatal error or just logged
+		}
+	}
+
 	compl, err := s.mr.StreamCompletion(req)
 	if err != nil {
 		s.log.Warn("failed to start a stream", "error", err)
@@ -311,4 +332,42 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		s.log.Error("failed to encode response", "error", err)
 	}
 
+}
+
+// Helper method to update attachments
+func (s *Service) updateAttachmentsMessageID(attachmentIDs []string, messageID, userID string) error {
+	if len(attachmentIDs) == 0 {
+		return nil
+	}
+
+	// Create placeholders for the IN clause
+	placeholders := make([]string, len(attachmentIDs))
+	args := make([]interface{}, 0, len(attachmentIDs)+2)
+
+	for i := range attachmentIDs {
+		placeholders[i] = "?"
+		args = append(args, attachmentIDs[i])
+	}
+	args = append(args, messageID, userID)
+
+	query := fmt.Sprintf("UPDATE attachments SET message_id = ? WHERE id IN (%s) AND user_id = ? AND message_id IS NULL",
+		strings.Join(placeholders, ","))
+
+	result, err := s.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to update attachments: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if int(rowsAffected) != len(attachmentIDs) {
+		s.log.Warn("not all attachments were updated",
+			"expected", len(attachmentIDs),
+			"updated", rowsAffected)
+	}
+
+	return nil
 }
