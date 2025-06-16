@@ -19,7 +19,9 @@ type Message struct {
 }
 
 type Options struct {
-	ApiKey  string `json:"api_key,omitempty"`
-	BaseUrl string `json:"base_url,omitempty"`
-	System  string `json:"system,omitempty"` // System prompt for the chat.
+	AnthropicAPIKey string `db:"anthropic_api_key" json:"anthropic_api_key"`
+	OpenAIAPIKey    string `db:"openai_api_key" json:"openai_api_key"`
+	GeminiAPIKey    string `db:"gemini_api_key" json:"gemini_api_key"`
+	OllamaBaseURL   string `db:"ollama_base_url" json:"ollama_base_url"`
+	SystemPrompt    string `json:"system,omitempty"` // System prompt for the chat.
 }
