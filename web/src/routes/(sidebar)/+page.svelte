@@ -102,9 +102,76 @@
 
 	let uploadedFiles: UploadedFileWithId[] = $state([]);
 
+	function validateFileType(
+		file: File,
+		selectedModel: ModelData
+	): { isValid: boolean; errorMessage?: string } {
+		const fileType = file.type.toLowerCase();
+		const fileName = file.name.toLowerCase();
+
+		// Check if model has PDF support
+		const hasPdf = selectedModel.features.has_pdf;
+		// Check if model has vision support
+		const hasVision = selectedModel.features.has_vision;
+
+		// If model has neither PDF nor vision support, reject all files
+		if (!hasPdf && !hasVision) {
+			return {
+				isValid: false,
+				errorMessage: `The model "${selectedModel.title}" doesn't support file attachments.`
+			};
+		}
+
+		// Check PDF files
+		if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+			if (!hasPdf) {
+				return {
+					isValid: false,
+					errorMessage: `The model "${selectedModel.title}" doesn't support PDF files.`
+				};
+			}
+			return { isValid: true };
+		}
+
+		// Check image files
+		const imageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+		const imageExtensions = ['.jpg', '.jpeg', '.png'];
+
+		const isImageType = imageTypes.some((type) => fileType === type);
+		const isImageExtension = imageExtensions.some((ext) => fileName.endsWith(ext));
+
+		if (isImageType || isImageExtension) {
+			if (!hasVision) {
+				return {
+					isValid: false,
+					errorMessage: `The model "${selectedModel.title}" doesn't support image files.`
+				};
+			}
+			return { isValid: true };
+		}
+
+		// If file type is not supported by any feature
+		const supportedTypes = [];
+		if (hasPdf) supportedTypes.push('PDF');
+		if (hasVision) supportedTypes.push('images (JPG, PNG, JPEG)');
+
+		return {
+			isValid: false,
+			errorMessage: `File type not supported. The model "${selectedModel.title}" only accepts: ${supportedTypes.join(', ')}.`
+		};
+	}
+
 	// Update uploadFile to store id with file
 	async function uploadFile(file: File, chatId?: string): Promise<UploadedFileWithId | null> {
 		const url: string = 'http://localhost:3141';
+		const selectedModel = data.models[selectedModelKey];
+
+		// Validate file type before upload
+		const validation = validateFileType(file, selectedModel);
+		if (!validation.isValid) {
+			uploadError = validation.errorMessage || 'File type not supported';
+			return null;
+		}
 
 		uploadingFile = file;
 		uploadError = null;
@@ -142,21 +209,31 @@
 	}
 
 	// Upload multiple files sequentially
-	async function uploadMultipleFiles(files: FileList | File[], chatId?: string): Promise<void> {
+	async function uploadMultipleFiles(files: FileList | File[]): Promise<void> {
 		const fileArray = Array.from(files);
+		const selectedModel = data.models[selectedModelKey];
 
 		for (const file of fileArray) {
+			// Check if file is already uploaded (by name and size)
 			const isDuplicate = uploadedFiles.some(
 				(uploadedFile) =>
 					uploadedFile.file.name === file.name && uploadedFile.file.size === file.size
 			);
 
 			if (!isDuplicate) {
-				await uploadFile(file, chatId);
+				// Validate file type before upload
+				const validation = validateFileType(file, selectedModel);
+
+				if (!validation.isValid) {
+					// Set error for the first invalid file and stop
+					uploadError = validation.errorMessage || 'File type not supported';
+					break;
+				}
+
+				await uploadFile(file);
 			}
 		}
 	}
-
 	// Updated file select handler - handles multiple files
 	async function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -335,10 +412,27 @@
 
 			goto(`/chat/${res.chat_id}/`);
 			refreshChatHistory();
-			clearAllFiles(); // clear after sending
+			clearAllFiles();
 		} catch (error) {
 			console.log('Error:', error);
 		}
+	}
+
+	function getAcceptAttribute(): string {
+		const selectedModel = data.models[selectedModelKey];
+		if (!selectedModel) return '';
+
+		const acceptTypes = [];
+
+		if (selectedModel.features.has_pdf) {
+			acceptTypes.push('.pdf', 'application/pdf');
+		}
+
+		if (selectedModel.features.has_vision) {
+			acceptTypes.push('.jpg', '.jpeg', '.png', 'image/jpeg', 'image/png');
+		}
+
+		return acceptTypes.join(',');
 	}
 
 	onMount(() => {
@@ -366,7 +460,7 @@
 	multiple
 	style="display: none;"
 	onchange={handleFileSelect}
-	accept="image/*,.pdf,.doc,.docx,.txt"
+	accept={getAcceptAttribute()}
 />
 
 {#if isDragOver}

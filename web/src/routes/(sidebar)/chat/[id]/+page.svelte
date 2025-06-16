@@ -10,7 +10,7 @@
 
 	let { data }: Props = $props();
 
-	import { ArrowUp, Brain, ChevronDown, Globe, Paperclip, X } from '@lucide/svelte';
+	import { ArrowUp, Brain, ChevronDown, FileText, Globe, Paperclip, X } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
@@ -140,8 +140,13 @@
 		return md.render(content);
 	}
 
+	interface UploadedFileWithId {
+		file: File;
+		id: string;
+	}
+
 	let fileInput: HTMLInputElement;
-	let uploadedFiles: File[] = $state([]);
+	let uploadedFiles: UploadedFileWithId[] = $state([]);
 	let uploadingFile: File | null = $state(null);
 	let uploadError: string | null = $state(null);
 	let isDragOver = $state(false);
@@ -150,9 +155,77 @@
 		// TODO: implement cancel logic
 	}
 
+	function validateFileType(
+		file: File,
+		selectedModel: ModelData
+	): { isValid: boolean; errorMessage?: string } {
+		const fileType = file.type.toLowerCase();
+		const fileName = file.name.toLowerCase();
+
+		// Check if model has PDF support
+		const hasPdf = selectedModel.features.has_pdf;
+		// Check if model has vision support
+		const hasVision = selectedModel.features.has_vision;
+
+		// If model has neither PDF nor vision support, reject all files
+		if (!hasPdf && !hasVision) {
+			return {
+				isValid: false,
+				errorMessage: `The model "${selectedModel.title}" doesn't support file attachments.`
+			};
+		}
+
+		// Check PDF files
+		if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+			if (!hasPdf) {
+				return {
+					isValid: false,
+					errorMessage: `The model "${selectedModel.title}" doesn't support PDF files.`
+				};
+			}
+			return { isValid: true };
+		}
+
+		// Check image files
+		const imageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+		const imageExtensions = ['.jpg', '.jpeg', '.png'];
+
+		const isImageType = imageTypes.some((type) => fileType === type);
+		const isImageExtension = imageExtensions.some((ext) => fileName.endsWith(ext));
+
+		if (isImageType || isImageExtension) {
+			if (!hasVision) {
+				return {
+					isValid: false,
+					errorMessage: `The model "${selectedModel.title}" doesn't support image files.`
+				};
+			}
+			return { isValid: true };
+		}
+
+		// If file type is not supported by any feature
+		const supportedTypes = [];
+		if (hasPdf) supportedTypes.push('PDF');
+		if (hasVision) supportedTypes.push('images (JPG, PNG, JPEG)');
+
+		return {
+			isValid: false,
+			errorMessage: `File type not supported. The model "${selectedModel.title}" only accepts: ${supportedTypes.join(', ')}.`
+		};
+	}
+
 	// Complete uploadFile function
-	async function uploadFile(file: File): Promise<boolean> {
+	async function uploadFile(file: File): Promise<UploadedFileWithId | null> {
 		const url: string = 'http://localhost:3141';
+
+		// Validate file type against selected model
+		const selectedModel = data.models[selectedModelKey];
+		const validation = validateFileType(file, selectedModel);
+
+		if (!validation.isValid) {
+			uploadError = validation.errorMessage || 'File type not supported';
+			return null;
+		}
 
 		// Set uploading state
 		uploadingFile = file;
@@ -177,29 +250,41 @@
 			// Reset uploading state
 			uploadingFile = null;
 
-			// Add to uploaded files if successful (append, don't replace)
-			uploadedFiles = [...uploadedFiles, file];
+			// Create uploaded file with ID
+			const uploaded: UploadedFileWithId = { file, id: result.id };
+			uploadedFiles = [...uploadedFiles, uploaded];
 
-			return true;
+			return uploaded;
 		} catch (error) {
 			console.error('Error uploading file:', error);
 			uploadingFile = null;
 			uploadError = error instanceof Error ? error.message : 'Upload failed';
-			return false;
+			return null;
 		}
 	}
 
 	// Upload multiple files sequentially
 	async function uploadMultipleFiles(files: FileList | File[]): Promise<void> {
 		const fileArray = Array.from(files);
+		const selectedModel = data.models[selectedModelKey];
 
 		for (const file of fileArray) {
 			// Check if file is already uploaded (by name and size)
 			const isDuplicate = uploadedFiles.some(
-				(uploadedFile) => uploadedFile.name === file.name && uploadedFile.size === file.size
+				(uploadedFile) =>
+					uploadedFile.file.name === file.name && uploadedFile.file.size === file.size
 			);
 
 			if (!isDuplicate) {
+				// Validate file type before upload
+				const validation = validateFileType(file, selectedModel);
+
+				if (!validation.isValid) {
+					// Set error for the first invalid file and stop
+					uploadError = validation.errorMessage || 'File type not supported';
+					break;
+				}
+
 				await uploadFile(file);
 			}
 		}
@@ -261,23 +346,14 @@
 
 	// Updated remove file function with server DELETE
 	async function removeFile(index: number) {
-		const file = uploadedFiles[index];
-		if (!file) return;
+		const uploadedFile = uploadedFiles[index];
+		if (!uploadedFile) return;
+
 		try {
-			// Fetch the list of attachments to find the id (adapt as needed)
 			const url = 'http://localhost:3141';
-			const res = await fetch(`${url}/v1/attachments/`);
-			if (!res.ok) throw new Error('Failed to fetch attachments');
-			const attachments = await res.json();
 
-			const attachment = attachments.find(
-				(att: any) => att.filename === file.name && att.size === file.size
-			);
-
-			if (!attachment) throw new Error('Attachment not found on server');
-
-			// Delete the attachment
-			const delRes = await fetch(`${url}/v1/attachments/${attachment.id}/`, {
+			// Delete the attachment using the stored ID
+			const delRes = await fetch(`${url}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
@@ -289,6 +365,11 @@
 			console.error('Error removing file:', error);
 			uploadError = error instanceof Error ? error.message : 'Failed to remove file';
 		}
+	}
+
+	function clearAllFiles() {
+		uploadedFiles = [];
+		uploadError = null;
 	}
 
 	// Helper function to format file size
@@ -423,7 +504,14 @@
 			content: tempMessage,
 			reasoning: '',
 			created_at: 0,
-			updated_at: 0
+			updated_at: 0,
+			attachments: uploadedFiles.map((f) => ({
+				id: f.id,
+				name: f.file.name,
+				src: `${url}/v1/attachments/${f.id}/`,
+				type: f.file.type,
+				created_at: Date.now()
+			}))
 		};
 		messages.push(userChat);
 
@@ -436,7 +524,8 @@
 				body: JSON.stringify({
 					model: selectedModelKey,
 					content: tempMessage,
-					reasoning_effort: reasoningEnabled ? 1024 : 0
+					reasoning_effort: reasoningEnabled ? 1024 : 0,
+					attachments: uploadedFiles.map((f) => f.id)
 				})
 			});
 
@@ -462,6 +551,7 @@
 			};
 
 			messages.push(assistantChat);
+			clearAllFiles(); // clear up
 		} catch (error) {
 			console.log('Error:', error);
 		}
@@ -541,6 +631,23 @@
 		};
 	}
 
+	function getAcceptAttribute(): string {
+		const selectedModel = data.models[selectedModelKey];
+		if (!selectedModel) return '';
+
+		const acceptTypes = [];
+
+		if (selectedModel.features.has_pdf) {
+			acceptTypes.push('.pdf', 'application/pdf');
+		}
+
+		if (selectedModel.features.has_vision) {
+			acceptTypes.push('.jpg', '.jpeg', '.png', 'image/jpeg', 'image/png');
+		}
+
+		return acceptTypes.join(',');
+	}
+
 	onMount(() => {
 		autoResize();
 
@@ -567,7 +674,7 @@
 		multiple
 		style="display: none;"
 		onchange={handleFileSelect}
-		accept="image/*,.pdf,.doc,.docx,.txt"
+		accept={getAcceptAttribute()}
 	/>
 
 	{#if isDragOver}
@@ -584,46 +691,63 @@
 		<div class="chat">
 			{#if !(messages.length == 0)}
 				{#each messages as message}
-					<div
-						class="single-chat {message.role == 'user' ? 'user' : 'assistant'}"
-						aria-label="Copy Codeblock"
-						role="button"
-						tabindex="0"
-						onclick={handleCopyClick}
-						onkeydown={() => {}}
-					>
-						{#if message.reasoning}
-							<div class="reasoning-box">
-								<button
-									onclick={() => {
-										const messageKey = message.id || messages.indexOf(message).toString();
-										reasoningStates[messageKey] = !reasoningStates[messageKey];
-										reasoningStates = { ...reasoningStates };
-									}}
-									class="reasoning-button"
-									><div
-										class="chevron-icon"
-										class:rotated={!reasoningStates[
-											message.id || messages.indexOf(message).toString()
-										]}
+					<div class="single-chat-container">
+						<div
+							class="single-chat {message.role == 'user' ? 'user' : 'assistant'}"
+							aria-label="Copy Codeblock"
+							role="button"
+							tabindex="0"
+							onclick={handleCopyClick}
+							onkeydown={() => {}}
+						>
+							{#if message.reasoning}
+								<div class="reasoning-box">
+									<button
+										onclick={() => {
+											const messageKey = message.id || messages.indexOf(message).toString();
+											reasoningStates[messageKey] = !reasoningStates[messageKey];
+											reasoningStates = { ...reasoningStates };
+										}}
+										class="reasoning-button"
+										><div
+											class="chevron-icon"
+											class:rotated={!reasoningStates[
+												message.id || messages.indexOf(message).toString()
+											]}
+										>
+											<ChevronDown size="14" />
+										</div>
+										Reasoning</button
 									>
-										<ChevronDown size="14" />
-									</div>
-									Reasoning</button
-								>
-								{#if reasoningStates[message.id || messages.indexOf(message).toString()]}
-									<div transition:fade={{ duration: 100 }} class="reasoning-text">
-										{@html renderMarkdown(message.reasoning)}
-									</div>
-								{/if}
+									{#if reasoningStates[message.id || messages.indexOf(message).toString()]}
+										<div transition:fade={{ duration: 100 }} class="reasoning-text">
+											{@html renderMarkdown(message.reasoning)}
+										</div>
+									{/if}
+								</div>
+							{/if}
+							{#if message.status === 'done'}
+								{@html renderMarkdown(message.content)}
+							{:else if message.status === 'streaming'}
+								{@html renderMarkdown(message.content)}
+								<!-- Optional: Add a typing indicator -->
+								<div class="typing-indicator">●●●</div>
+							{/if}
+						</div>
+						{#if message.attachments && message.attachments.length > 0}
+							<div class="attachments">
+								{#each message.attachments as attachment}
+									<a
+										href={attachment.src}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="attachment-link"
+									>
+										<FileText size="24" />
+										<div class="extension">{attachment.type.split('/').pop()}</div>
+									</a>
+								{/each}
 							</div>
-						{/if}
-						{#if message.status === 'done'}
-							{@html renderMarkdown(message.content)}
-						{:else if message.status === 'streaming'}
-							{@html renderMarkdown(message.content)}
-							<!-- Optional: Add a typing indicator -->
-							<div class="typing-indicator">●●●</div>
 						{/if}
 					</div>
 				{/each}
@@ -656,11 +780,11 @@
 		{#if uploadedFiles.length > 0 && !uploadingFile}
 			<div class="upload-container">
 				<div class="uploaded-files">
-					{#each uploadedFiles as file, index}
+					{#each uploadedFiles as uploaded, index}
 						<div class="file-item uploaded">
-							<span class="file-icon">{getFileIcon(file)}</span>
+							<span class="file-icon">{getFileIcon(uploaded.file)}</span>
 							<div class="file-info">
-								<span class="file-name">{file.name}</span>
+								<span class="file-name">{uploaded.file.name}</span>
 							</div>
 							<button
 								class="remove-file"
@@ -821,6 +945,12 @@
 		width: 100%;
 	}
 
+	.single-chat-container {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
 	.single-chat {
 		display: block;
 		width: 100%;
@@ -844,6 +974,53 @@
 		width: 100%;
 		max-width: 100%;
 		padding: 8px 0;
+	}
+
+	.attachments {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: row;
+		width: max-content;
+		flex-wrap: wrap;
+		gap: 16px;
+		max-width: 100%;
+		color: hsl(var(--secondary-foreground));
+		line-height: 1.7;
+		margin-top: 8px;
+		margin-left: auto;
+		padding: 4px 6px;
+		background-color: #2b2430;
+		border-radius: 10px;
+		box-shadow: 0 0 2px #88888866;
+	}
+
+	.attachment-link {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		color: hsl(var(--secondary-foreground));
+		text-decoration: none;
+		font-size: 14px;
+		padding-top: 2px;
+		transition: color 0.1s ease;
+	}
+
+	.extension {
+		font-size: 12px;
+		padding: 2px 4px;
+		border-radius: 8px;
+		color: hsl(var(--secondary-foreground));
+		transition: color 0.1s ease;
+	}
+
+	.attachment-link:hover {
+		color: hsl(var(--primary) / 0.4);
+	}
+
+	.attachment-link:hover .extension {
+		color: hsl(var(--primary) / 0.4);
 	}
 
 	.reasoning-box {
