@@ -24,7 +24,7 @@
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
-	import { scale } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { refreshChatHistory } from '$lib/store';
 
@@ -76,7 +76,7 @@
 	const iconSize = 16;
 
 	let textarea: HTMLElement;
-	let message = $state('');
+	let message = $derived('');
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models);
@@ -84,6 +84,7 @@
 	let activeTab: string = $state('create');
 	let currentSuggestions: string[] = $derived(buttonData[activeTab]?.suggestions || []);
 	let selectedModelKey: string = $state(Object.keys(data.models)[0]);
+	let showPlaceholder: boolean = $state(true);
 
 	function toggleModelSelection() {
 		if (modelSelectionOpen) {
@@ -152,6 +153,8 @@
 
 	async function sendMessage(message: string) {
 		const tempMessage = message;
+		showPlaceholder = false; 
+		message = ''; 
 		const url = 'http://localhost:3141';
 
 		try {
@@ -173,9 +176,6 @@
 			}
 
 			const res = await response.json();
-
-			console.log(res);
-
 			goto(`/chat/${res.chat_id}/`);
 			refreshChatHistory();
 		} catch (error) {
@@ -191,8 +191,8 @@
 </script>
 
 <div class="chat">
-	{#if message.length == 0}
-		<div class="placeholder">
+	{#if showPlaceholder && message.length === 0}
+		<div class="placeholder" transition:fade={{duration: 100}}>
 			<div class="title">How can I help you?</div>
 			<div class="buttons">
 				{#each Object.entries(buttonData) as [key, button]}
@@ -234,7 +234,6 @@
 					e.preventDefault();
 					if (message.length == 0) return;
 					sendMessage(message);
-					message = ''; // TODO: handle in sendMessage with state
 				}
 			}}
 		></textarea>
@@ -295,7 +294,6 @@
 					class={message.length == 0 ? '' : 'active'}
 					onclick={() => {
 						sendMessage(message);
-						message = '';
 					}}
 					disabled={message.length == 0}
 					id="SendButton"

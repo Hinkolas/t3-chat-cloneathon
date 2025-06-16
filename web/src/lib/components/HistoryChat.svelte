@@ -3,7 +3,7 @@
 	import { X, PinOff, Pin, TextCursor } from '@lucide/svelte';
 	import { scale } from 'svelte/transition';
 
-	let { chat, patchChat, openPopup, renameChat, activeContextMenuId, onContextMenuOpen } = $props();
+	let { chat, isCurrent, patchChat, openPopup, renameChat, activeContextMenuId, onContextMenuOpen } = $props();
 
 	// Context menu state
 	let showContextMenu = $derived(activeContextMenuId === chat.id);
@@ -66,6 +66,7 @@
 		}
 	}}
 	oncontextmenu={handleContextMenu}
+	class:active={isCurrent}
 >
 	<span>{chat.title}</span>
 	<div class="buttons">
@@ -145,6 +146,10 @@
 	}
 
 	.chat:hover {
+		background-color: var(--sidebar-chat-hover);
+	}
+
+	.chat.active {
 		background-color: var(--sidebar-chat-hover);
 	}
 

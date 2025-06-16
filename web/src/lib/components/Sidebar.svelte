@@ -2,16 +2,13 @@
 	let { chats = $bindable() } = $props();
 
 	import { fade } from 'svelte/transition';
+	import { Pin, LogOut } from '@lucide/svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import HistoryChat from '$lib/components/HistoryChat.svelte';
-	import { Pin, LogOut } from '@lucide/svelte';
-	import { showConfirmationPopup, showRenamePopup, popup, closeSidebar } from '$lib/store';
-	
+	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
 	import type { ChatHistoryResponse, ChatHistoryData } from '$lib/types';
-	import { toggleSidebar, sidebarState} from '$lib/store';
+	import { toggleSidebar, sidebarState } from '$lib/store';
 	import { get } from 'svelte/store';
-
-	// Import extracted services and utilities
 	import { ChatApiService } from '$lib/utils/chatApi';
 	import {
 		groupChatsByTime,
@@ -19,6 +16,8 @@
 		type GroupedChats
 	} from '$lib/utils/chatUtils';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	let sidebarCollapsed: boolean = $derived($sidebarState.collapsed);
 	let chatSearchTerm: string = $state('');
@@ -38,7 +37,6 @@
 			.sort((a: ChatHistoryData, b: ChatHistoryData) => b.last_message_at - a.last_message_at)
 	);
 
-	// UI-specific functions that remain in component
 	function openPopup(id: string, chatTitle: string = 'this chat') {
 		showConfirmationPopup({
 			title: 'Delete Thread',
@@ -88,6 +86,9 @@
 			const index = chats.findIndex((chat: ChatHistoryData) => chat.id === id);
 			if (index > -1) {
 				chats.splice(index, 1);
+				if (url === id) {
+					goto(`/`);
+				}
 			}
 		} catch (error) {
 			console.error('Error deleting chat:', error);
@@ -165,6 +166,8 @@
 			toggleSidebar();
 		}
 	});
+
+	let url = $derived(page.url.pathname.split('/').pop());
 </script>
 
 <svelte:window bind:innerWidth />
@@ -206,6 +209,7 @@
 						{#each section.chats as chat}
 							<HistoryChat
 								{chat}
+								isCurrent={url === chat.id}
 								{patchChat}
 								{openPopup}
 								{renameChat}

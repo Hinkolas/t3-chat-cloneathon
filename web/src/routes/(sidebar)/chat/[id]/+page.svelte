@@ -277,18 +277,16 @@
 		const eventSource = new EventSource(`${url}/v1/streams/${stream_id}/`);
 
 		eventSource.onopen = () => {
-			console.log('Stream opened for message', messageIndex);
+			// console.log('Stream opened for message', messageIndex);
 		};
 
 		eventSource.addEventListener('message_delta', (event) => {
 			const data = JSON.parse(event.data);
 
 			if (data.content) {
-				console.log('Received content:', data.content);
 				accumulatedContent += data.content;
 			}
 			if (data.reasoning) {
-				console.log('Received reasoning:', data.content);
 				accumulatedReasoning += data.reasoning;
 			}
 
@@ -303,7 +301,6 @@
 		});
 
 		eventSource.addEventListener('message_end', (event) => {
-			console.log('Stream ended for message', messageIndex);
 
 			// Create a new messages array and update status
 			const newMessages = [...messages];
