@@ -77,7 +77,7 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 					})
 				case anthropic.ThinkingDelta:
 					s.Publish(stream.Chunk{
-						Thinking: deltaVariant.Thinking,
+						Reasoning: deltaVariant.Thinking,
 					})
 				}
 			}

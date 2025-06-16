@@ -59,8 +59,8 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 			s.Close()
 		} else {
 			s.Publish(stream.Chunk{
-				Thinking: resp.Message.Thinking,
-				Content:  resp.Message.Content,
+				Reasoning: resp.Message.Thinking,
+				Content:   resp.Message.Content,
 			})
 		}
 

@@ -9,8 +9,8 @@ import (
 type CloseFunc func([]Chunk) error
 
 type Chunk struct {
-	Thinking string `json:"thinking,omitempty"`
-	Content  string `json:"content,omitempty"`
+	Reasoning string `json:"reasoning,omitempty"`
+	Content   string `json:"content,omitempty"`
 }
 
 // Stream represents one ongoing streaming process.
