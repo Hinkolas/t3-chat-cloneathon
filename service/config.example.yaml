@@ -86,6 +86,7 @@ models:
       has_vision: true
       has_pdf: true
       has_search: true
+      has_reasoning: true
     flags:
       is_free: true
       is_experimental: true
@@ -101,6 +102,7 @@ models:
       has_pdf: true
       has_vision: true
       has_search: true
+      has_reasoning: true
     flags:
       is_experimental: true
 
