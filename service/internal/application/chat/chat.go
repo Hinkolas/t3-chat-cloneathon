@@ -68,11 +68,9 @@ type Chat struct {
 	ID     string `json:"id"`
 	UserID string `json:"user_id"`
 
-	Title       string `json:"title"`
-	Model       string `json:"model"`
-	IsPinned    bool   `json:"is_pinned"`
-	IsStreaming bool   `json:"is_streaming"`
-
+	Title         string `json:"title"`
+	Model         string `json:"model"`
+	IsPinned      bool   `json:"is_pinned"`
 	Status        string `json:"status"` // e.g. "streaming", "done", "error"
 	CreatedAt     int64  `json:"created_at"`
 	UpdatedAt     int64  `json:"updated_at"`
@@ -107,7 +105,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 	query := `
         SELECT
-            c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.status, c.last_message_at, c.created_at, c.updated_at,
+            c.id, c.user_id, c.title, c.model, c.is_pinned, c.status, c.last_message_at, c.created_at, c.updated_at,
             m.id, m.role, m.model, m.content, m.reasoning, m.status, m.created_at, m.updated_at,
             a.id, a.name, a.type, a.src, a.created_at
         FROM chats c
@@ -131,7 +129,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 		var (
 			// Chat fields
 			cID, cUserID, cTitle, cModel, cStatus  string
-			cIsPinned, cIsStreaming                int
+			cIsPinned                              int
 			cLastMessageAt, cCreatedAt, cUpdatedAt int64
 			// Message fields (nullable)
 			mID, mRole, mModel, mContent, mReasoning, mStatus sql.NullString
@@ -141,7 +139,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 		)
 
 		err := rows.Scan(
-			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cStatus, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
+			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cStatus, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
 			&mID, &mRole, &mModel, &mContent, &mReasoning, &mStatus, &mCreatedAt, &mUpdatedAt,
 			&aID, &aName, &aType, &aSrc, &aCreatedAt,
 		)
@@ -158,7 +156,6 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 				Title:         cTitle,
 				Model:         cModel,
 				IsPinned:      cIsPinned == 1,
-				IsStreaming:   cIsStreaming == 1,
 				Status:        cStatus,
 				LastMessageAt: cLastMessageAt,
 				CreatedAt:     cCreatedAt,

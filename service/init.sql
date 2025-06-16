@@ -31,10 +31,10 @@ CREATE TABLE
         title TEXT NOT NULL,
         model TEXT NOT NULL,
         is_pinned INTEGER NOT NULL,
-        is_streaming INTEGER NOT NULL,
-        last_message_at INTEGER NOT NULL,
+        status TEXT NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
+        last_message_at INTEGER NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
 
@@ -47,6 +47,7 @@ CREATE TABLE
         model TEXT NOT NULL,
         content TEXT NOT NULL,
         reasoning TEXT NOT NULL,
+        status TEXT NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -75,1827 +76,1837 @@ CREATE INDEX IF NOT EXISTS idx_attachments_message_id ON attachments (message_id
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id_created_at ON messages (chat_id, created_at);
 
 -- Create triggers for automatic updates
-CREATE TRIGGER update_chat_last_message_at
+CREATE TRIGGER update_chat_on_message_create
 AFTER INSERT ON messages
 FOR EACH ROW
 BEGIN
     UPDATE chats 
-    SET last_message_at = NEW.created_at 
+    SET last_message_at = NEW.created_at, status = NEW.status
+    WHERE id = NEW.chat_id;
+END;
+
+CREATE TRIGGER update_chat_on_message_change
+AFTER UPDATE OF status ON messages
+FOR EACH ROW
+WHEN OLD.status != NEW.status
+BEGIN
+    UPDATE chats
+    SET status = NEW.status
     WHERE id = NEW.chat_id;
 END;
 
 
-INSERT INTO
-    chats (
-        id,
-        user_id,
-        title,
-        model,
-        is_pinned,
-        is_streaming,
-        last_message_at,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'test-chat-1',
-        'user-123',
-        'Morning Routine Ideas',
-        'claude-4-sonnet',
-        0,
-        0,
-        1748791079000,
-        1748791019000,
-        1748791079000
-    ),
-    (
-        'test-chat-2',
-        'user-123',
-        'Travel Planning Tips',
-        'qwen3',
-        0,
-        0,
-        1748841079000,
-        1748841019000,
-        1748841079000
-    ),
-    (
-        'test-chat-3',
-        'user-123',
-        'Gardening for Beginners',
-        'claude-4-sonnet',
-        0,
-        0,
-        1748891079000,
-        1748891019000,
-        1748891079000
-    ),
-    (
-        'test-chat-4',
-        'user-123',
-        'Fitness at Home',
-        'qwen3',
-        1,
-        0,
-        1748941079000,
-        1748941019000,
-        1748941079000
-    ),
-    (
-        'test-chat-5',
-        'user-123',
-        'Budgeting Basics',
-        'claude-4-sonnet',
-        0,
-        0,
-        1748991079000,
-        1748991019000,
-        1748991079000
-    ),
-    (
-        'test-chat-6',
-        'user-123',
-        'Understanding Climate Change',
-        'qwen3',
-        0,
-        0,
-        1749041079000,
-        1749041019000,
-        1749041079000
-    ),
-    (
-        'test-chat-7',
-        'user-123',
-        'DIY Home Repairs',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749091079000,
-        1749091019000,
-        1749091079000
-    ),
-    (
-        'test-chat-8',
-        'user-123',
-        'Healthy Sleep Habits',
-        'qwen3',
-        0,
-        0,
-        1749141079000,
-        1749141019000,
-        1749141079000
-    ),
-    (
-        'test-chat-9',
-        'user-123',
-        'Introduction to Investing',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749191079000,
-        1749191019000,
-        1749191079000
-    ),
-    (
-        'test-chat-10',
-        'user-123',
-        'Cooking Quick Meals',
-        'qwen3',
-        0,
-        0,
-        1749241019000,
-        1749241019000,
-        1749241019000
-    );
+-- INSERT INTO
+--     chats (
+--         id,
+--         user_id,
+--         title,
+--         model,
+--         is_pinned,
+--         is_streaming,
+--         last_message_at,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'test-chat-1',
+--         'user-123',
+--         'Morning Routine Ideas',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1748791079000,
+--         1748791019000,
+--         1748791079000
+--     ),
+--     (
+--         'test-chat-2',
+--         'user-123',
+--         'Travel Planning Tips',
+--         'qwen3',
+--         0,
+--         0,
+--         1748841079000,
+--         1748841019000,
+--         1748841079000
+--     ),
+--     (
+--         'test-chat-3',
+--         'user-123',
+--         'Gardening for Beginners',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1748891079000,
+--         1748891019000,
+--         1748891079000
+--     ),
+--     (
+--         'test-chat-4',
+--         'user-123',
+--         'Fitness at Home',
+--         'qwen3',
+--         1,
+--         0,
+--         1748941079000,
+--         1748941019000,
+--         1748941079000
+--     ),
+--     (
+--         'test-chat-5',
+--         'user-123',
+--         'Budgeting Basics',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1748991079000,
+--         1748991019000,
+--         1748991079000
+--     ),
+--     (
+--         'test-chat-6',
+--         'user-123',
+--         'Understanding Climate Change',
+--         'qwen3',
+--         0,
+--         0,
+--         1749041079000,
+--         1749041019000,
+--         1749041079000
+--     ),
+--     (
+--         'test-chat-7',
+--         'user-123',
+--         'DIY Home Repairs',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749091079000,
+--         1749091019000,
+--         1749091079000
+--     ),
+--     (
+--         'test-chat-8',
+--         'user-123',
+--         'Healthy Sleep Habits',
+--         'qwen3',
+--         0,
+--         0,
+--         1749141079000,
+--         1749141019000,
+--         1749141079000
+--     ),
+--     (
+--         'test-chat-9',
+--         'user-123',
+--         'Introduction to Investing',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749191079000,
+--         1749191019000,
+--         1749191079000
+--     ),
+--     (
+--         'test-chat-10',
+--         'user-123',
+--         'Cooking Quick Meals',
+--         'qwen3',
+--         0,
+--         0,
+--         1749241019000,
+--         1749241019000,
+--         1749241019000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-1-1',
-        'user-123',
-        'test-chat-1',
-        'user',
-        'claude-4-sonnet',
-        'What are some effective morning routine ideas?',
-        '',
-        1748791019000,
-        1748791019000
-    ),
-    (
-        'msg-1-2',
-        'user-123',
-        'test-chat-1',
-        'assistant',
-        'claude-4-sonnet',
-        'Waking up early, hydrating, light exercise, and meditation can set a positive tone for your day.',
-        '',
-        1748791039000,
-        1748791039000
-    ),
-    (
-        'msg-1-3',
-        'user-123',
-        'test-chat-1',
-        'user',
-        'claude-4-sonnet',
-        'How long should a morning routine be?',
-        '',
-        1748791059000,
-        1748791059000
-    ),
-    (
-        'msg-1-4',
-        'user-123',
-        'test-chat-1',
-        'assistant',
-        'claude-4-sonnet',
-        'It varies for everyone, but even 15-30 minutes dedicated to self-care can make a difference.',
-        '',
-        1748791079000,
-        1748791079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-1-1',
+--         'user-123',
+--         'test-chat-1',
+--         'user',
+--         'claude-4-sonnet',
+--         'What are some effective morning routine ideas?',
+--         '',
+--         1748791019000,
+--         1748791019000
+--     ),
+--     (
+--         'msg-1-2',
+--         'user-123',
+--         'test-chat-1',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Waking up early, hydrating, light exercise, and meditation can set a positive tone for your day.',
+--         '',
+--         1748791039000,
+--         1748791039000
+--     ),
+--     (
+--         'msg-1-3',
+--         'user-123',
+--         'test-chat-1',
+--         'user',
+--         'claude-4-sonnet',
+--         'How long should a morning routine be?',
+--         '',
+--         1748791059000,
+--         1748791059000
+--     ),
+--     (
+--         'msg-1-4',
+--         'user-123',
+--         'test-chat-1',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'It varies for everyone, but even 15-30 minutes dedicated to self-care can make a difference.',
+--         '',
+--         1748791079000,
+--         1748791079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-2-1',
-        'user-123',
-        'test-chat-2',
-        'user',
-        'qwen3',
-        'What are essential travel planning tips?',
-        '',
-        1748841019000,
-        1748841019000
-    ),
-    (
-        'msg-2-2',
-        'user-123',
-        'test-chat-2',
-        'assistant',
-        'qwen3',
-        'Start with a budget, research your destination, book accommodations and flights in advance, and pack light.',
-        'The user asked for essential travel planning tips. I will focus on key, actionable steps that are generally applicable to most travel scenarios. This includes financial preparation, destination knowledge, logistical arrangements (flights/accommodation), and practical packing advice to cover the main phases of planning a trip.',
-        1748841039000,
-        1748841039000
-    ),
-    (
-        'msg-2-3',
-        'user-123',
-        'test-chat-2',
-        'user',
-        'qwen3',
-        'How to find cheap flights?',
-        '',
-        1748841059000,
-        1748841059000
-    ),
-    (
-        'msg-2-4',
-        'user-123',
-        'test-chat-2',
-        'assistant',
-        'qwen3',
-        'Use flight comparison websites, be flexible with your travel dates, consider flying mid-week, and look into budget airlines.',
-        'The user asked for ways to find cheap flights. I will provide a range of common and effective strategies. These include using tools designed for price comparison, being open to less popular travel times (flexibility, mid-week), and considering cost-effective airline types (budget airlines).',
-        1748841079000,
-        1748841079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-2-1',
+--         'user-123',
+--         'test-chat-2',
+--         'user',
+--         'qwen3',
+--         'What are essential travel planning tips?',
+--         '',
+--         1748841019000,
+--         1748841019000
+--     ),
+--     (
+--         'msg-2-2',
+--         'user-123',
+--         'test-chat-2',
+--         'assistant',
+--         'qwen3',
+--         'Start with a budget, research your destination, book accommodations and flights in advance, and pack light.',
+--         'The user asked for essential travel planning tips. I will focus on key, actionable steps that are generally applicable to most travel scenarios. This includes financial preparation, destination knowledge, logistical arrangements (flights/accommodation), and practical packing advice to cover the main phases of planning a trip.',
+--         1748841039000,
+--         1748841039000
+--     ),
+--     (
+--         'msg-2-3',
+--         'user-123',
+--         'test-chat-2',
+--         'user',
+--         'qwen3',
+--         'How to find cheap flights?',
+--         '',
+--         1748841059000,
+--         1748841059000
+--     ),
+--     (
+--         'msg-2-4',
+--         'user-123',
+--         'test-chat-2',
+--         'assistant',
+--         'qwen3',
+--         'Use flight comparison websites, be flexible with your travel dates, consider flying mid-week, and look into budget airlines.',
+--         'The user asked for ways to find cheap flights. I will provide a range of common and effective strategies. These include using tools designed for price comparison, being open to less popular travel times (flexibility, mid-week), and considering cost-effective airline types (budget airlines).',
+--         1748841079000,
+--         1748841079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-3-1',
-        'user-123',
-        'test-chat-3',
-        'user',
-        'claude-4-sonnet',
-        'I want to start gardening. Where do I begin?',
-        '',
-        1748891019000,
-        1748891019000
-    ),
-    (
-        'msg-3-2',
-        'user-123',
-        'test-chat-3',
-        'assistant',
-        'claude-4-sonnet',
-        'Begin with easy-to-grow plants like herbs or leafy greens. Choose a spot with good sunlight and proper drainage.',
-        '',
-        1748891039000,
-        1748891039000
-    ),
-    (
-        'msg-3-3',
-        'user-123',
-        'test-chat-3',
-        'user',
-        'claude-4-sonnet',
-        'What tools do I need for gardening?',
-        '',
-        1748891059000,
-        1748891059000
-    ),
-    (
-        'msg-3-4',
-        'user-123',
-        'test-chat-3',
-        'assistant',
-        'claude-4-sonnet',
-        'Basic tools include gardening gloves, a hand trowel, a cultivator, and a watering can.',
-        '',
-        1748891079000,
-        1748891079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-3-1',
+--         'user-123',
+--         'test-chat-3',
+--         'user',
+--         'claude-4-sonnet',
+--         'I want to start gardening. Where do I begin?',
+--         '',
+--         1748891019000,
+--         1748891019000
+--     ),
+--     (
+--         'msg-3-2',
+--         'user-123',
+--         'test-chat-3',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Begin with easy-to-grow plants like herbs or leafy greens. Choose a spot with good sunlight and proper drainage.',
+--         '',
+--         1748891039000,
+--         1748891039000
+--     ),
+--     (
+--         'msg-3-3',
+--         'user-123',
+--         'test-chat-3',
+--         'user',
+--         'claude-4-sonnet',
+--         'What tools do I need for gardening?',
+--         '',
+--         1748891059000,
+--         1748891059000
+--     ),
+--     (
+--         'msg-3-4',
+--         'user-123',
+--         'test-chat-3',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Basic tools include gardening gloves, a hand trowel, a cultivator, and a watering can.',
+--         '',
+--         1748891079000,
+--         1748891079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-4-1',
-        'user-123',
-        'test-chat-4',
-        'user',
-        'qwen3',
-        'How can I stay fit at home without equipment?',
-        '',
-        1748941019000,
-        1748941019000
-    ),
-    (
-        'msg-4-2',
-        'user-123',
-        'test-chat-4',
-        'assistant',
-        'qwen3',
-        'Bodyweight exercises like push-ups, squats, planks, and lunges are highly effective. You can also try jumping jacks and burpees for cardio.',
-        'The user is asking for fitness methods without equipment. I will focus on bodyweight exercises as they are accessible and effective for both strength and cardiovascular fitness, requiring no external tools.',
-        1748941039000,
-        1748941039000
-    ),
-    (
-        'msg-4-3',
-        'user-123',
-        'test-chat-4',
-        'user',
-        'qwen3',
-        'Are online workout videos helpful?',
-        '',
-        1748941059000,
-        1748941059000
-    ),
-    (
-        'msg-4-4',
-        'user-123',
-        'test-chat-4',
-        'assistant',
-        'qwen3',
-        'Yes, many free online resources and apps offer guided home workouts suitable for all fitness levels. They can provide structure and motivation.',
-        'The user is asking about the utility of online workout videos. I will confirm their helpfulness and explain why, focusing on aspects like accessibility, guidance, structure, and motivational benefits, which are key advantages of such resources.',
-        1748941079000,
-        1748941079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-4-1',
+--         'user-123',
+--         'test-chat-4',
+--         'user',
+--         'qwen3',
+--         'How can I stay fit at home without equipment?',
+--         '',
+--         1748941019000,
+--         1748941019000
+--     ),
+--     (
+--         'msg-4-2',
+--         'user-123',
+--         'test-chat-4',
+--         'assistant',
+--         'qwen3',
+--         'Bodyweight exercises like push-ups, squats, planks, and lunges are highly effective. You can also try jumping jacks and burpees for cardio.',
+--         'The user is asking for fitness methods without equipment. I will focus on bodyweight exercises as they are accessible and effective for both strength and cardiovascular fitness, requiring no external tools.',
+--         1748941039000,
+--         1748941039000
+--     ),
+--     (
+--         'msg-4-3',
+--         'user-123',
+--         'test-chat-4',
+--         'user',
+--         'qwen3',
+--         'Are online workout videos helpful?',
+--         '',
+--         1748941059000,
+--         1748941059000
+--     ),
+--     (
+--         'msg-4-4',
+--         'user-123',
+--         'test-chat-4',
+--         'assistant',
+--         'qwen3',
+--         'Yes, many free online resources and apps offer guided home workouts suitable for all fitness levels. They can provide structure and motivation.',
+--         'The user is asking about the utility of online workout videos. I will confirm their helpfulness and explain why, focusing on aspects like accessibility, guidance, structure, and motivational benefits, which are key advantages of such resources.',
+--         1748941079000,
+--         1748941079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-5-1',
-        'user-123',
-        'test-chat-5',
-        'user',
-        'claude-4-sonnet',
-        'What are the basics of personal budgeting?',
-        '',
-        1748991019000,
-        1748991019000
-    ),
-    (
-        'msg-5-2',
-        'user-123',
-        'test-chat-5',
-        'assistant',
-        'claude-4-sonnet',
-        'Track your income and expenses, set financial goals, categorize your spending, and review your budget regularly to make adjustments.',
-        '',
-        1748991039000,
-        1748991039000
-    ),
-    (
-        'msg-5-3',
-        'user-123',
-        'test-chat-5',
-        'user',
-        'claude-4-sonnet',
-        'What is the 50/30/20 rule?',
-        '',
-        1748991059000,
-        1748991059000
-    ),
-    (
-        'msg-5-4',
-        'user-123',
-        'test-chat-5',
-        'assistant',
-        'claude-4-sonnet',
-        'It suggests allocating 50% of your income to needs, 30% to wants, and 20% to savings and debt repayment. It''s a simple guideline for budgeting.',
-        '',
-        1748991079000,
-        1748991079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-5-1',
+--         'user-123',
+--         'test-chat-5',
+--         'user',
+--         'claude-4-sonnet',
+--         'What are the basics of personal budgeting?',
+--         '',
+--         1748991019000,
+--         1748991019000
+--     ),
+--     (
+--         'msg-5-2',
+--         'user-123',
+--         'test-chat-5',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Track your income and expenses, set financial goals, categorize your spending, and review your budget regularly to make adjustments.',
+--         '',
+--         1748991039000,
+--         1748991039000
+--     ),
+--     (
+--         'msg-5-3',
+--         'user-123',
+--         'test-chat-5',
+--         'user',
+--         'claude-4-sonnet',
+--         'What is the 50/30/20 rule?',
+--         '',
+--         1748991059000,
+--         1748991059000
+--     ),
+--     (
+--         'msg-5-4',
+--         'user-123',
+--         'test-chat-5',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'It suggests allocating 50% of your income to needs, 30% to wants, and 20% to savings and debt repayment. It''s a simple guideline for budgeting.',
+--         '',
+--         1748991079000,
+--         1748991079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-6-1',
-        'user-123',
-        'test-chat-6',
-        'user',
-        'qwen3',
-        'Can you explain climate change in simple terms?',
-        '',
-        1749041019000,
-        1749041019000
-    ),
-    (
-        'msg-6-2',
-        'user-123',
-        'test-chat-6',
-        'assistant',
-        'qwen3',
-        'Climate change refers to long-term shifts in temperatures and weather patterns, primarily caused by human activities leading to increased greenhouse gases in the atmosphere.',
-        'The user is asking for a simple explanation of climate change. I will define it broadly by its core characteristics (long-term shifts in temperature/weather) and identify its main driver (human activities and resulting greenhouse gases) to provide a concise and understandable overview.',
-        1749041039000,
-        1749041039000
-    ),
-    (
-        'msg-6-3',
-        'user-123',
-        'test-chat-6',
-        'user',
-        'qwen3',
-        'What are the main impacts of climate change?',
-        '',
-        1749041059000,
-        1749041059000
-    ),
-    (
-        'msg-6-4',
-        'user-123',
-        'test-chat-6',
-        'assistant',
-        'qwen3',
-        'Impacts include rising sea levels, more extreme weather events (heatwaves, floods, droughts), disruptions to ecosystems, and threats to food security.',
-        'The user is asking for the main impacts of climate change. I will list several diverse and significant consequences, covering environmental effects (sea levels, extreme weather, ecosystems) and direct societal impacts (food security), to provide a comprehensive yet concise answer.',
-        1749041079000,
-        1749041079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-6-1',
+--         'user-123',
+--         'test-chat-6',
+--         'user',
+--         'qwen3',
+--         'Can you explain climate change in simple terms?',
+--         '',
+--         1749041019000,
+--         1749041019000
+--     ),
+--     (
+--         'msg-6-2',
+--         'user-123',
+--         'test-chat-6',
+--         'assistant',
+--         'qwen3',
+--         'Climate change refers to long-term shifts in temperatures and weather patterns, primarily caused by human activities leading to increased greenhouse gases in the atmosphere.',
+--         'The user is asking for a simple explanation of climate change. I will define it broadly by its core characteristics (long-term shifts in temperature/weather) and identify its main driver (human activities and resulting greenhouse gases) to provide a concise and understandable overview.',
+--         1749041039000,
+--         1749041039000
+--     ),
+--     (
+--         'msg-6-3',
+--         'user-123',
+--         'test-chat-6',
+--         'user',
+--         'qwen3',
+--         'What are the main impacts of climate change?',
+--         '',
+--         1749041059000,
+--         1749041059000
+--     ),
+--     (
+--         'msg-6-4',
+--         'user-123',
+--         'test-chat-6',
+--         'assistant',
+--         'qwen3',
+--         'Impacts include rising sea levels, more extreme weather events (heatwaves, floods, droughts), disruptions to ecosystems, and threats to food security.',
+--         'The user is asking for the main impacts of climate change. I will list several diverse and significant consequences, covering environmental effects (sea levels, extreme weather, ecosystems) and direct societal impacts (food security), to provide a comprehensive yet concise answer.',
+--         1749041079000,
+--         1749041079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-7-1',
-        'user-123',
-        'test-chat-7',
-        'user',
-        'claude-4-sonnet',
-        'What are some common DIY home repairs I can learn?',
-        '',
-        1749091019000,
-        1749091019000
-    ),
-    (
-        'msg-7-2',
-        'user-123',
-        'test-chat-7',
-        'assistant',
-        'claude-4-sonnet',
-        'Simple tasks like fixing a leaky faucet, patching small holes in walls, unclogging drains, and changing light fixtures are great starting points.',
-        '',
-        1749091039000,
-        1749091039000
-    ),
-    (
-        'msg-7-3',
-        'user-123',
-        'test-chat-7',
-        'user',
-        'claude-4-sonnet',
-        'Where can I find reliable DIY repair guides?',
-        '',
-        1749091059000,
-        1749091059000
-    ),
-    (
-        'msg-7-4',
-        'user-123',
-        'test-chat-7',
-        'assistant',
-        'claude-4-sonnet',
-        'YouTube tutorials, home improvement websites, and even your local library can provide step-by-step instructions and visual aids.',
-        '',
-        1749091079000,
-        1749091079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-7-1',
+--         'user-123',
+--         'test-chat-7',
+--         'user',
+--         'claude-4-sonnet',
+--         'What are some common DIY home repairs I can learn?',
+--         '',
+--         1749091019000,
+--         1749091019000
+--     ),
+--     (
+--         'msg-7-2',
+--         'user-123',
+--         'test-chat-7',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Simple tasks like fixing a leaky faucet, patching small holes in walls, unclogging drains, and changing light fixtures are great starting points.',
+--         '',
+--         1749091039000,
+--         1749091039000
+--     ),
+--     (
+--         'msg-7-3',
+--         'user-123',
+--         'test-chat-7',
+--         'user',
+--         'claude-4-sonnet',
+--         'Where can I find reliable DIY repair guides?',
+--         '',
+--         1749091059000,
+--         1749091059000
+--     ),
+--     (
+--         'msg-7-4',
+--         'user-123',
+--         'test-chat-7',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'YouTube tutorials, home improvement websites, and even your local library can provide step-by-step instructions and visual aids.',
+--         '',
+--         1749091079000,
+--         1749091079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-8-1',
-        'user-123',
-        'test-chat-8',
-        'user',
-        'qwen3',
-        'How can I develop healthier sleep habits?',
-        '',
-        1749141019000,
-        1749141019000
-    ),
-    (
-        'msg-8-2',
-        'user-123',
-        'test-chat-8',
-        'assistant',
-        'qwen3',
-        'Establish a consistent sleep schedule, create a relaxing bedtime routine, ensure your bedroom is dark and cool, and avoid caffeine and screens before bed.',
-        'The user is asking for ways to develop healthier sleep habits. I will suggest a comprehensive set of practices that address different aspects of sleep hygiene: consistency in timing, pre-sleep relaxation, optimizing the sleep environment, and avoiding stimulants/disruptors.',
-        1749141039000,
-        1749141039000
-    ),
-    (
-        'msg-8-3',
-        'user-123',
-        'test-chat-8',
-        'user',
-        'qwen3',
-        'Is napping good or bad?',
-        '',
-        1749141059000,
-        1749141059000
-    ),
-    (
-        'msg-8-4',
-        'user-123',
-        'test-chat-8',
-        'assistant',
-        'qwen3',
-        'Short power naps (20-30 minutes) can be beneficial for alertness, but longer or irregular naps can disrupt nighttime sleep.',
-        'The user is asking about the benefits/downsides of napping. I will provide a nuanced answer, differentiating between beneficial "power naps" (short duration) and potentially disruptive "longer or irregular naps," explaining the impact on alertness versus nighttime sleep.',
-        1749141079000,
-        1749141079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-8-1',
+--         'user-123',
+--         'test-chat-8',
+--         'user',
+--         'qwen3',
+--         'How can I develop healthier sleep habits?',
+--         '',
+--         1749141019000,
+--         1749141019000
+--     ),
+--     (
+--         'msg-8-2',
+--         'user-123',
+--         'test-chat-8',
+--         'assistant',
+--         'qwen3',
+--         'Establish a consistent sleep schedule, create a relaxing bedtime routine, ensure your bedroom is dark and cool, and avoid caffeine and screens before bed.',
+--         'The user is asking for ways to develop healthier sleep habits. I will suggest a comprehensive set of practices that address different aspects of sleep hygiene: consistency in timing, pre-sleep relaxation, optimizing the sleep environment, and avoiding stimulants/disruptors.',
+--         1749141039000,
+--         1749141039000
+--     ),
+--     (
+--         'msg-8-3',
+--         'user-123',
+--         'test-chat-8',
+--         'user',
+--         'qwen3',
+--         'Is napping good or bad?',
+--         '',
+--         1749141059000,
+--         1749141059000
+--     ),
+--     (
+--         'msg-8-4',
+--         'user-123',
+--         'test-chat-8',
+--         'assistant',
+--         'qwen3',
+--         'Short power naps (20-30 minutes) can be beneficial for alertness, but longer or irregular naps can disrupt nighttime sleep.',
+--         'The user is asking about the benefits/downsides of napping. I will provide a nuanced answer, differentiating between beneficial "power naps" (short duration) and potentially disruptive "longer or irregular naps," explaining the impact on alertness versus nighttime sleep.',
+--         1749141079000,
+--         1749141079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-9-1',
-        'user-123',
-        'test-chat-9',
-        'user',
-        'claude-4-sonnet',
-        'What should I know about investing for beginners?',
-        '',
-        1749191019000,
-        1749191019000
-    ),
-    (
-        'msg-9-2',
-        'user-123',
-        'test-chat-9',
-        'assistant',
-        'claude-4-sonnet',
-        'Start by understanding your financial goals and risk tolerance. Consider low-cost index funds or ETFs for diversification and long-term growth.',
-        '',
-        1749191039000,
-        1749191039000
-    ),
-    (
-        'msg-9-3',
-        'user-123',
-        'test-chat-9',
-        'user',
-        'claude-4-sonnet',
-        'Is it too risky to invest now?',
-        '',
-        1749191059000,
-        1749191059000
-    ),
-    (
-        'msg-9-4',
-        'user-123',
-        'test-chat-9',
-        'assistant',
-        'claude-4-sonnet',
-        'Investing always carries some risk, but time in the market generally outweighs timing the market. Start small and regularly contribute to mitigate risk over the long term.',
-        '',
-        1749191079000,
-        1749191079000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-9-1',
+--         'user-123',
+--         'test-chat-9',
+--         'user',
+--         'claude-4-sonnet',
+--         'What should I know about investing for beginners?',
+--         '',
+--         1749191019000,
+--         1749191019000
+--     ),
+--     (
+--         'msg-9-2',
+--         'user-123',
+--         'test-chat-9',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Start by understanding your financial goals and risk tolerance. Consider low-cost index funds or ETFs for diversification and long-term growth.',
+--         '',
+--         1749191039000,
+--         1749191039000
+--     ),
+--     (
+--         'msg-9-3',
+--         'user-123',
+--         'test-chat-9',
+--         'user',
+--         'claude-4-sonnet',
+--         'Is it too risky to invest now?',
+--         '',
+--         1749191059000,
+--         1749191059000
+--     ),
+--     (
+--         'msg-9-4',
+--         'user-123',
+--         'test-chat-9',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Investing always carries some risk, but time in the market generally outweighs timing the market. Start small and regularly contribute to mitigate risk over the long term.',
+--         '',
+--         1749191079000,
+--         1749191079000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-10-1',
-        'user-123',
-        'test-chat-10',
-        'user',
-        'qwen3',
-        'What are some ideas for quick and healthy meals?',
-        '',
-        1749241019000,
-        1749241019000
-    ),
-    (
-        'msg-10-2',
-        'user-123',
-        'test-chat-10',
-        'assistant',
-        'qwen3',
-        'Sheet pan dinners, stir-fries, loaded salads, and quick pasta dishes with plenty of vegetables are great options for busy weeknights.',
-        'The user is asking for quick and healthy meal ideas. I will suggest categories of meals known for being both fast to prepare and nutritious, focusing on methods that simplify cooking and incorporate plenty of vegetables, suitable for busy schedules.',
-        1749241039000,
-        1749241039000
-    ),
-    (
-        'msg-10-3',
-        'user-123',
-        'test-chat-10',
-        'user',
-        'qwen3',
-        'How can I meal prep efficiently?',
-        '',
-        1749241059000,
-        1749241059000
-    ),
-    (
-        'msg-10-4',
-        'user-123',
-        'test-chat-10',
-        'assistant',
-        'qwen3',
-        'Dedicate a few hours on a weekend to chop vegetables, cook grains, and pre-cook proteins. Store components separately to mix and match during the week.',
-        'The user is asking for efficient meal prep strategies. I will outline a practical approach that involves dedicated time for batch preparation of core components (vegetables, grains, proteins) and emphasizes separate storage to maintain freshness and allow for versatile meal assembly throughout the week.',
-        1749309419000,
-        1749309419000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-10-1',
+--         'user-123',
+--         'test-chat-10',
+--         'user',
+--         'qwen3',
+--         'What are some ideas for quick and healthy meals?',
+--         '',
+--         1749241019000,
+--         1749241019000
+--     ),
+--     (
+--         'msg-10-2',
+--         'user-123',
+--         'test-chat-10',
+--         'assistant',
+--         'qwen3',
+--         'Sheet pan dinners, stir-fries, loaded salads, and quick pasta dishes with plenty of vegetables are great options for busy weeknights.',
+--         'The user is asking for quick and healthy meal ideas. I will suggest categories of meals known for being both fast to prepare and nutritious, focusing on methods that simplify cooking and incorporate plenty of vegetables, suitable for busy schedules.',
+--         1749241039000,
+--         1749241039000
+--     ),
+--     (
+--         'msg-10-3',
+--         'user-123',
+--         'test-chat-10',
+--         'user',
+--         'qwen3',
+--         'How can I meal prep efficiently?',
+--         '',
+--         1749241059000,
+--         1749241059000
+--     ),
+--     (
+--         'msg-10-4',
+--         'user-123',
+--         'test-chat-10',
+--         'assistant',
+--         'qwen3',
+--         'Dedicate a few hours on a weekend to chop vegetables, cook grains, and pre-cook proteins. Store components separately to mix and match during the week.',
+--         'The user is asking for efficient meal prep strategies. I will outline a practical approach that involves dedicated time for batch preparation of core components (vegetables, grains, proteins) and emphasizes separate storage to maintain freshness and allow for versatile meal assembly throughout the week.',
+--         1749309419000,
+--         1749309419000
+--     );
 
-INSERT INTO
-    chats (
-        id,
-        user_id,
-        title,
-        model,
-        is_pinned,
-        is_streaming,
-        last_message_at,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'test-chat-11',
-        'user-123',
-        'Healthy Eating Tips',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749309479000,
-        1749309419000,
-        1749309479000
-    ),
-    (
-        'test-chat-12',
-        'user-123',
-        'Learning a New Language',
-        'qwen3',
-        0,
-        0,
-        1749360060000,
-        1749360000000,
-        1749360060000
-    ),
-    (
-        'test-chat-13',
-        'user-123',
-        'Home Decor Ideas',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749410060000,
-        1749410000000,
-        1749410060000
-    ),
-    (
-        'test-chat-14',
-        'user-123',
-        'Time Management',
-        'qwen3',
-        1,
-        0,
-        1749460060000,
-        1749460000000,
-        1749460060000
-    ),
-    (
-        'test-chat-15',
-        'user-123',
-        'Pet Care Advice',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749510060000,
-        1749510000000,
-        1749510060000
-    ),
-    (
-        'test-chat-16',
-        'user-123',
-        'Understanding AI',
-        'qwen3',
-        0,
-        0,
-        1749560060000,
-        1749560000000,
-        1749560060000
-    ),
-    (
-        'test-chat-17',
-        'user-123',
-        'Coding Challenges',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749610060000,
-        1749610000000,
-        1749610060000
-    ),
-    (
-        'test-chat-18',
-        'user-123',
-        'Mindfulness and Meditation',
-        'qwen3',
-        0,
-        0,
-        1749660060000,
-        1749660000000,
-        1749660060000
-    ),
-    (
-        'test-chat-19',
-        'user-123',
-        'Digital Photography',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749710060000,
-        1749710000000,
-        1749710060000
-    ),
-    (
-        'test-chat-20',
-        'user-123',
-        'Car Maintenance Basics',
-        'qwen3',
-        0,
-        0,
-        1749827819000,
-        1749760000000,
-        1749827819000
-    );
+-- INSERT INTO
+--     chats (
+--         id,
+--         user_id,
+--         title,
+--         model,
+--         is_pinned,
+--         is_streaming,
+--         last_message_at,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'test-chat-11',
+--         'user-123',
+--         'Healthy Eating Tips',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749309479000,
+--         1749309419000,
+--         1749309479000
+--     ),
+--     (
+--         'test-chat-12',
+--         'user-123',
+--         'Learning a New Language',
+--         'qwen3',
+--         0,
+--         0,
+--         1749360060000,
+--         1749360000000,
+--         1749360060000
+--     ),
+--     (
+--         'test-chat-13',
+--         'user-123',
+--         'Home Decor Ideas',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749410060000,
+--         1749410000000,
+--         1749410060000
+--     ),
+--     (
+--         'test-chat-14',
+--         'user-123',
+--         'Time Management',
+--         'qwen3',
+--         1,
+--         0,
+--         1749460060000,
+--         1749460000000,
+--         1749460060000
+--     ),
+--     (
+--         'test-chat-15',
+--         'user-123',
+--         'Pet Care Advice',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749510060000,
+--         1749510000000,
+--         1749510060000
+--     ),
+--     (
+--         'test-chat-16',
+--         'user-123',
+--         'Understanding AI',
+--         'qwen3',
+--         0,
+--         0,
+--         1749560060000,
+--         1749560000000,
+--         1749560060000
+--     ),
+--     (
+--         'test-chat-17',
+--         'user-123',
+--         'Coding Challenges',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749610060000,
+--         1749610000000,
+--         1749610060000
+--     ),
+--     (
+--         'test-chat-18',
+--         'user-123',
+--         'Mindfulness and Meditation',
+--         'qwen3',
+--         0,
+--         0,
+--         1749660060000,
+--         1749660000000,
+--         1749660060000
+--     ),
+--     (
+--         'test-chat-19',
+--         'user-123',
+--         'Digital Photography',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749710060000,
+--         1749710000000,
+--         1749710060000
+--     ),
+--     (
+--         'test-chat-20',
+--         'user-123',
+--         'Car Maintenance Basics',
+--         'qwen3',
+--         0,
+--         0,
+--         1749827819000,
+--         1749760000000,
+--         1749827819000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-11-1',
-        'user-123',
-        'test-chat-11',
-        'user',
-        'claude-4-sonnet',
-        'What are some simple ways to eat healthier?',
-        '',
-        1749309419000,
-        1749309419000
-    ),
-    (
-        'msg-11-2',
-        'user-123',
-        'test-chat-11',
-        'assistant',
-        'claude-4-sonnet',
-        'Start by incorporating more fruits and vegetables into your daily meals. Aim for a variety of colors to ensure a wide range of nutrients.',
-        '',
-        1749309439000,
-        1749309439000
-    ),
-    (
-        'msg-11-3',
-        'user-123',
-        'test-chat-11',
-        'user',
-        'claude-4-sonnet',
-        'Should I cut out carbs completely?',
-        '',
-        1749309459000,
-        1749309459000
-    ),
-    (
-        'msg-11-4',
-        'user-123',
-        'test-chat-11',
-        'assistant',
-        'claude-4-sonnet',
-        'Not necessarily! Focus on complex carbohydrates like whole grains, oats, and brown rice, which provide sustained energy and fiber, rather than eliminating them entirely.',
-        '',
-        1749309479000,
-        1749309479000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-11-1',
+--         'user-123',
+--         'test-chat-11',
+--         'user',
+--         'claude-4-sonnet',
+--         'What are some simple ways to eat healthier?',
+--         '',
+--         1749309419000,
+--         1749309419000
+--     ),
+--     (
+--         'msg-11-2',
+--         'user-123',
+--         'test-chat-11',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Start by incorporating more fruits and vegetables into your daily meals. Aim for a variety of colors to ensure a wide range of nutrients.',
+--         '',
+--         1749309439000,
+--         1749309439000
+--     ),
+--     (
+--         'msg-11-3',
+--         'user-123',
+--         'test-chat-11',
+--         'user',
+--         'claude-4-sonnet',
+--         'Should I cut out carbs completely?',
+--         '',
+--         1749309459000,
+--         1749309459000
+--     ),
+--     (
+--         'msg-11-4',
+--         'user-123',
+--         'test-chat-11',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Not necessarily! Focus on complex carbohydrates like whole grains, oats, and brown rice, which provide sustained energy and fiber, rather than eliminating them entirely.',
+--         '',
+--         1749309479000,
+--         1749309479000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-12-1',
-        'user-123',
-        'test-chat-12',
-        'user',
-        'qwen3',
-        'What''s the best way to learn a new language quickly?',
-        '',
-        1749360000000,
-        1749360000000
-    ),
-    (
-        'msg-12-2',
-        'user-123',
-        'test-chat-12',
-        'assistant',
-        'qwen3',
-        'Immersion is key! Try to expose yourself to the language as much as possible through movies, music, and conversations with native speakers.',
-        'The user is asking for the best way to learn a language quickly. I will focus on the principle of immersion, as it is widely considered the most effective for rapid acquisition. This includes various forms of exposure (media, native speakers) to maximize learning opportunities.',
-        1749360020000,
-        1749360020000
-    ),
-    (
-        'msg-12-3',
-        'user-123',
-        'test-chat-12',
-        'user',
-        'qwen3',
-        'Are language learning apps effective?',
-        '',
-        1749360040000,
-        1749360040000
-    ),
-    (
-        'msg-12-4',
-        'user-123',
-        'test-chat-12',
-        'assistant',
-        'qwen3',
-        'Yes, apps like Duolingo or Babbel can be great for building vocabulary and basic grammar, but they are most effective when combined with other learning methods.',
-        'The user is asking about the effectiveness of language learning apps. I will affirm their utility for specific foundational skills (vocabulary, grammar) while adding the nuance that they are best used as supplementary tools rather than standalone methods, suggesting a holistic approach.',
-        1749360060000,
-        1749360060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-12-1',
+--         'user-123',
+--         'test-chat-12',
+--         'user',
+--         'qwen3',
+--         'What''s the best way to learn a new language quickly?',
+--         '',
+--         1749360000000,
+--         1749360000000
+--     ),
+--     (
+--         'msg-12-2',
+--         'user-123',
+--         'test-chat-12',
+--         'assistant',
+--         'qwen3',
+--         'Immersion is key! Try to expose yourself to the language as much as possible through movies, music, and conversations with native speakers.',
+--         'The user is asking for the best way to learn a language quickly. I will focus on the principle of immersion, as it is widely considered the most effective for rapid acquisition. This includes various forms of exposure (media, native speakers) to maximize learning opportunities.',
+--         1749360020000,
+--         1749360020000
+--     ),
+--     (
+--         'msg-12-3',
+--         'user-123',
+--         'test-chat-12',
+--         'user',
+--         'qwen3',
+--         'Are language learning apps effective?',
+--         '',
+--         1749360040000,
+--         1749360040000
+--     ),
+--     (
+--         'msg-12-4',
+--         'user-123',
+--         'test-chat-12',
+--         'assistant',
+--         'qwen3',
+--         'Yes, apps like Duolingo or Babbel can be great for building vocabulary and basic grammar, but they are most effective when combined with other learning methods.',
+--         'The user is asking about the effectiveness of language learning apps. I will affirm their utility for specific foundational skills (vocabulary, grammar) while adding the nuance that they are best used as supplementary tools rather than standalone methods, suggesting a holistic approach.',
+--         1749360060000,
+--         1749360060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-13-1',
-        'user-123',
-        'test-chat-13',
-        'user',
-        'claude-4-sonnet',
-        'I want to redecorate my living room. Any budget-friendly ideas?',
-        '',
-        1749410000000,
-        1749410000000
-    ),
-    (
-        'msg-13-2',
-        'user-123',
-        'test-chat-13',
-        'assistant',
-        'claude-4-sonnet',
-        'Absolutely! Repainting walls, adding throw pillows and blankets, and rearranging existing furniture can make a big impact without spending much.',
-        '',
-        1749410020000,
-        1749410020000
-    ),
-    (
-        'msg-13-3',
-        'user-123',
-        'test-chat-13',
-        'user',
-        'claude-4-sonnet',
-        'What about lighting?',
-        '',
-        1749410040000,
-        1749410040000
-    ),
-    (
-        'msg-13-4',
-        'user-123',
-        'test-chat-13',
-        'assistant',
-        'claude-4-sonnet',
-        'Strategic lighting can transform a room. Consider adding floor lamps, table lamps, and even fairy lights to create different moods and highlight features.',
-        '',
-        1749410060000,
-        1749410060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-13-1',
+--         'user-123',
+--         'test-chat-13',
+--         'user',
+--         'claude-4-sonnet',
+--         'I want to redecorate my living room. Any budget-friendly ideas?',
+--         '',
+--         1749410000000,
+--         1749410000000
+--     ),
+--     (
+--         'msg-13-2',
+--         'user-123',
+--         'test-chat-13',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Absolutely! Repainting walls, adding throw pillows and blankets, and rearranging existing furniture can make a big impact without spending much.',
+--         '',
+--         1749410020000,
+--         1749410020000
+--     ),
+--     (
+--         'msg-13-3',
+--         'user-123',
+--         'test-chat-13',
+--         'user',
+--         'claude-4-sonnet',
+--         'What about lighting?',
+--         '',
+--         1749410040000,
+--         1749410040000
+--     ),
+--     (
+--         'msg-13-4',
+--         'user-123',
+--         'test-chat-13',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Strategic lighting can transform a room. Consider adding floor lamps, table lamps, and even fairy lights to create different moods and highlight features.',
+--         '',
+--         1749410060000,
+--         1749410060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-14-1',
-        'user-123',
-        'test-chat-14',
-        'user',
-        'qwen3',
-        'I struggle with time management. How can I improve?',
-        '',
-        1749460000000,
-        1749460000000
-    ),
-    (
-        'msg-14-2',
-        'user-123',
-        'test-chat-14',
-        'assistant',
-        'qwen3',
-        'Try the Pomodoro Technique: work for 25 minutes, then take a 5-minute break. This helps maintain focus and prevents burnout.',
-        'The user is asking for time management improvement. I will suggest a specific, well-known technique (Pomodoro) that directly addresses focus and burnout, as it provides a structured approach to work intervals and breaks.',
-        1749460020000,
-        1749460020000
-    ),
-    (
-        'msg-14-3',
-        'user-123',
-        'test-chat-14',
-        'user',
-        'qwen3',
-        'How do I prioritize tasks?',
-        '',
-        1749460040000,
-        1749460040000
-    ),
-    (
-        'msg-14-4',
-        'user-123',
-        'test-chat-14',
-        'assistant',
-        'qwen3',
-        'Use the Eisenhower Matrix: categorize tasks as urgent/important, important/not urgent, urgent/not important, and neither. Focus on the urgent and important ones first.',
-        'The user is asking for task prioritization methods. I will suggest the Eisenhower Matrix, a widely used and effective framework for categorizing and prioritizing tasks based on urgency and importance, allowing for clear decision-making on what to focus on first.',
-        1749460060000,
-        1749460060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-14-1',
+--         'user-123',
+--         'test-chat-14',
+--         'user',
+--         'qwen3',
+--         'I struggle with time management. How can I improve?',
+--         '',
+--         1749460000000,
+--         1749460000000
+--     ),
+--     (
+--         'msg-14-2',
+--         'user-123',
+--         'test-chat-14',
+--         'assistant',
+--         'qwen3',
+--         'Try the Pomodoro Technique: work for 25 minutes, then take a 5-minute break. This helps maintain focus and prevents burnout.',
+--         'The user is asking for time management improvement. I will suggest a specific, well-known technique (Pomodoro) that directly addresses focus and burnout, as it provides a structured approach to work intervals and breaks.',
+--         1749460020000,
+--         1749460020000
+--     ),
+--     (
+--         'msg-14-3',
+--         'user-123',
+--         'test-chat-14',
+--         'user',
+--         'qwen3',
+--         'How do I prioritize tasks?',
+--         '',
+--         1749460040000,
+--         1749460040000
+--     ),
+--     (
+--         'msg-14-4',
+--         'user-123',
+--         'test-chat-14',
+--         'assistant',
+--         'qwen3',
+--         'Use the Eisenhower Matrix: categorize tasks as urgent/important, important/not urgent, urgent/not important, and neither. Focus on the urgent and important ones first.',
+--         'The user is asking for task prioritization methods. I will suggest the Eisenhower Matrix, a widely used and effective framework for categorizing and prioritizing tasks based on urgency and importance, allowing for clear decision-making on what to focus on first.',
+--         1749460060000,
+--         1749460060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-15-1',
-        'user-123',
-        'test-chat-15',
-        'user',
-        'claude-4-sonnet',
-        'My cat is scratching the furniture. Any advice?',
-        '',
-        1749510000000,
-        1749510000000
-    ),
-    (
-        'msg-15-2',
-        'user-123',
-        'test-chat-15',
-        'assistant',
-        'claude-4-sonnet',
-        'Provide plenty of scratching posts of various textures and heights. Encourage use with catnip or toys, and trim your cat''s nails regularly.',
-        '',
-        1749510020000,
-        1749510020000
-    ),
-    (
-        'msg-15-3',
-        'user-123',
-        'test-chat-15',
-        'user',
-        'claude-4-sonnet',
-        'How often should I feed my dog?',
-        '',
-        1749510040000,
-        1749510040000
-    ),
-    (
-        'msg-15-4',
-        'user-123',
-        'test-chat-15',
-        'assistant',
-        'claude-4-sonnet',
-        'Most adult dogs do well with two meals a day, morning and evening. Puppies may need 3-4 smaller meals daily.',
-        '',
-        1749510060000,
-        1749510060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-15-1',
+--         'user-123',
+--         'test-chat-15',
+--         'user',
+--         'claude-4-sonnet',
+--         'My cat is scratching the furniture. Any advice?',
+--         '',
+--         1749510000000,
+--         1749510000000
+--     ),
+--     (
+--         'msg-15-2',
+--         'user-123',
+--         'test-chat-15',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Provide plenty of scratching posts of various textures and heights. Encourage use with catnip or toys, and trim your cat''s nails regularly.',
+--         '',
+--         1749510020000,
+--         1749510020000
+--     ),
+--     (
+--         'msg-15-3',
+--         'user-123',
+--         'test-chat-15',
+--         'user',
+--         'claude-4-sonnet',
+--         'How often should I feed my dog?',
+--         '',
+--         1749510040000,
+--         1749510040000
+--     ),
+--     (
+--         'msg-15-4',
+--         'user-123',
+--         'test-chat-15',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Most adult dogs do well with two meals a day, morning and evening. Puppies may need 3-4 smaller meals daily.',
+--         '',
+--         1749510060000,
+--         1749510060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-16-1',
-        'user-123',
-        'test-chat-16',
-        'user',
-        'qwen3',
-        'What exactly is Artificial Intelligence?',
-        '',
-        1749560000000,
-        1749560000000
-    ),
-    (
-        'msg-16-2',
-        'user-123',
-        'test-chat-16',
-        'assistant',
-        'qwen3',
-        'Artificial Intelligence (AI) refers to the simulation of human intelligence in machines programmed to think like humans and mimic their actions, such as learning, problem-solving, and decision-making.',
-        'The user is asking for a definition of Artificial Intelligence. I will provide a concise and clear explanation, focusing on the core concept of machines simulating human intelligence and key cognitive abilities like learning and problem-solving, which are central to AI.',
-        1749560020000,
-        1749560020000
-    ),
-    (
-        'msg-16-3',
-        'user-123',
-        'test-chat-16',
-        'user',
-        'qwen3',
-        'What''s the difference between AI and Machine Learning?',
-        '',
-        1749560040000,
-        1749560040000
-    ),
-    (
-        'msg-16-4',
-        'user-123',
-        'test-chat-16',
-        'assistant',
-        'qwen3',
-        'Machine Learning is a subset of AI that enables systems to learn from data without explicit programming. AI is the broader concept of creating intelligent machines, while ML is a method to achieve that intelligence.',
-        'The user is asking for the distinction between AI and Machine Learning. I will explain their relationship by defining Machine Learning as a subset of AI. This clarifies that ML is a specific approach or technique used within the broader field of AI to achieve intelligence through data-driven learning.',
-        1749560060000,
-        1749560060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-16-1',
+--         'user-123',
+--         'test-chat-16',
+--         'user',
+--         'qwen3',
+--         'What exactly is Artificial Intelligence?',
+--         '',
+--         1749560000000,
+--         1749560000000
+--     ),
+--     (
+--         'msg-16-2',
+--         'user-123',
+--         'test-chat-16',
+--         'assistant',
+--         'qwen3',
+--         'Artificial Intelligence (AI) refers to the simulation of human intelligence in machines programmed to think like humans and mimic their actions, such as learning, problem-solving, and decision-making.',
+--         'The user is asking for a definition of Artificial Intelligence. I will provide a concise and clear explanation, focusing on the core concept of machines simulating human intelligence and key cognitive abilities like learning and problem-solving, which are central to AI.',
+--         1749560020000,
+--         1749560020000
+--     ),
+--     (
+--         'msg-16-3',
+--         'user-123',
+--         'test-chat-16',
+--         'user',
+--         'qwen3',
+--         'What''s the difference between AI and Machine Learning?',
+--         '',
+--         1749560040000,
+--         1749560040000
+--     ),
+--     (
+--         'msg-16-4',
+--         'user-123',
+--         'test-chat-16',
+--         'assistant',
+--         'qwen3',
+--         'Machine Learning is a subset of AI that enables systems to learn from data without explicit programming. AI is the broader concept of creating intelligent machines, while ML is a method to achieve that intelligence.',
+--         'The user is asking for the distinction between AI and Machine Learning. I will explain their relationship by defining Machine Learning as a subset of AI. This clarifies that ML is a specific approach or technique used within the broader field of AI to achieve intelligence through data-driven learning.',
+--         1749560060000,
+--         1749560060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-17-1',
-        'user-123',
-        'test-chat-17',
-        'user',
-        'claude-4-sonnet',
-        'Where can I find coding challenges for beginners?',
-        '',
-        1749610000000,
-        1749610000000
-    ),
-    (
-        'msg-17-2',
-        'user-123',
-        'test-chat-17',
-        'assistant',
-        'claude-4-sonnet',
-        'Websites like HackerRank, LeetCode (filter by easy), and freeCodeCamp offer a wide range of coding challenges perfect for beginners to practice their skills.',
-        '',
-        1749610020000,
-        1749610020000
-    ),
-    (
-        'msg-17-3',
-        'user-123',
-        'test-chat-17',
-        'user',
-        'claude-4-sonnet',
-        'What''s a good first project idea?',
-        '',
-        1749610040000,
-        1749610040000
-    ),
-    (
-        'msg-17-4',
-        'user-123',
-        'test-chat-17',
-        'assistant',
-        'claude-4-sonnet',
-        'A simple to-do list application, a basic calculator, or a rock-paper-scissors game are excellent first projects to solidify your foundational coding concepts.',
-        '',
-        1749610060000,
-        1749610060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-17-1',
+--         'user-123',
+--         'test-chat-17',
+--         'user',
+--         'claude-4-sonnet',
+--         'Where can I find coding challenges for beginners?',
+--         '',
+--         1749610000000,
+--         1749610000000
+--     ),
+--     (
+--         'msg-17-2',
+--         'user-123',
+--         'test-chat-17',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Websites like HackerRank, LeetCode (filter by easy), and freeCodeCamp offer a wide range of coding challenges perfect for beginners to practice their skills.',
+--         '',
+--         1749610020000,
+--         1749610020000
+--     ),
+--     (
+--         'msg-17-3',
+--         'user-123',
+--         'test-chat-17',
+--         'user',
+--         'claude-4-sonnet',
+--         'What''s a good first project idea?',
+--         '',
+--         1749610040000,
+--         1749610040000
+--     ),
+--     (
+--         'msg-17-4',
+--         'user-123',
+--         'test-chat-17',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'A simple to-do list application, a basic calculator, or a rock-paper-scissors game are excellent first projects to solidify your foundational coding concepts.',
+--         '',
+--         1749610060000,
+--         1749610060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-18-1',
-        'user-123',
-        'test-chat-18',
-        'user',
-        'qwen3',
-        'How can I start practicing mindfulness?',
-        '',
-        1749660000000,
-        1749660000000
-    ),
-    (
-        'msg-18-2',
-        'user-123',
-        'test-chat-18',
-        'assistant',
-        'qwen3',
-        'Begin with simple breathing exercises. Find a quiet spot, sit comfortably, and focus on your breath for 5-10 minutes. Notice the sensation of air entering and leaving your body.',
-        'The user is asking how to start mindfulness. I will suggest a foundational and accessible practice: focusing on breath. This approach is widely taught as a primary entry point into mindfulness because it requires no special equipment or prior experience, and can be done anywhere.',
-        1749660020000,
-        1749660020000
-    ),
-    (
-        'msg-18-3',
-        'user-123',
-        'test-chat-18',
-        'user',
-        'qwen3',
-        'Is meditation difficult?',
-        '',
-        1749660040000,
-        1749660040000
-    ),
-    (
-        'msg-18-4',
-        'user-123',
-        'test-chat-18',
-        'assistant',
-        'qwen3',
-        'It can feel challenging at first, but consistency is more important than perfection. Don''t worry if your mind wanders; gently bring your focus back to your breath. Guided meditations can be very helpful.',
-        'The user is asking about the difficulty of meditation. I will acknowledge initial challenges but emphasize consistency over perfection, reassuring them that mind-wandering is normal. I will also suggest guided meditations as a practical tool to assist beginners.',
-        1749660060000,
-        1749660060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-18-1',
+--         'user-123',
+--         'test-chat-18',
+--         'user',
+--         'qwen3',
+--         'How can I start practicing mindfulness?',
+--         '',
+--         1749660000000,
+--         1749660000000
+--     ),
+--     (
+--         'msg-18-2',
+--         'user-123',
+--         'test-chat-18',
+--         'assistant',
+--         'qwen3',
+--         'Begin with simple breathing exercises. Find a quiet spot, sit comfortably, and focus on your breath for 5-10 minutes. Notice the sensation of air entering and leaving your body.',
+--         'The user is asking how to start mindfulness. I will suggest a foundational and accessible practice: focusing on breath. This approach is widely taught as a primary entry point into mindfulness because it requires no special equipment or prior experience, and can be done anywhere.',
+--         1749660020000,
+--         1749660020000
+--     ),
+--     (
+--         'msg-18-3',
+--         'user-123',
+--         'test-chat-18',
+--         'user',
+--         'qwen3',
+--         'Is meditation difficult?',
+--         '',
+--         1749660040000,
+--         1749660040000
+--     ),
+--     (
+--         'msg-18-4',
+--         'user-123',
+--         'test-chat-18',
+--         'assistant',
+--         'qwen3',
+--         'It can feel challenging at first, but consistency is more important than perfection. Don''t worry if your mind wanders; gently bring your focus back to your breath. Guided meditations can be very helpful.',
+--         'The user is asking about the difficulty of meditation. I will acknowledge initial challenges but emphasize consistency over perfection, reassuring them that mind-wandering is normal. I will also suggest guided meditations as a practical tool to assist beginners.',
+--         1749660060000,
+--         1749660060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-19-1',
-        'user-123',
-        'test-chat-19',
-        'user',
-        'claude-4-sonnet',
-        'What are the basics of digital photography?',
-        '',
-        1749710000000,
-        1749710000000
-    ),
-    (
-        'msg-19-2',
-        'user-123',
-        'test-chat-19',
-        'assistant',
-        'claude-4-sonnet',
-        'The "exposure triangle" is fundamental: aperture (controls depth of field), shutter speed (controls motion blur), and ISO (controls sensitivity to light). Understanding how they interact is key.',
-        '',
-        1749710020000,
-        1749710020000
-    ),
-    (
-        'msg-19-3',
-        'user-123',
-        'test-chat-19',
-        'user',
-        'claude-4-sonnet',
-        'How important is composition?',
-        '',
-        1749710040000,
-        1749710040000
-    ),
-    (
-        'msg-19-4',
-        'user-123',
-        'test-chat-19',
-        'assistant',
-        'claude-4-sonnet',
-        'Composition is extremely important! It''s how you arrange elements within your frame. Rules like the Rule of Thirds, leading lines, and framing can dramatically improve your photos.',
-        '',
-        1749710060000,
-        1749710060000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-19-1',
+--         'user-123',
+--         'test-chat-19',
+--         'user',
+--         'claude-4-sonnet',
+--         'What are the basics of digital photography?',
+--         '',
+--         1749710000000,
+--         1749710000000
+--     ),
+--     (
+--         'msg-19-2',
+--         'user-123',
+--         'test-chat-19',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'The "exposure triangle" is fundamental: aperture (controls depth of field), shutter speed (controls motion blur), and ISO (controls sensitivity to light). Understanding how they interact is key.',
+--         '',
+--         1749710020000,
+--         1749710020000
+--     ),
+--     (
+--         'msg-19-3',
+--         'user-123',
+--         'test-chat-19',
+--         'user',
+--         'claude-4-sonnet',
+--         'How important is composition?',
+--         '',
+--         1749710040000,
+--         1749710040000
+--     ),
+--     (
+--         'msg-19-4',
+--         'user-123',
+--         'test-chat-19',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Composition is extremely important! It''s how you arrange elements within your frame. Rules like the Rule of Thirds, leading lines, and framing can dramatically improve your photos.',
+--         '',
+--         1749710060000,
+--         1749710060000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-20-1',
-        'user-123',
-        'test-chat-20',
-        'user',
-        'qwen3',
-        'What basic car maintenance should I know?',
-        '',
-        1749760000000,
-        1749760000000
-    ),
-    (
-        'msg-20-2',
-        'user-123',
-        'test-chat-20',
-        'assistant',
-        'qwen3',
-        'Regular oil changes, checking tire pressure, and ensuring your fluid levels (coolant, brake fluid, windshield washer fluid) are adequate are crucial for car longevity and safety.',
-        'The user is asking for basic car maintenance. I will list essential, routine checks that directly impact the car''s longevity and safety. These include oil changes, tire pressure, and fluid levels, as they are fundamental to preventing common issues and ensuring safe operation.',
-        1749760020000,
-        1749760020000
-    ),
-    (
-        'msg-20-3',
-        'user-123',
-        'test-chat-20',
-        'user',
-        'qwen3',
-        'How often should I check my oil?',
-        '',
-        1749760040000,
-        1749760040000
-    ),
-    (
-        'msg-20-4',
-        'user-123',
-        'test-chat-20',
-        'assistant',
-        'qwen3',
-        'It''s a good idea to check your engine oil level once a month, and definitely before a long road trip. This helps catch potential issues early.',
-        'The user is asking for the frequency of oil checks. I will provide practical guidelines: monthly routine checks for general maintenance and an additional check before long trips, emphasizing that this proactive approach helps in early detection of potential issues.',
-        1749827819000,
-        1749827819000
-    );
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-20-1',
+--         'user-123',
+--         'test-chat-20',
+--         'user',
+--         'qwen3',
+--         'What basic car maintenance should I know?',
+--         '',
+--         1749760000000,
+--         1749760000000
+--     ),
+--     (
+--         'msg-20-2',
+--         'user-123',
+--         'test-chat-20',
+--         'assistant',
+--         'qwen3',
+--         'Regular oil changes, checking tire pressure, and ensuring your fluid levels (coolant, brake fluid, windshield washer fluid) are adequate are crucial for car longevity and safety.',
+--         'The user is asking for basic car maintenance. I will list essential, routine checks that directly impact the car''s longevity and safety. These include oil changes, tire pressure, and fluid levels, as they are fundamental to preventing common issues and ensuring safe operation.',
+--         1749760020000,
+--         1749760020000
+--     ),
+--     (
+--         'msg-20-3',
+--         'user-123',
+--         'test-chat-20',
+--         'user',
+--         'qwen3',
+--         'How often should I check my oil?',
+--         '',
+--         1749760040000,
+--         1749760040000
+--     ),
+--     (
+--         'msg-20-4',
+--         'user-123',
+--         'test-chat-20',
+--         'assistant',
+--         'qwen3',
+--         'It''s a good idea to check your engine oil level once a month, and definitely before a long road trip. This helps catch potential issues early.',
+--         'The user is asking for the frequency of oil checks. I will provide practical guidelines: monthly routine checks for general maintenance and an additional check before long trips, emphasizing that this proactive approach helps in early detection of potential issues.',
+--         1749827819000,
+--         1749827819000
+--     );
 
-INSERT INTO
-    attachments (id, user_id, message_id, name, type, src, created_at)
-VALUES
-    (
-        'att-1-1-1',
-        'user-123',
-        'msg-1-1',
-        'morning_routine_inspiration.jpeg',
-        'image/jpeg',
-        'http://127.0.0.1:3141/v1/attachments/att-1-1-1/',
-        1748791016000
-    ),
-    (
-        'att-1-3-1',
-        'user-123',
-        'msg-1-3',
-        'morning_routine_tracker.pdf',
-        'application/pdf',
-        'http://127.0.0.1:3141/v1/attachments/att-1-3-1/',
-        1748791056000
-    ),
-    (
-        'att-3-1-1',
-        'user-123',
-        'msg-3-1',
-        'garden_layout_sketch.png',
-        'image/png',
-        'http://127.0.0.1:3141/v1/attachments/att-3-1-1/',
-        1748891016000
-    ),
-    (
-        'att-3-3-1',
-        'user-123',
-        'msg-3-3',
-        'gardening_tool_list.docx',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'http://127.0.0.1:3141/v1/attachments/att-3-3-1/',
-        1748891056000
-    ),
-    (
-        'att-5-1-1',
-        'user-123',
-        'msg-5-1',
-        'current_expenses_spreadsheet.xlsx',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'http://127.0.0.1:3141/v1/attachments/att-5-1-1/',
-        1748991016000
-    ),
-    (
-        'att-5-3-1',
-        'user-123',
-        'msg-5-3',
-        'budget_template.pdf',
-        'application/pdf',
-        'http://127.0.0.1:3141/v1/attachments/att-5-3-1/',
-        1748991056000
-    ),
-    (
-        'att-7-1-1',
-        'user-123',
-        'msg-7-1',
-        'leaky_faucet_photo.jpeg',
-        'image/jpeg',
-        'http://127.0.0.1:3141/v1/attachments/att-7-1-1/',
-        1749091016000
-    ),
-    (
-        'att-7-3-1',
-        'user-123',
-        'msg-7-3',
-        'diy_repair_manual_cover.png',
-        'image/png',
-        'http://127.0.0.1:3141/v1/attachments/att-7-3-1/',
-        1749091056000
-    ),
-    (
-        'att-9-1-1',
-        'user-123',
-        'msg-9-1',
-        'investment_portfolio_chart.svg',
-        'image/svg+xml',
-        'http://127.0.0.1:3141/v1/attachments/att-9-1-1/',
-        1749191016000
-    ),
-    (
-        'att-9-3-1',
-        'user-123',
-        'msg-9-3',
-        'market_outlook_report.pdf',
-        'application/pdf',
-        'http://127.0.0.1:3141/v1/attachments/att-9-3-1/',
-        1749191056000
-    ),
-    (
-        'att-11-1-1',
-        'user-123',
-        'msg-11-1',
-        'meal_plan_example.pdf',
-        'application/pdf',
-        'http://127.0.0.1:3141/v1/attachments/att-11-1-1/',
-        1749309416000
-    ),
-    (
-        'att-11-3-1',
-        'user-123',
-        'msg-11-3',
-        'dietary_guidelines.pdf',
-        'application/pdf',
-        'http://127.0.0.1:3141/v1/attachments/att-11-3-1/',
-        1749309456000
-    ),
-    (
-        'att-13-1-1',
-        'user-123',
-        'msg-13-1',
-        'living_room_before_photo.jpeg',
-        'image/jpeg',
-        'http://127.0.0.1:3141/v1/attachments/att-13-1-1/',
-        1749409997000
-    ),
-    (
-        'att-13-3-1',
-        'user-123',
-        'msg-13-3',
-        'lighting_fixture_options.png',
-        'image/png',
-        'http://127.0.0.1:3141/v1/attachments/att-13-3-1/',
-        1749410037000
-    ),
-    (
-        'att-15-1-1',
-        'user-123',
-        'msg-15-1',
-        'cat_scratch_post_ideas.jpeg',
-        'image/jpeg',
-        'http://127.0.0.1:3141/v1/attachments/att-15-1-1/',
-        1749509997000
-    ),
-    (
-        'att-15-3-1',
-        'user-123',
-        'msg-15-3',
-        'dog_feeding_chart.pdf',
-        'application/pdf',
-        'http://127.0.0.1:3141/v1/attachments/att-15-3-1/',
-        1749510037000
-    ),
-    (
-        'att-17-1-1',
-        'user-123',
-        'msg-17-1',
-        'coding_challenge_platform_screenshot.png',
-        'image/png',
-        'http://127.0.0.1:3141/v1/attachments/att-17-1-1/',
-        1749609997000
-    ),
-    (
-        'att-17-3-1',
-        'user-123',
-        'msg-17-3',
-        'project_idea_flowchart.svg',
-        'image/svg+xml',
-        'http://127.0.0.1:3141/v1/attachments/att-17-3-1/',
-        1749610037000
-    ),
-    (
-        'att-19-1-1',
-        'user-123',
-        'msg-19-1',
-        'camera_settings_diagram.jpeg',
-        'image/jpeg',
-        'http://127.0.0.1:3141/v1/attachments/att-19-1-1/',
-        1749709997000
-    ),
-    (
-        'att-19-3-1',
-        'user-123',
-        'msg-19-3',
-        'composition_rule_of_thirds.png',
-        'image/png',
-        'http://127.0.0.1:3141/v1/attachments/att-19-3-1/',
-        1749710037000
-    );
+-- INSERT INTO
+--     attachments (id, user_id, message_id, name, type, src, created_at)
+-- VALUES
+--     (
+--         'att-1-1-1',
+--         'user-123',
+--         'msg-1-1',
+--         'morning_routine_inspiration.jpeg',
+--         'image/jpeg',
+--         'http://127.0.0.1:3141/v1/attachments/att-1-1-1/',
+--         1748791016000
+--     ),
+--     (
+--         'att-1-3-1',
+--         'user-123',
+--         'msg-1-3',
+--         'morning_routine_tracker.pdf',
+--         'application/pdf',
+--         'http://127.0.0.1:3141/v1/attachments/att-1-3-1/',
+--         1748791056000
+--     ),
+--     (
+--         'att-3-1-1',
+--         'user-123',
+--         'msg-3-1',
+--         'garden_layout_sketch.png',
+--         'image/png',
+--         'http://127.0.0.1:3141/v1/attachments/att-3-1-1/',
+--         1748891016000
+--     ),
+--     (
+--         'att-3-3-1',
+--         'user-123',
+--         'msg-3-3',
+--         'gardening_tool_list.docx',
+--         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+--         'http://127.0.0.1:3141/v1/attachments/att-3-3-1/',
+--         1748891056000
+--     ),
+--     (
+--         'att-5-1-1',
+--         'user-123',
+--         'msg-5-1',
+--         'current_expenses_spreadsheet.xlsx',
+--         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+--         'http://127.0.0.1:3141/v1/attachments/att-5-1-1/',
+--         1748991016000
+--     ),
+--     (
+--         'att-5-3-1',
+--         'user-123',
+--         'msg-5-3',
+--         'budget_template.pdf',
+--         'application/pdf',
+--         'http://127.0.0.1:3141/v1/attachments/att-5-3-1/',
+--         1748991056000
+--     ),
+--     (
+--         'att-7-1-1',
+--         'user-123',
+--         'msg-7-1',
+--         'leaky_faucet_photo.jpeg',
+--         'image/jpeg',
+--         'http://127.0.0.1:3141/v1/attachments/att-7-1-1/',
+--         1749091016000
+--     ),
+--     (
+--         'att-7-3-1',
+--         'user-123',
+--         'msg-7-3',
+--         'diy_repair_manual_cover.png',
+--         'image/png',
+--         'http://127.0.0.1:3141/v1/attachments/att-7-3-1/',
+--         1749091056000
+--     ),
+--     (
+--         'att-9-1-1',
+--         'user-123',
+--         'msg-9-1',
+--         'investment_portfolio_chart.svg',
+--         'image/svg+xml',
+--         'http://127.0.0.1:3141/v1/attachments/att-9-1-1/',
+--         1749191016000
+--     ),
+--     (
+--         'att-9-3-1',
+--         'user-123',
+--         'msg-9-3',
+--         'market_outlook_report.pdf',
+--         'application/pdf',
+--         'http://127.0.0.1:3141/v1/attachments/att-9-3-1/',
+--         1749191056000
+--     ),
+--     (
+--         'att-11-1-1',
+--         'user-123',
+--         'msg-11-1',
+--         'meal_plan_example.pdf',
+--         'application/pdf',
+--         'http://127.0.0.1:3141/v1/attachments/att-11-1-1/',
+--         1749309416000
+--     ),
+--     (
+--         'att-11-3-1',
+--         'user-123',
+--         'msg-11-3',
+--         'dietary_guidelines.pdf',
+--         'application/pdf',
+--         'http://127.0.0.1:3141/v1/attachments/att-11-3-1/',
+--         1749309456000
+--     ),
+--     (
+--         'att-13-1-1',
+--         'user-123',
+--         'msg-13-1',
+--         'living_room_before_photo.jpeg',
+--         'image/jpeg',
+--         'http://127.0.0.1:3141/v1/attachments/att-13-1-1/',
+--         1749409997000
+--     ),
+--     (
+--         'att-13-3-1',
+--         'user-123',
+--         'msg-13-3',
+--         'lighting_fixture_options.png',
+--         'image/png',
+--         'http://127.0.0.1:3141/v1/attachments/att-13-3-1/',
+--         1749410037000
+--     ),
+--     (
+--         'att-15-1-1',
+--         'user-123',
+--         'msg-15-1',
+--         'cat_scratch_post_ideas.jpeg',
+--         'image/jpeg',
+--         'http://127.0.0.1:3141/v1/attachments/att-15-1-1/',
+--         1749509997000
+--     ),
+--     (
+--         'att-15-3-1',
+--         'user-123',
+--         'msg-15-3',
+--         'dog_feeding_chart.pdf',
+--         'application/pdf',
+--         'http://127.0.0.1:3141/v1/attachments/att-15-3-1/',
+--         1749510037000
+--     ),
+--     (
+--         'att-17-1-1',
+--         'user-123',
+--         'msg-17-1',
+--         'coding_challenge_platform_screenshot.png',
+--         'image/png',
+--         'http://127.0.0.1:3141/v1/attachments/att-17-1-1/',
+--         1749609997000
+--     ),
+--     (
+--         'att-17-3-1',
+--         'user-123',
+--         'msg-17-3',
+--         'project_idea_flowchart.svg',
+--         'image/svg+xml',
+--         'http://127.0.0.1:3141/v1/attachments/att-17-3-1/',
+--         1749610037000
+--     ),
+--     (
+--         'att-19-1-1',
+--         'user-123',
+--         'msg-19-1',
+--         'camera_settings_diagram.jpeg',
+--         'image/jpeg',
+--         'http://127.0.0.1:3141/v1/attachments/att-19-1-1/',
+--         1749709997000
+--     ),
+--     (
+--         'att-19-3-1',
+--         'user-123',
+--         'msg-19-3',
+--         'composition_rule_of_thirds.png',
+--         'image/png',
+--         'http://127.0.0.1:3141/v1/attachments/att-19-3-1/',
+--         1749710037000
+--     );
 
-INSERT INTO
-    chats (
-        id,
-        user_id,
-        title,
-        model,
-        is_pinned,
-        is_streaming,
-        last_message_at,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'test-chat-21',
-        'user-123',
-        'Understanding Quantum Computing',
-        'claude-4-sonnet',
-        0,
-        0,
-        1749310899000,
-        1749310509000,
-        1749310899000
-    );
+-- INSERT INTO
+--     chats (
+--         id,
+--         user_id,
+--         title,
+--         model,
+--         is_pinned,
+--         is_streaming,
+--         last_message_at,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'test-chat-21',
+--         'user-123',
+--         'Understanding Quantum Computing',
+--         'claude-4-sonnet',
+--         0,
+--         0,
+--         1749310899000,
+--         1749310509000,
+--         1749310899000
+--     );
 
-INSERT INTO
-    messages (
-        id,
-        user_id,
-        chat_id,
-        role,
-        model,
-        content,
-        reasoning,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'msg-21-1',
-        'user-123',
-        'test-chat-21',
-        'user',
-        'claude-4-sonnet',
-        'What is quantum computing?',
-        '',
-        1749310509000,
-        1749310509000
-    ),
-    (
-        'msg-21-2',
-        'user-123',
-        'test-chat-21',
-        'assistant',
-        'claude-4-sonnet',
-        'Quantum computing is a new type of computation that harnesses the principles of quantum mechanics, such as superposition and entanglement, to solve complex problems that are intractable for classical computers. Unlike classical computers that use bits to represent information as either 0 or 1, quantum computers use **qubits**. Qubits can exist in multiple states simultaneously, which is known as superposition. This allows quantum computers to process a vast number of possibilities at once, leading to potentially exponential speedups for certain types of problems.
+-- INSERT INTO
+--     messages (
+--         id,
+--         user_id,
+--         chat_id,
+--         role,
+--         model,
+--         content,
+--         reasoning,
+--         created_at,
+--         updated_at
+--     )
+-- VALUES
+--     (
+--         'msg-21-1',
+--         'user-123',
+--         'test-chat-21',
+--         'user',
+--         'claude-4-sonnet',
+--         'What is quantum computing?',
+--         '',
+--         1749310509000,
+--         1749310509000
+--     ),
+--     (
+--         'msg-21-2',
+--         'user-123',
+--         'test-chat-21',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Quantum computing is a new type of computation that harnesses the principles of quantum mechanics, such as superposition and entanglement, to solve complex problems that are intractable for classical computers. Unlike classical computers that use bits to represent information as either 0 or 1, quantum computers use **qubits**. Qubits can exist in multiple states simultaneously, which is known as superposition. This allows quantum computers to process a vast number of possibilities at once, leading to potentially exponential speedups for certain types of problems.
 
-Key concepts include:
+-- Key concepts include:
 
-*   **Superposition**: A qubit can be in a state of 0, 1, or a combination of both simultaneously. This is often visualized as a sphere where a point on the surface represents the qubit''s state.
-*   **Entanglement**: Two or more qubits can become linked in such a way that they share the same fate, even when physically separated. Measuring the state of one entangled qubit instantly influences the state of the other(s).
-*   **Quantum Tunneling**: A quantum phenomenon where a particle can pass through a potential energy barrier, even if it does not have enough kinetic energy to do so classically. While not directly a computational principle, it plays a role in some quantum annealing processes.
+-- *   **Superposition**: A qubit can be in a state of 0, 1, or a combination of both simultaneously. This is often visualized as a sphere where a point on the surface represents the qubit''s state.
+-- *   **Entanglement**: Two or more qubits can become linked in such a way that they share the same fate, even when physically separated. Measuring the state of one entangled qubit instantly influences the state of the other(s).
+-- *   **Quantum Tunneling**: A quantum phenomenon where a particle can pass through a potential energy barrier, even if it does not have enough kinetic energy to do so classically. While not directly a computational principle, it plays a role in some quantum annealing processes.
 
-Here''s a simple Python example of a classical bit vs. a quantum bit concept (conceptual, not runnable quantum code):
+-- Here''s a simple Python example of a classical bit vs. a quantum bit concept (conceptual, not runnable quantum code):
 
-```python
-# Classical bit
-classical_bit = 0 # Can be 0 or 1
+-- ```python
+-- # Classical bit
+-- classical_bit = 0 # Can be 0 or 1
 
-# Quantum bit (conceptual representation of superposition)
-# In reality, this would require a quantum computing library like Qiskit or Cirq
-class Qubit:
-    def __init__(self):
-        self.state = "superposition (0 and 1)"
+-- # Quantum bit (conceptual representation of superposition)
+-- # In reality, this would require a quantum computing library like Qiskit or Cirq
+-- class Qubit:
+--     def __init__(self):
+--         self.state = "superposition (0 and 1)"
 
-my_qubit = Qubit()
-print(f"Classical bit state: {classical_bit}")
-print(f"Quantum bit state: {my_qubit.state}")
-```
+-- my_qubit = Qubit()
+-- print(f"Classical bit state: {classical_bit}")
+-- print(f"Quantum bit state: {my_qubit.state}")
+-- ```
 
-Quantum computers are not meant to replace classical computers for everyday tasks, but rather to excel at specific, highly complex problems in fields like drug discovery, material science, financial modeling, and cryptography.',
-        '',
-        1749310549000,
-        1749310549000
-    ),
-    (
-        'msg-21-3',
-        'user-123',
-        'test-chat-21',
-        'user',
-        'claude-4-sonnet',
-        'What kind of problems can it solve?',
-        '',
-        1749310589000,
-        1749310589000
-    ),
-    (
-        'msg-21-4',
-        'user-123',
-        'test-chat-21',
-        'assistant',
-        'claude-4-sonnet',
-        'Quantum computers are particularly well-suited for problems that involve a large number of variables and complex interactions, where classical computers would take an impossibly long time to find a solution. Some of the key areas where quantum computing is expected to make a significant impact include:
+-- Quantum computers are not meant to replace classical computers for everyday tasks, but rather to excel at specific, highly complex problems in fields like drug discovery, material science, financial modeling, and cryptography.',
+--         '',
+--         1749310549000,
+--         1749310549000
+--     ),
+--     (
+--         'msg-21-3',
+--         'user-123',
+--         'test-chat-21',
+--         'user',
+--         'claude-4-sonnet',
+--         'What kind of problems can it solve?',
+--         '',
+--         1749310589000,
+--         1749310589000
+--     ),
+--     (
+--         'msg-21-4',
+--         'user-123',
+--         'test-chat-21',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Quantum computers are particularly well-suited for problems that involve a large number of variables and complex interactions, where classical computers would take an impossibly long time to find a solution. Some of the key areas where quantum computing is expected to make a significant impact include:
 
-1.  **Drug Discovery and Materials Science**: Simulating molecular structures and chemical reactions at the quantum level. This could lead to the development of new drugs with fewer side effects, and novel materials with unprecedented properties (e.g., superconductors at room temperature). The ability to accurately model molecular interactions is crucial for rational drug design.
+-- 1.  **Drug Discovery and Materials Science**: Simulating molecular structures and chemical reactions at the quantum level. This could lead to the development of new drugs with fewer side effects, and novel materials with unprecedented properties (e.g., superconductors at room temperature). The ability to accurately model molecular interactions is crucial for rational drug design.
 
-    *   *Example Application*: Designing a new catalyst for a chemical reaction.
-    *   *Traditional Approach*: Costly and time-consuming trial-and-error experiments.
-    *   *Quantum Approach*: Simulate the reaction at an atomic level to identify optimal catalysts.
+--     *   *Example Application*: Designing a new catalyst for a chemical reaction.
+--     *   *Traditional Approach*: Costly and time-consuming trial-and-error experiments.
+--     *   *Quantum Approach*: Simulate the reaction at an atomic level to identify optimal catalysts.
 
-2.  **Optimization Problems**: Finding the most efficient solution among a vast number of possibilities. This includes logistics, supply chain management, financial modeling, and traffic flow optimization.
+-- 2.  **Optimization Problems**: Finding the most efficient solution among a vast number of possibilities. This includes logistics, supply chain management, financial modeling, and traffic flow optimization.
 
-    *   *Example Application*: Optimizing delivery routes for a large logistics company.
-    *   *Traditional Approach*: Heuristics and approximations that may not find the global optimum.
-    *   *Quantum Approach*: Explore a much larger solution space to find more optimal routes.
+--     *   *Example Application*: Optimizing delivery routes for a large logistics company.
+--     *   *Traditional Approach*: Heuristics and approximations that may not find the global optimum.
+--     *   *Quantum Approach*: Explore a much larger solution space to find more optimal routes.
 
-3.  **Cryptography**: Breaking currently secure encryption methods (like RSA) and developing new, quantum-resistant cryptographic algorithms. Shor''s algorithm, for instance, can efficiently factor large numbers, posing a threat to public-key cryptography.
+-- 3.  **Cryptography**: Breaking currently secure encryption methods (like RSA) and developing new, quantum-resistant cryptographic algorithms. Shor''s algorithm, for instance, can efficiently factor large numbers, posing a threat to public-key cryptography.
 
-    *   *Example Application*: Securing sensitive data in a post-quantum world.
-    *   *Traditional Approach*: Relying on the computational difficulty of factoring large numbers.
-    *   *Quantum Approach*: Utilizing quantum algorithms to break or create stronger encryption.
+--     *   *Example Application*: Securing sensitive data in a post-quantum world.
+--     *   *Traditional Approach*: Relying on the computational difficulty of factoring large numbers.
+--     *   *Quantum Approach*: Utilizing quantum algorithms to break or create stronger encryption.
 
-    Here''s a conceptual representation of how Shor''s algorithm might look in a simplified quantum circuit (using Qiskit syntax for illustration):
+--     Here''s a conceptual representation of how Shor''s algorithm might look in a simplified quantum circuit (using Qiskit syntax for illustration):
 
-    ```python
-    from qiskit import QuantumCircuit, transpile, Aer, IBMQ
-    from qiskit.visualization import plot_histogram
+--     ```python
+--     from qiskit import QuantumCircuit, transpile, Aer, IBMQ
+--     from qiskit.visualization import plot_histogram
 
-    # This is a highly simplified conceptual example and not a runnable Shor''s algorithm
-    # Shor''s algorithm is much more complex and requires many qubits and operations.
-    qc = QuantumCircuit(4, 2) # 4 qubits, 2 classical bits
+--     # This is a highly simplified conceptual example and not a runnable Shor''s algorithm
+--     # Shor''s algorithm is much more complex and requires many qubits and operations.
+--     qc = QuantumCircuit(4, 2) # 4 qubits, 2 classical bits
 
-    # Apply some Hadamard gates for superposition (conceptual)
-    qc.h([0, 1])
+--     # Apply some Hadamard gates for superposition (conceptual)
+--     qc.h([0, 1])
 
-    # Apply some controlled-NOT gates for entanglement (conceptual)
-    qc.cx(0, 2)
-    qc.cx(1, 3)
+--     # Apply some controlled-NOT gates for entanglement (conceptual)
+--     qc.cx(0, 2)
+--     qc.cx(1, 3)
 
-    # Measure (conceptual)
-    qc.measure([0, 1], [0, 1])
+--     # Measure (conceptual)
+--     qc.measure([0, 1], [0, 1])
 
-    print("Simplified Quantum Circuit for factoring (conceptual):")
-    print(qc.draw(output=''text''))
+--     print("Simplified Quantum Circuit for factoring (conceptual):")
+--     print(qc.draw(output=''text''))
 
-    # You would then run this on a quantum simulator or actual hardware
-    # simulator = Aer.get_backend(''qasm_simulator'')
-    # job = simulator.run(transpile(qc, simulator), shots=1024)
-    # result = job.result()
-    # counts = result.get_counts(qc)
-    # print(plot_histogram(counts))
-    ```
+--     # You would then run this on a quantum simulator or actual hardware
+--     # simulator = Aer.get_backend(''qasm_simulator'')
+--     # job = simulator.run(transpile(qc, simulator), shots=1024)
+--     # result = job.result()
+--     # counts = result.get_counts(qc)
+--     # print(plot_histogram(counts))
+--     ```
 
-4.  **Machine Learning**: Enhancing machine learning algorithms for tasks like pattern recognition, data analysis, and artificial intelligence. Quantum machine learning could offer speedups for training complex models or processing vast datasets.
+-- 4.  **Machine Learning**: Enhancing machine learning algorithms for tasks like pattern recognition, data analysis, and artificial intelligence. Quantum machine learning could offer speedups for training complex models or processing vast datasets.
 
-    *   *Example Application*: Accelerating the training of deep neural networks.
-    *   *Traditional Approach*: Computationally intensive training on classical CPUs/GPUs.
-    *   *Quantum Approach*: Leveraging quantum parallelism for faster convergence.
+--     *   *Example Application*: Accelerating the training of deep neural networks.
+--     *   *Traditional Approach*: Computationally intensive training on classical CPUs/GPUs.
+--     *   *Quantum Approach*: Leveraging quantum parallelism for faster convergence.
 
-These are just a few examples, and the field is rapidly evolving, with new applications being discovered constantly.',
-        '',
-        1749310629000,
-        1749310629000
-    ),
-    (
-        'msg-21-5',
-        'user-123',
-        'test-chat-21',
-        'user',
-        'claude-4-sonnet',
-        'Is it available now?',
-        '',
-        1749310669000,
-        1749310669000
-    ),
-    (
-        'msg-21-6',
-        'user-123',
-        'test-chat-21',
-        'assistant',
-        'claude-4-sonnet',
-        'Yes, quantum computing is available now, but it''s still very much in its early stages of development and primarily accessible to researchers, large corporations, and dedicated quantum computing startups. It''s not yet a consumer-level technology, nor is it capable of outperforming classical computers for most common tasks.
+-- These are just a few examples, and the field is rapidly evolving, with new applications being discovered constantly.',
+--         '',
+--         1749310629000,
+--         1749310629000
+--     ),
+--     (
+--         'msg-21-5',
+--         'user-123',
+--         'test-chat-21',
+--         'user',
+--         'claude-4-sonnet',
+--         'Is it available now?',
+--         '',
+--         1749310669000,
+--         1749310669000
+--     ),
+--     (
+--         'msg-21-6',
+--         'user-123',
+--         'test-chat-21',
+--         'assistant',
+--         'claude-4-sonnet',
+--         'Yes, quantum computing is available now, but it''s still very much in its early stages of development and primarily accessible to researchers, large corporations, and dedicated quantum computing startups. It''s not yet a consumer-level technology, nor is it capable of outperforming classical computers for most common tasks.
 
-Here''s a breakdown of the current landscape:
+-- Here''s a breakdown of the current landscape:
 
-*   **Cloud-Based Access**: Major technology companies like IBM (IBM Quantum Experience), Google (Quantum AI), Amazon (Amazon Braket), and Microsoft (Azure Quantum) provide cloud access to their quantum processors. This allows users to write quantum algorithms and run them on actual quantum hardware or simulators without needing to build and maintain their own quantum computers. This is the most common way for researchers and developers to experiment with quantum computing today.
+-- *   **Cloud-Based Access**: Major technology companies like IBM (IBM Quantum Experience), Google (Quantum AI), Amazon (Amazon Braket), and Microsoft (Azure Quantum) provide cloud access to their quantum processors. This allows users to write quantum algorithms and run them on actual quantum hardware or simulators without needing to build and maintain their own quantum computers. This is the most common way for researchers and developers to experiment with quantum computing today.
 
-    *   *Example*: Using IBM Quantum Experience to run a small quantum circuit:
-        ```python
-        # Requires IBM Quantum Experience account and qiskit installed
-        # from qiskit import QuantumCircuit, transpile, Aer
-        # from qiskit_ibm_runtime import QiskitRuntimeService
+--     *   *Example*: Using IBM Quantum Experience to run a small quantum circuit:
+--         ```python
+--         # Requires IBM Quantum Experience account and qiskit installed
+--         # from qiskit import QuantumCircuit, transpile, Aer
+--         # from qiskit_ibm_runtime import QiskitRuntimeService
 
-        # # Authenticate with your IBM Quantum token
-        # service = QiskitRuntimeService(channel=''ibm_cloud'', token=''YOUR_IBM_QUANTUM_TOKEN'')
-        # backend = service.get_backend(''ibm_brisbane'') # Or another available backend
+--         # # Authenticate with your IBM Quantum token
+--         # service = QiskitRuntimeService(channel=''ibm_cloud'', token=''YOUR_IBM_QUANTUM_TOKEN'')
+--         # backend = service.get_backend(''ibm_brisbane'') # Or another available backend
 
-        # qc = QuantumCircuit(1, 1)
-        # qc.h(0) # Apply Hadamard gate
-        # qc.measure(0, 0) # Measure qubit
+--         # qc = QuantumCircuit(1, 1)
+--         # qc.h(0) # Apply Hadamard gate
+--         # qc.measure(0, 0) # Measure qubit
 
-        # print("Simple Hadamard Circuit:")
-        # print(qc.draw(output=''text''))
+--         # print("Simple Hadamard Circuit:")
+--         # print(qc.draw(output=''text''))
 
-        # # Job execution (conceptual, requires proper setup)
-        # # job = backend.run(transpile(qc, backend), shots=1024)
-        # # result = job.result()
-        # # counts = result.get_counts(qc)
-        # # print(f"Measurement counts: {counts}")
-        ```
+--         # # Job execution (conceptual, requires proper setup)
+--         # # job = backend.run(transpile(qc, backend), shots=1024)
+--         # # result = job.result()
+--         # # counts = result.get_counts(qc)
+--         # # print(f"Measurement counts: {counts}")
+--         ```
 
-*   **Noisy Intermediate-Scale Quantum (NISQ) Era**: We are currently in the NISQ era, meaning quantum computers have a limited number of qubits (typically tens to a few hundreds) and are prone to errors (noise). This limits the complexity of algorithms that can be run reliably. Significant error correction technologies are still under development.
+-- *   **Noisy Intermediate-Scale Quantum (NISQ) Era**: We are currently in the NISQ era, meaning quantum computers have a limited number of qubits (typically tens to a few hundreds) and are prone to errors (noise). This limits the complexity of algorithms that can be run reliably. Significant error correction technologies are still under development.
 
-*   **Specialized Applications**: As mentioned before, quantum computers are not general-purpose machines. Their current applications are highly specialized and often involve exploring proof-of-concept solutions for the problems discussed earlier (drug discovery, optimization, etc.).
+-- *   **Specialized Applications**: As mentioned before, quantum computers are not general-purpose machines. Their current applications are highly specialized and often involve exploring proof-of-concept solutions for the problems discussed earlier (drug discovery, optimization, etc.).
 
-*   **Future Outlook**: The field is advancing rapidly. Researchers are constantly improving qubit coherence times, increasing the number of qubits, and developing more robust error correction techniques. While a truly fault-tolerant quantum computer capable of solving large-scale, real-world problems is still years away, the progress is undeniable. Many experts predict that quantum computing will start to have a tangible impact on various industries within the next decade.
+-- *   **Future Outlook**: The field is advancing rapidly. Researchers are constantly improving qubit coherence times, increasing the number of qubits, and developing more robust error correction techniques. While a truly fault-tolerant quantum computer capable of solving large-scale, real-world problems is still years away, the progress is undeniable. Many experts predict that quantum computing will start to have a tangible impact on various industries within the next decade.
 
-In summary, while you can access and experiment with quantum computers today through cloud platforms, they are not yet ubiquitous or capable of solving everyday computational tasks more efficiently than classical computers. The journey towards widespread practical quantum computing is ongoing.',
-        '',
-        1749310899000,
-        1749310899000
-    );
+-- In summary, while you can access and experiment with quantum computers today through cloud platforms, they are not yet ubiquitous or capable of solving everyday computational tasks more efficiently than classical computers. The journey towards widespread practical quantum computing is ongoing.',
+--         '',
+--         1749310899000,
+--         1749310899000
+--     );

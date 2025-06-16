@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
@@ -73,20 +74,22 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
 	}
 
+	now := time.Now()
 	message := Message{
-		ID:        fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
 		ChatID:    chatID,
 		UserID:    userID,
 		Role:      "user",
+		Status:    "done",
 		Model:     req.Model,
 		Content:   body.Content,
-		CreatedAt: time.Now().UnixMilli(),
-		UpdatedAt: time.Now().UnixMilli(),
+		CreatedAt: now.UnixMilli(),
+		UpdatedAt: now.UnixMilli(),
 	}
 
-	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		message.ID, message.ChatID, message.UserID,
-		message.Role, message.Model,
+		message.Role, message.Status, message.Model,
 		message.Content, message.Reasoning,
 		message.CreatedAt, message.UpdatedAt,
 	)
@@ -104,29 +107,42 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	now = time.Now()
+	message = Message{
+		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		ChatID:    chatID,
+		UserID:    userID,
+		Role:      "assistant",
+		Status:    "streaming",
+		Model:     req.Model,
+		CreatedAt: now.UnixMilli(),
+		UpdatedAt: now.UnixMilli(),
+	}
+
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID,
+		message.Role, message.Status, message.Model,
+		message.Content, message.Reasoning,
+		message.CreatedAt, message.UpdatedAt,
+	)
+	if err != nil {
+		s.log.Warn("failed to insert message into database", "error", err)
+		fmt.Println(err)
+		http.Error(w, "failed to insert message into database", http.StatusInternalServerError)
+		return
+	}
+
 	compl.OnClose(func(chunks []stream.Chunk) error {
 
-		message := Message{
-			ID:        fmt.Sprintf("msg_%d", time.Now().UnixNano()),
-			ChatID:    chatID,
-			UserID:    userID,
-			Role:      "assistant",
-			Model:     req.Model,
-			CreatedAt: time.Now().UnixMilli(),
-			UpdatedAt: time.Now().UnixMilli(),
-		}
+		var contentBuilder, reasoningBuilder strings.Builder
 
-		// TODO: Maybe use string builder instead
 		for _, chunk := range chunks {
-			message.Content += chunk.Content
-			message.Reasoning += chunk.Reasoning
+			contentBuilder.WriteString(chunk.Content)
+			reasoningBuilder.WriteString(chunk.Reasoning)
 		}
 
-		_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			message.ID, message.ChatID, message.UserID,
-			message.Role, message.Model,
-			message.Content, message.Reasoning,
-			message.CreatedAt, message.UpdatedAt,
+		_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+			contentBuilder.String(), reasoningBuilder.String(), "done", time.Now().UnixMilli(), message.ID,
 		)
 
 		return err
@@ -166,16 +182,18 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		Title:         fmt.Sprintf("New Chat %d", time.Now().Unix()), // TODO: Generate title based on the first message using a lightweight model
 		Model:         body.Model,
 		IsPinned:      false,
-		LastMessageAt: now.UnixMilli(),
+		Status:        "streaming",
 		CreatedAt:     now.UnixMilli(),
 		UpdatedAt:     now.UnixMilli(),
+		LastMessageAt: 0,
 	}
 
-	_, err := s.db.Exec("INSERT INTO chats (id, user_id, title, model, is_pinned, is_streaming, last_message_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	_, err := s.db.Exec("INSERT INTO chats (id, user_id, title, model, is_pinned, status, created_at, updated_at, last_message_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		newChat.ID, newChat.UserID,
 		newChat.Title, newChat.Model,
-		newChat.IsPinned, false,
-		newChat.LastMessageAt, newChat.CreatedAt, newChat.UpdatedAt,
+		newChat.IsPinned, newChat.Status,
+		newChat.CreatedAt, newChat.UpdatedAt,
+		newChat.LastMessageAt,
 	)
 	if err != nil {
 		s.log.Warn("failed to insert chat into database", "error", err)
@@ -202,24 +220,22 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
 	}
 
+	now = time.Now()
 	message := Message{
-		ID:     fmt.Sprintf("msg_%d", now.UnixNano()),
-		ChatID: newChat.ID,
-		UserID: userID,
-
-		Role:  "user",
-		Model: req.Model,
-
+		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		ChatID:    newChat.ID,
+		UserID:    userID,
+		Role:      "user",
+		Status:    "done",
+		Model:     req.Model,
 		Content:   body.Content,
-		Reasoning: "",
-
 		CreatedAt: now.UnixMilli(),
 		UpdatedAt: now.UnixMilli(),
 	}
 
-	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		message.ID, message.ChatID, message.UserID,
-		message.Role, message.Model,
+		message.Role, message.Status, message.Model,
 		message.Content, message.Reasoning,
 		message.CreatedAt, message.UpdatedAt,
 	)
@@ -237,30 +253,42 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	now = time.Now()
+	message = Message{
+		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		ChatID:    newChat.ID,
+		UserID:    userID,
+		Role:      "assistant",
+		Status:    "streaming",
+		Model:     req.Model,
+		CreatedAt: now.UnixMilli(),
+		UpdatedAt: now.UnixMilli(),
+	}
+
+	_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, status, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		message.ID, message.ChatID, message.UserID,
+		message.Role, message.Status, message.Model,
+		message.Content, message.Reasoning,
+		message.CreatedAt, message.UpdatedAt,
+	)
+	if err != nil {
+		s.log.Warn("failed to insert message into database", "error", err)
+		fmt.Println(err)
+		http.Error(w, "failed to insert message into database", http.StatusInternalServerError)
+		return
+	}
+
 	compl.OnClose(func(chunks []stream.Chunk) error {
 
-		now := time.Now()
-		message := Message{
-			ID:        fmt.Sprintf("msg_%d", time.Now().UnixNano()),
-			ChatID:    newChat.ID,
-			UserID:    userID,
-			Role:      "assistant",
-			Model:     req.Model,
-			CreatedAt: now.UnixMilli(),
-			UpdatedAt: now.UnixMilli(),
-		}
+		var contentBuilder, reasoningBuilder strings.Builder
 
-		// TODO: Maybe use string builder instead
 		for _, chunk := range chunks {
-			message.Content += chunk.Content
-			message.Reasoning += chunk.Reasoning // TODO: Rename chunk Thinking -> Reasonsing
+			contentBuilder.WriteString(chunk.Content)
+			reasoningBuilder.WriteString(chunk.Reasoning)
 		}
 
-		_, err = s.db.Exec("INSERT INTO messages (id, chat_id, user_id, role, model, content, reasoning, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			message.ID, message.ChatID, message.UserID,
-			message.Role, message.Model,
-			message.Content, message.Reasoning,
-			message.CreatedAt, message.UpdatedAt,
+		_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+			contentBuilder.String(), reasoningBuilder.String(), "done", time.Now().UnixMilli(), message.ID,
 		)
 
 		return err
@@ -268,7 +296,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Add stream to stream pool and return id
-	streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
+	streamID := fmt.Sprintf("stream_%d", time.Now().UnixNano()) // TODO: Consider replacing with uuid
 	s.sp.Add(streamID, compl)
 
 	s.log.Debug("stream was started sucessfully", "chat_id", newChat.ID, "stream_id", streamID)
