@@ -1,7 +1,6 @@
 package gemini
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -13,10 +12,10 @@ import (
 
 func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
-	ctx := context.TODO()
+	s := stream.New()
 
 	// TODO: replace with a proper context
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{
+	client, err := genai.NewClient(s.Context(), &genai.ClientConfig{
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {
@@ -53,16 +52,14 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 		}
 	}
 
-	chat, err := client.Chats.Create(ctx, req.Model, &config, messages)
+	chat, err := client.Chats.Create(s.Context(), req.Model, &config, messages)
 	if err != nil {
 		return nil, err
 	}
 
-	s := stream.New()
-
 	go func() {
 
-		for result, err := range chat.SendMessageStream(ctx, genai.Part{Text: req.Messages[len(req.Messages)-1].Content}) {
+		for result, err := range chat.SendMessageStream(s.Context(), genai.Part{Text: req.Messages[len(req.Messages)-1].Content}) {
 
 			content, thoughts := getChunk(result)
 
