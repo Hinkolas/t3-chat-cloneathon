@@ -26,6 +26,7 @@
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import { scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import { refreshChatHistory } from '$lib/store';
 
 	interface ButtonData {
 		icon: typeof Icon;
@@ -176,6 +177,7 @@
 			console.log(res);
 
 			goto(`/chat/${res.chat_id}/`);
+			refreshChatHistory();
 		} catch (error) {
 			console.log('Error:', error);
 		}

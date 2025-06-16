@@ -13,10 +13,33 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import Error from '$lib/components/Error.svelte';
 	import { toggleSidebar } from '$lib/store';
+	import { sidebarState } from '$lib/store';
 
 	let chats = $state(data.chats);
 
-	function newChat() {}
+	$effect(() => {
+		if ($sidebarState.refresh) {
+			refreshChats();
+		}
+	})
+
+	async function refreshChats() {
+		const apiUrl = 'http://localhost:3141';
+
+		try {
+			// Fetch chat history
+			const chatHistoryResponse = await fetch(`${apiUrl}/v1/chats/`);
+			if (!chatHistoryResponse.ok) {
+				console.error(500, 'Failed to fetch chats');
+			}
+			const newChats: ChatHistoryResponse = await chatHistoryResponse.json();
+
+			console.log(newChats);
+			chats = newChats;
+		} catch (err) {
+			console.error('Load function error:', err);
+		}
+	}
 </script>
 
 <div class="container">
@@ -27,7 +50,7 @@
 		<button onclick={toggleSidebar} class="sidebar-button">
 			<PanelLeft size="16" />
 		</button>
-		<Sidebar {chats} {newChat} />
+		<Sidebar {chats} />
 		<div class="content">
 			<slot />
 		</div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { chats = $bindable(), newChat } = $props();
+	let { chats = $bindable() } = $props();
 
 	import { fade } from 'svelte/transition';
 	import SearchInput from '$lib/components/SearchInput.svelte';
@@ -8,7 +8,7 @@
 	import { showConfirmationPopup, showRenamePopup, popup, closeSidebar } from '$lib/store';
 	
 	import type { ChatHistoryResponse, ChatHistoryData } from '$lib/types';
-	import { toggleSidebar, sidebarState } from '$lib/store';
+	import { toggleSidebar, sidebarState} from '$lib/store';
 	import { get } from 'svelte/store';
 
 	// Import extracted services and utilities
@@ -188,7 +188,7 @@
 	<div class="head">
 		<div class="title">Chat</div>
 		<div class="newChatButton">
-			<a href="/" onclick={newChat}>New Chat</a>
+			<a href="/">New Chat</a>
 		</div>
 		<div class="search-container">
 			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
