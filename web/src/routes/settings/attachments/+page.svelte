@@ -96,7 +96,9 @@
 			{#each Object.entries(filteredAttachments) as [idx, attachment]}
 				<div
 					class="attachment"
-					onclick={() => toggleAttachment(attachment.id)}
+					onclick={() => {
+						toggleAttachment(attachment.id);
+					}}
 					role="button"
 					aria-label="Select Attachment"
 					tabindex="0"
@@ -111,7 +113,14 @@
 						<FileText size="24" />
 					</div>
 					<div class="infos">
-						<a href={attachment.src} target="_blank" class="title">
+						<a
+							onclick={(e) => {
+								e.stopPropagation();
+							}}
+							href={attachment.src}
+							target="_blank"
+							class="title"
+						>
 							{attachment.name}
 							<ExternalLink size="16" />
 						</a>
@@ -196,8 +205,8 @@
 	}
 
 	.square {
-		width: 15px;
-		height: 15px;
+		min-width: 15px;
+		min-height: 15px;
 		border-radius: 4px;
 		border: 1px solid #614052;
 		display: flex;
@@ -243,8 +252,8 @@
 	}
 
 	.attachment .preview {
-		width: 48px;
-		height: 48px;
+		min-width: 48px;
+		min-height: 48px;
 		border-radius: 4px;
 		background-color: #302029;
 		display: flex;
@@ -269,6 +278,10 @@
 		align-items: center;
 		gap: 8px;
 		color: hsl(var(--secondary-foreground));
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		max-width: 100%;
 	}
 
 	.attachment .infos .title:hover {

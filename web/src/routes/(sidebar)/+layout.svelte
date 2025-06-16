@@ -16,12 +16,13 @@
 	import { sidebarState } from '$lib/store';
 
 	let chats = $state(data.chats);
+	let models = $state(data.models || {});
 
 	$effect(() => {
 		if ($sidebarState.refresh) {
 			refreshChats();
 		}
-	})
+	});
 
 	async function refreshChats() {
 		const apiUrl = 'http://localhost:3141';
@@ -39,10 +40,12 @@
 			console.error('Load function error:', err);
 		}
 	}
+
+	console.log('Sidebar layout loaded with models:', data.models);
 </script>
 
 <div class="container">
-	{#if !data.models || Object.keys(data.models).length === 0}
+	{#if !models }
 		<Error />
 	{:else}
 		<Popup />

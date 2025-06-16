@@ -79,11 +79,11 @@
 	let message = $state('');
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
-	let filteredModels: ModelsResponse = $state(data.models);
+	let filteredModels: ModelsResponse = $state(data.models || {});
 
 	let activeTab: string = $state('create');
 	let currentSuggestions: string[] = $derived(buttonData[activeTab]?.suggestions || []);
-	let selectedModelKey: string = $state(Object.keys(data.models)[0]);
+	let selectedModelKey: string = $state(Object.keys(data.models)[0] || 'Empty');
 	let showPlaceholder: boolean = $state(true);
 
 	let reasoningOn: boolean = $state(false);
@@ -91,16 +91,21 @@
 
 	// File upload related state
 	let fileInput: HTMLInputElement;
-	let uploadedFiles: File[] = $state([]);
 	let uploadingFile: File | null = $state(null);
 	let uploadError: string | null = $state(null);
 	let isDragOver = $state(false);
 
-	// Complete uploadFile function
-	async function uploadFile(file: File, chatId?: string): Promise<boolean> {
+	interface UploadedFileWithId {
+		file: File;
+		id: string;
+	}
+
+	let uploadedFiles: UploadedFileWithId[] = $state([]);
+
+	// Update uploadFile to store id with file
+	async function uploadFile(file: File, chatId?: string): Promise<UploadedFileWithId | null> {
 		const url: string = 'http://localhost:3141';
 
-		// Set uploading state
 		uploadingFile = file;
 		uploadError = null;
 
@@ -122,19 +127,18 @@
 
 			const result = await response.json();
 
-			// Reset uploading state
 			uploadingFile = null;
 
-			// Add to uploaded files if successful (append, don't replace)
-			uploadedFiles = [...uploadedFiles, file];
+			const uploaded: UploadedFileWithId = { file, id: result.id };
+			uploadedFiles = [...uploadedFiles, uploaded];
 
 			console.log('File uploaded successfully:', result);
-			return true;
+			return uploaded;
 		} catch (error) {
 			console.error('Error uploading file:', error);
 			uploadingFile = null;
 			uploadError = error instanceof Error ? error.message : 'Upload failed';
-			return false;
+			return null;
 		}
 	}
 
@@ -143,9 +147,9 @@
 		const fileArray = Array.from(files);
 
 		for (const file of fileArray) {
-			// Check if file is already uploaded (by name and size)
 			const isDuplicate = uploadedFiles.some(
-				(uploadedFile) => uploadedFile.name === file.name && uploadedFile.size === file.size
+				(uploadedFile) =>
+					uploadedFile.file.name === file.name && uploadedFile.file.size === file.size
 			);
 
 			if (!isDuplicate) {
@@ -214,7 +218,6 @@
 		uploadError = null;
 	}
 
-	// Clear all uploaded files
 	function clearAllFiles() {
 		uploadedFiles = [];
 		uploadError = null;
@@ -319,7 +322,8 @@
 				body: JSON.stringify({
 					model: selectedModelKey,
 					content: tempMessage,
-					reasoning_effort: reasoningOn ? 1024 : 0
+					reasoning_effort: reasoningOn ? 1024 : 0,
+					attachments: uploadedFiles.map((f) => f.id)
 				})
 			});
 
@@ -330,17 +334,9 @@
 
 			const res = await response.json();
 
-			// If we have uploaded files, upload them to the new chat
-			if (uploadedFiles.length > 0) {
-				// Re-upload files to the new chat
-				const chatId = res.chat_id;
-				for (const file of uploadedFiles) {
-					await uploadFile(file, chatId);
-				}
-			}
-
 			goto(`/chat/${res.chat_id}/`);
 			refreshChatHistory();
+			clearAllFiles(); // clear after sending
 		} catch (error) {
 			console.log('Error:', error);
 		}
@@ -438,11 +434,11 @@
 		{#if uploadedFiles.length > 0 && !uploadingFile}
 			<div class="upload-container">
 				<div class="uploaded-files">
-					{#each uploadedFiles as file, index}
+					{#each uploadedFiles as uploaded, index}
 						<div class="file-item uploaded">
-							<span class="file-icon">{getFileIcon(file)}</span>
+							<span class="file-icon">{getFileIcon(uploaded.file)}</span>
 							<div class="file-info">
-								<span class="file-name">{file.name}</span>
+								<span class="file-name">{uploaded.file.name}</span>
 							</div>
 							<button
 								class="remove-file"
@@ -499,52 +495,59 @@
 						</div>
 					</div>
 					<button
+						disabled={Object.keys(data.models).length === 0}
 						onclick={toggleModelSelection}
 						class="selection-button non-selectable {modelSelectionOpen ? 'active' : ''}"
 					>
-						<span>{data.models[selectedModelKey].title}</span>
-						<ChevronDown size={iconSize} />
+						{#if Object.keys(data.models).length > 0}
+							<span>{data.models[selectedModelKey].title}</span>
+							<ChevronDown size={iconSize} />
+						{:else}
+							<span>No Models</span>
+						{/if}
 					</button>
 				</div>
-				{#if data.models[selectedModelKey].features.has_reasoning}
+				{#if Object.keys(data.models).length > 0}
+					{#if data.models[selectedModelKey].features.has_reasoning}
+						<button
+							class="reasoning-button-feature"
+							class:active={reasoningOn}
+							onclick={() => {
+								reasoningOn = !reasoningOn;
+							}}
+						>
+							<Brain size={iconSize} />
+							Reasoning
+						</button>
+					{/if}
+					{#if data.models[selectedModelKey].features.has_web_search}
+						<button
+							class="reasoning-button-feature"
+							class:active={webSearchEnabled}
+							onclick={() => {
+								webSearchEnabled = !webSearchEnabled;
+							}}
+						>
+							<Globe size={iconSize} />
+							Search
+						</button>
+					{/if}
 					<button
-						class="reasoning-button-feature"
-						class:active={reasoningOn}
-						onclick={() => {
-							reasoningOn = !reasoningOn;
-						}}
+						onclick={triggerFileUpload}
+						class:has-file={uploadedFiles.length > 0}
+						disabled={!!uploadingFile}
 					>
-						<Brain size={iconSize} />
-						Reasoning
+						<Paperclip size={iconSize} />
+						{#if uploadedFiles.length > 0}
+							Attach ({uploadedFiles.length})
+						{:else}
+							Attach
+						{/if}
+						{#if uploadingFile}
+							<div class="button-spinner"></div>
+						{/if}
 					</button>
 				{/if}
-				{#if data.models[selectedModelKey].features.has_web_search}
-					<button
-						class="reasoning-button-feature"
-						class:active={webSearchEnabled}
-						onclick={() => {
-							webSearchEnabled = !webSearchEnabled;
-						}}
-					>
-						<Globe size={iconSize} />
-						Search
-					</button>
-				{/if}
-				<button
-					onclick={triggerFileUpload}
-					class:has-file={uploadedFiles.length > 0}
-					disabled={!!uploadingFile}
-				>
-					<Paperclip size={iconSize} />
-					{#if uploadedFiles.length > 0}
-						Attach ({uploadedFiles.length})
-					{:else}
-						Attach
-					{/if}
-					{#if uploadingFile}
-						<div class="button-spinner"></div>
-					{/if}
-				</button>
 			</div>
 			<div class="button-group">
 				<button
@@ -552,7 +555,7 @@
 					onclick={() => {
 						sendMessage(message);
 					}}
-					disabled={message.length == 0}
+					disabled={message.length == 0 || Object.keys(data.models).length === 0}
 					id="SendButton"
 				>
 					<ArrowUp size="20" />
