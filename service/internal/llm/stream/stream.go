@@ -80,13 +80,13 @@ func (s *Stream) Publish(c Chunk) {
 }
 
 // Subscribe returns a channel on which the caller will receive all past and future chunks
-func (s *Stream) Subscribe(buffer int) Subscription {
+func (s *Stream) Subscribe(buffer int) *Subscription {
 	ch := make(chan Chunk, buffer)
 	s.mu.Lock()
 	ch <- s.cache
 	s.subs = append(s.subs, ch)
 	s.mu.Unlock()
-	return Subscription{ch, func() { s.unsubscribe(ch) }}
+	return &Subscription{ch, func() { s.unsubscribe(ch) }}
 }
 
 // unsubscribe removes ch from s.subs and closes it.
@@ -96,7 +96,7 @@ func (s *Stream) unsubscribe(ch chan Chunk) {
 	// find & remove
 	for i, c := range s.subs {
 		if c == ch {
-			s.subs = append(s.subs[:i], s.subs[i+1:]...)
+			s.subs = slices.Delete(s.subs, i, i+1)
 			close(ch)
 			return
 		}

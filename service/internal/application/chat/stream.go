@@ -25,16 +25,15 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the stream
-	strm, ok := s.sp.Get(streamID)
+	sub, ok := s.sp.Subscribe(streamID)
 	if !ok {
 		s.log.Debug("stream not found", "stream_id", streamID)
 		http.Error(w, "stream not found", http.StatusNotFound)
 		return
 	}
+	defer sub.Cancel()
 
 	// Subscribe to the stream
-	sub := strm.Subscribe(10)
-	defer sub.Cancel()
 
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
@@ -74,6 +73,8 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// TODO: Consider creating a database table to keep track of ongoing streams
 func (s *Service) CancelStream(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "not implemented yet", http.StatusNotImplemented)
+	streamID := mux.Vars(r)["id"]
+	s.sp.Cancel(streamID)
 }
