@@ -10,7 +10,7 @@ import (
 	"google.golang.org/genai"
 )
 
-func StreamCompletion(req chat.Request) (*stream.Stream, error) {
+func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
 	s := stream.New()
 
@@ -61,17 +61,17 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 
 		for result, err := range chat.SendMessageStream(s.Context(), genai.Part{Text: req.Messages[len(req.Messages)-1].Content}) {
 
+			if err != nil {
+				s.Fail(fmt.Errorf("gemini: %w", err))
+				return
+			}
+
 			content, thoughts := getChunk(result)
 
 			s.Publish(stream.Chunk{
 				Content:   content,
 				Reasoning: thoughts,
 			})
-
-			if err != nil {
-				s.Fail(fmt.Errorf("gemini: %w", err))
-				return
-			}
 
 		}
 
@@ -87,6 +87,10 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 }
 
 func getChunk(r *genai.GenerateContentResponse) (string, string) {
+
+	if r == nil {
+		return "", ""
+	}
 
 	if len(r.Candidates) == 0 || r.Candidates[0].Content == nil || len(r.Candidates[0].Content.Parts) == 0 {
 		return "", ""

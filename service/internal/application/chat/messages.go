@@ -110,7 +110,7 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	compl, err := s.mr.StreamCompletion(req)
+	compl, err := s.mr.StreamCompletion(req, chat.Options{})
 	if err != nil {
 		s.log.Warn("failed to start a stream", "error", err)
 		http.Error(w, "failed to start a stream", http.StatusInternalServerError)
@@ -198,14 +198,15 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:     now.UnixMilli(),
 		UpdatedAt:     now.UnixMilli(),
 		LastMessageAt: 0,
+		SharedAt:      0,
 	}
 
-	_, err := s.db.Exec("INSERT INTO chats (id, user_id, title, model, is_pinned, status, created_at, updated_at, last_message_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	_, err := s.db.Exec("INSERT INTO chats (id, user_id, title, model, is_pinned, status, created_at, updated_at, last_message_at, shared_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		newChat.ID, newChat.UserID,
 		newChat.Title, newChat.Model,
 		newChat.IsPinned, newChat.Status,
 		newChat.CreatedAt, newChat.UpdatedAt,
-		newChat.LastMessageAt,
+		newChat.LastMessageAt, newChat.SharedAt,
 	)
 	if err != nil {
 		s.log.Warn("failed to insert chat into database", "error", err)
@@ -268,7 +269,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	compl, err := s.mr.StreamCompletion(req)
+	compl, err := s.mr.StreamCompletion(req, chat.Options{})
 	if err != nil {
 		s.log.Warn("failed to start a stream", "error", err)
 		http.Error(w, "failed to start a stream", http.StatusInternalServerError)

@@ -11,7 +11,7 @@ import (
 	"github.com/ollama/ollama/api"
 )
 
-func StreamCompletion(req chat.Request) (*stream.Stream, error) {
+func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
 	var base *url.URL
 	var err error

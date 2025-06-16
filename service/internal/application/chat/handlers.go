@@ -29,4 +29,11 @@ func (s *Service) Handle(r *mux.Router) {
 	router.HandleFunc("/{id}/", s.OpenStream).Methods("GET")
 	router.HandleFunc("/{id}/", s.CancelStream).Methods("DELETE")
 
+	router = r.PathPrefix("/v1/profile").Subrouter()
+	router.HandleFunc("/", s.GetUserProfile).Methods("GET")
+	router.HandleFunc("/", s.PatchUserProfile).Methods("PATCH")
+
+	router = r.PathPrefix("/v1/share").Subrouter()
+	router.HandleFunc("/{id}/", s.GetSharedChat).Methods("GET")
+
 }

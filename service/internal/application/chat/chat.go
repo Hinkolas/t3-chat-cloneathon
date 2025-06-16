@@ -27,6 +27,7 @@ type ChatListItem struct {
 	Status        string `json:"status"`
 	LastMessageAt int64  `json:"last_message_at"`
 	CreatedAt     int64  `json:"created_at"`
+	SharedAt      int64  `json:"shared_at"`
 }
 
 func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +36,7 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 	chats := make([]ChatListItem, 0)
 
-	rows, err := s.db.Query("SELECT id, title, is_pinned, status, last_message_at, created_at FROM chats WHERE user_id = ?", userID)
+	rows, err := s.db.Query("SELECT id, title, is_pinned, status, last_message_at, created_at, shared_at FROM chats WHERE user_id = ?", userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -44,7 +45,7 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var chat ChatListItem
-		if err := rows.Scan(&chat.ID, &chat.Title, &chat.IsPinned, &chat.Status, &chat.LastMessageAt, &chat.CreatedAt); err != nil {
+		if err := rows.Scan(&chat.ID, &chat.Title, &chat.IsPinned, &chat.Status, &chat.LastMessageAt, &chat.CreatedAt, &chat.SharedAt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -75,6 +76,7 @@ type Chat struct {
 	CreatedAt     int64  `json:"created_at"`
 	UpdatedAt     int64  `json:"updated_at"`
 	LastMessageAt int64  `json:"last_message_at"`
+	SharedAt      int64  `json:"shared_at"`
 
 	Messages []Message `json:"messages"`
 }
@@ -255,6 +257,7 @@ type PatchChatRequest struct {
 	Title    *string `json:"title,omitempty"`
 	IsPinned *bool   `json:"is_pinned,omitempty"`
 	Model    *string `json:"model,omitempty"`
+	SharedAt *int64  `json:"shared_at,omitempty"`
 }
 
 func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
@@ -334,6 +337,27 @@ func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
+	}
+
+	if req.SharedAt != nil {
+
+		result, err := s.db.Exec("UPDATE chats SET shared_at = ? WHERE id = ? AND user_id = ?", *req.SharedAt, id, userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if rowsAffected == 0 {
+			http.Error(w, "Chat not found", http.StatusNotFound)
+			return
+		}
+
 	}
 
 	w.WriteHeader(http.StatusNoContent)
