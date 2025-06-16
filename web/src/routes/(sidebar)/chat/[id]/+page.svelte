@@ -238,7 +238,7 @@
 				body: JSON.stringify({
 					model: selectedModelKey,
 					content: tempMessage,
-					reasoning_effort: reasoningOn ? 256 : 0
+					reasoning_effort: reasoningOn ? 1024 : 0
 				})
 			});
 
@@ -282,7 +282,7 @@
 
 		eventSource.addEventListener('message_delta', (event) => {
 			const data = JSON.parse(event.data);
-
+			console.log(data);
 			if (data.content) {
 				accumulatedContent += data.content;
 			}
@@ -327,7 +327,6 @@
 	});
 
 	let reasoningStates: Record<string, boolean> = $state({});
-
 	let reasoningOn: boolean = $state(false);
 </script>
 

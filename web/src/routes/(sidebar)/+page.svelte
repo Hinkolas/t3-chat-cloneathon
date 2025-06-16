@@ -166,7 +166,7 @@
 				body: JSON.stringify({
 					model: selectedModelKey,
 					content: tempMessage,
-					reasoning_effort: reasoningOn ? 256 : 0
+					reasoning_effort: reasoningOn ? 1024 : 0
 				})
 			});
 
