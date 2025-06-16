@@ -24,17 +24,19 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-
-	// Subscribe to the stream
-	sub, ok := s.sp.Subscribe(streamID)
+	// Get the stream
+	strm, ok := s.sp.Get(streamID)
 	if !ok {
 		s.log.Debug("stream not found", "stream_id", streamID)
 		http.Error(w, "stream not found", http.StatusNotFound)
 		return
 	}
+
+	// Subscribe to the stream
+	sub := strm.Subscribe(10)
 	defer sub.Cancel()
 
+	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
 
 	for {
@@ -44,7 +46,7 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 			s.log.Debug("stream: client closed connection", "stream_id", streamID)
 			return
 
-		case chunk, more := <-sub.Channel():
+		case chunk, more := <-sub.Read():
 			if !more {
 				// publisher closed the stream
 				s.log.Debug("stream: provider closed the stream", "stream_id", streamID)

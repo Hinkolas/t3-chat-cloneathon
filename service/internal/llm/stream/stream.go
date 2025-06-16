@@ -45,7 +45,7 @@ func (s *Subscription) Cancel() {
 	s.cancel()
 }
 
-func (s *Subscription) Channel() <-chan Chunk {
+func (s *Subscription) Read() <-chan Chunk {
 	return s.ch
 }
 
@@ -79,7 +79,7 @@ func (s *Stream) Publish(c Chunk) {
 	s.pub <- c
 }
 
-// Subscribe returns a channel on which the caller will receive _all_ past and future chunks
+// Subscribe returns a channel on which the caller will receive all past and future chunks
 func (s *Stream) Subscribe(buffer int) Subscription {
 	ch := make(chan Chunk, buffer)
 	s.mu.Lock()
@@ -87,6 +87,20 @@ func (s *Stream) Subscribe(buffer int) Subscription {
 	s.subs = append(s.subs, ch)
 	s.mu.Unlock()
 	return Subscription{ch, func() { s.unsubscribe(ch) }}
+}
+
+// unsubscribe removes ch from s.subs and closes it.
+func (s *Stream) unsubscribe(ch chan Chunk) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// find & remove
+	for i, c := range s.subs {
+		if c == ch {
+			s.subs = append(s.subs[:i], s.subs[i+1:]...)
+			close(ch)
+			return
+		}
+	}
 }
 
 // Wait blocks until the stream is done. It returns any error.
@@ -122,20 +136,6 @@ func (s *Stream) emit(chunk Chunk) {
 		default:
 			// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
 			fmt.Println("subscriber is slow, blocking on chunk")
-		}
-	}
-}
-
-// unsubscribe removes ch from s.subs and closes it.
-func (s *Stream) unsubscribe(ch chan Chunk) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	// find & remove
-	for i, c := range s.subs {
-		if c == ch {
-			s.subs = append(s.subs[:i], s.subs[i+1:]...)
-			close(ch)
-			return
 		}
 	}
 }
