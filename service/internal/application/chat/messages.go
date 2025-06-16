@@ -58,6 +58,11 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	profile, err := s.getUserProfile(userID)
+	if err != nil {
+		s.log.Warn("failed to get user profile", "error", err)
+	}
+
 	messages = append(messages, chat.Message{
 		Role:    "user",
 		Content: body.Content,
@@ -72,6 +77,7 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		ReasoningEffort:     body.ReasoningEffort,
 		Stop:                nil,
 		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
+		System:              profile.SystemPrompt(),
 	}
 
 	now := time.Now()
@@ -110,51 +116,7 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	profile, err := s.getUserProfile(userID)
-	if err != nil {
-		s.log.Warn("failed to get user profile", "error", err)
-	}
-
-	prompt := fmt.Sprintf(`You are a personalized AI assistant. Your primary goal is to be helpful, engaging, and tailored to the user's specific needs and preferences.
-
-# Your Persona
-Your personality should be guided by the following traits: %s.
-Embody these traits in your language, tone, and the structure of your responses. If no traits are specified, adopt a generally helpful, friendly, and curious persona.
-
-# User Information
-You have been provided with the following information about the user. Use it to personalize the conversation naturally.
-
-- **User's Name:** %s
-  - Address the user by this name occasionally to create a more personal connection. Use it in greetings or when it feels natural, but avoid overusing it. If no name is provided, use neutral and friendly greetings.
-
-- **User's Role:** %s
-  - The user identifies as a %s. Keep this role in mind to understand their perspective. Your examples, analogies, and suggestions may be more effective if they relate to this role.
-
-- **User's Context & Preferences:** %s
-  - This is the most important information for personalization. It contains the user's interests, values, and preferences.
-  - Proactively use this context to tailor your responses. For example, if the user is interested in "philosophy," you can frame answers or provide examples through a philosophical lens. If they prefer "concise" answers, keep your responses direct and to the point.
-
-# Core Instructions
-1.  **Integrate, Don't Recite:** Do not state the user's information back to them (e.g., "As an engineer, you might like..."). Instead, let the information subtly guide your word choice, examples, and tone.
-2.  **Prioritize User Context:** The user's context in '%s' should be the primary driver of your personalization.
-3.  **Maintain Your Persona:** Consistently apply the traits from '%s' throughout the entire conversation.
-4.  **Be Helpful:** Your ultimate purpose is to assist the user effectively with their requests.`,
-		profile.CustomAssistantTrait,
-		profile.CustomUserName,
-		profile.CustomUserProfession,
-		profile.CustomUserProfession,
-		profile.CustomContext,
-		profile.CustomContext,        // Add this line
-		profile.CustomAssistantTrait, // Add this line
-	)
-
-	compl, err := s.mr.StreamCompletion(req, chat.Options{
-		AnthropicAPIKey: profile.AnthropicAPIKey,
-		GeminiAPIKey:    profile.GeminiAPIKey,
-		OpenAIAPIKey:    profile.OpenAIAPIKey,
-		OllamaBaseURL:   profile.OllamaBaseURL,
-		SystemPrompt:    prompt,
-	})
+	compl, err := s.mr.StreamCompletion(req, profile.Options())
 	if err != nil {
 		s.log.Warn("failed to start a stream", "error", err)
 		http.Error(w, "failed to start a stream", http.StatusInternalServerError)
@@ -259,6 +221,11 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	profile, err := s.getUserProfile(userID)
+	if err != nil {
+		s.log.Warn("failed to get user profile", "error", err)
+	}
+
 	messages := []chat.Message{
 		{
 			Role:    "user",
@@ -275,6 +242,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		ReasoningEffort:     body.ReasoningEffort,
 		Stop:                nil,
 		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
+		System:              profile.SystemPrompt(),
 	}
 
 	now = time.Now()
@@ -313,51 +281,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	profile, err := s.getUserProfile(userID)
-	if err != nil {
-		s.log.Warn("failed to get user profile", "error", err)
-	}
-
-	prompt := fmt.Sprintf(`You are a personalized AI assistant. Your primary goal is to be helpful, engaging, and tailored to the user's specific needs and preferences.
-
-# Your Persona
-Your personality should be guided by the following traits: %s.
-Embody these traits in your language, tone, and the structure of your responses. If no traits are specified, adopt a generally helpful, friendly, and curious persona.
-
-# User Information
-You have been provided with the following information about the user. Use it to personalize the conversation naturally.
-
-- **User's Name:** %s
-  - Address the user by this name occasionally to create a more personal connection. Use it in greetings or when it feels natural, but avoid overusing it. If no name is provided, use neutral and friendly greetings.
-
-- **User's Role:** %s
-  - The user identifies as a %s. Keep this role in mind to understand their perspective. Your examples, analogies, and suggestions may be more effective if they relate to this role.
-
-- **User's Context & Preferences:** %s
-  - This is the most important information for personalization. It contains the user's interests, values, and preferences.
-  - Proactively use this context to tailor your responses. For example, if the user is interested in "philosophy," you can frame answers or provide examples through a philosophical lens. If they prefer "concise" answers, keep your responses direct and to the point.
-
-# Core Instructions
-1.  **Integrate, Don't Recite:** Do not state the user's information back to them (e.g., "As an engineer, you might like..."). Instead, let the information subtly guide your word choice, examples, and tone.
-2.  **Prioritize User Context:** The user's context in '%s' should be the primary driver of your personalization.
-3.  **Maintain Your Persona:** Consistently apply the traits from '%s' throughout the entire conversation.
-4.  **Be Helpful:** Your ultimate purpose is to assist the user effectively with their requests.`,
-		profile.CustomAssistantTrait,
-		profile.CustomUserName,
-		profile.CustomUserProfession,
-		profile.CustomUserProfession,
-		profile.CustomContext,
-		profile.CustomContext,        // Add this line
-		profile.CustomAssistantTrait, // Add this line
-	)
-
-	compl, err := s.mr.StreamCompletion(req, chat.Options{
-		AnthropicAPIKey: profile.AnthropicAPIKey,
-		GeminiAPIKey:    profile.GeminiAPIKey,
-		OpenAIAPIKey:    profile.OpenAIAPIKey,
-		OllamaBaseURL:   profile.OllamaBaseURL,
-		SystemPrompt:    prompt,
-	})
+	compl, err := s.mr.StreamCompletion(req, profile.Options())
 	if err != nil {
 		s.log.Warn("failed to start a stream", "error", err)
 		http.Error(w, "failed to start a stream", http.StatusInternalServerError)

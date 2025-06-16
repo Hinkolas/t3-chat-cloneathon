@@ -13,16 +13,21 @@ import (
 
 func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
-	var base *url.URL
-	var err error
+	env := os.Getenv("OLLAMA_BASE_URL")
+	if user, ok := opt["ollama_base_url"]; ok {
+		env = user
+	}
 
-	env, ok := os.LookupEnv("OLLAMA_BASE_URL")
-	base, err = url.Parse(env)
-	if !ok || err != nil {
+	if env == "" {
+		return nil, fmt.Errorf("OLLAMA_BASE_URL is not set")
+	}
+
+	baseUrl, err := url.Parse(env)
+	if err != nil {
 		return nil, fmt.Errorf("failed to parse OLLAMA_BASE_URL: %w", err)
 	}
 
-	client := api.NewClient(base, &http.Client{}) // TODO: replace with a shared client pool
+	client := api.NewClient(baseUrl, &http.Client{}) // TODO: replace with a shared client pool
 
 	request := &api.ChatRequest{
 		Model:    req.Model,

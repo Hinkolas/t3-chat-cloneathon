@@ -3,6 +3,7 @@ package anthropic
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/stream"
@@ -12,6 +13,11 @@ import (
 
 func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
+	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	if key, ok := opt["anthropic_api_key"]; ok {
+		apiKey = key
+	}
+
 	s := stream.New()
 
 	// TODO: replace with a global application client pool
@@ -20,6 +26,7 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 	}
 
 	client := anthropic.NewClient(
+		option.WithAPIKey(apiKey),
 		option.WithHTTPClient(httpClient),
 	)
 

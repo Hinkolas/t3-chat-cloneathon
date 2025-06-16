@@ -3,6 +3,7 @@ package gemini
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
@@ -12,10 +13,16 @@ import (
 
 func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if key, ok := opt["gemini_api_key"]; ok {
+		apiKey = key
+	}
+
 	s := stream.New()
 
 	// TODO: replace with a proper context
 	client, err := genai.NewClient(s.Context(), &genai.ClientConfig{
+		APIKey:  apiKey,
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {

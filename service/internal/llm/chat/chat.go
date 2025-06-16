@@ -10,6 +10,7 @@ type Request struct {
 	ReasoningEffort     int32     `json:"reasoning_effort,omitempty"`
 	Stop                any       `json:"stop,omitempty"`
 	Messages            []Message `json:"messages"`
+	System              string    `json:"system"` // System prompt for the chat session
 }
 
 type Message struct {
@@ -18,10 +19,4 @@ type Message struct {
 	Reasoning string `json:"reasoning"`
 }
 
-type Options struct {
-	AnthropicAPIKey string `db:"anthropic_api_key" json:"anthropic_api_key"`
-	OpenAIAPIKey    string `db:"openai_api_key" json:"openai_api_key"`
-	GeminiAPIKey    string `db:"gemini_api_key" json:"gemini_api_key"`
-	OllamaBaseURL   string `db:"ollama_base_url" json:"ollama_base_url"`
-	SystemPrompt    string `json:"system,omitempty"` // System prompt for the chat.
-}
+type Options map[string]string

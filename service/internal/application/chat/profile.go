@@ -1,10 +1,15 @@
 package chat
 
 import (
+	_ "embed"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"text/template"
 )
+
+//go:embed system.txt
+var systemTemplate string
 
 type UserProfile struct {
 	UserID string `db:"user_id" json:"user_id"`
@@ -18,6 +23,42 @@ type UserProfile struct {
 	CustomUserProfession string `db:"custom_user_profession" json:"custom_user_profession"`
 	CustomAssistantTrait string `db:"custom_assistant_trait" json:"custom_assistant_trait"`
 	CustomContext        string `db:"custom_context" json:"custom_context"`
+}
+
+func (p *UserProfile) SystemPrompt() string {
+
+	tmpl, err := template.New("system").Parse(systemTemplate)
+	if err != nil {
+		panic(err)
+		// return systemTemplate // fallback to original template on parse error
+	}
+
+	var buf strings.Builder
+	err = tmpl.Execute(&buf, p)
+	if err != nil {
+		panic(err)
+		// return systemTemplate // fallback to original template on execution error
+	}
+
+	return buf.String()
+
+}
+
+func (p *UserProfile) Options() map[string]string {
+	options := make(map[string]string)
+	if p.AnthropicAPIKey != "" {
+		options["anthropic_api_key"] = p.AnthropicAPIKey
+	}
+	if p.OpenAIAPIKey != "" {
+		options["openai_api_key"] = p.OpenAIAPIKey
+	}
+	if p.GeminiAPIKey != "" {
+		options["gemini_api_key"] = p.GeminiAPIKey
+	}
+	if p.OllamaBaseURL != "" {
+		options["ollama_base_url"] = p.OllamaBaseURL
+	}
+	return options
 }
 
 func (s *Service) getUserProfile(userID string) (*UserProfile, error) {
