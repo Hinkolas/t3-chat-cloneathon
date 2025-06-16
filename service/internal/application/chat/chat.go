@@ -24,6 +24,7 @@ type ChatListItem struct {
 	ID            string `json:"id"`
 	Title         string `json:"title"`
 	IsPinned      bool   `json:"is_pinned"`
+	Status        string `json:"status"`
 	LastMessageAt int64  `json:"last_message_at"`
 	CreatedAt     int64  `json:"created_at"`
 }
@@ -34,7 +35,7 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 	chats := make([]ChatListItem, 0)
 
-	rows, err := s.db.Query("SELECT id, title, is_pinned, last_message_at, created_at FROM chats WHERE user_id = ?", userID)
+	rows, err := s.db.Query("SELECT id, title, is_pinned, status, last_message_at, created_at FROM chats WHERE user_id = ?", userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -43,7 +44,7 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var chat ChatListItem
-		if err := rows.Scan(&chat.ID, &chat.Title, &chat.IsPinned, &chat.LastMessageAt, &chat.CreatedAt); err != nil {
+		if err := rows.Scan(&chat.ID, &chat.Title, &chat.IsPinned, &chat.Status, &chat.LastMessageAt, &chat.CreatedAt); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -72,9 +73,10 @@ type Chat struct {
 	IsPinned    bool   `json:"is_pinned"`
 	IsStreaming bool   `json:"is_streaming"`
 
-	LastMessageAt int64 `json:"last_message_at"`
-	CreatedAt     int64 `json:"created_at"`
-	UpdatedAt     int64 `json:"updated_at"`
+	Status        string `json:"status"` // e.g. "streaming", "done", "error"
+	CreatedAt     int64  `json:"created_at"`
+	UpdatedAt     int64  `json:"updated_at"`
+	LastMessageAt int64  `json:"last_message_at"`
 
 	Messages []Message `json:"messages"`
 }
@@ -90,8 +92,9 @@ type Message struct {
 	Content   string `json:"content"`
 	Reasoning string `json:"reasoning,omitempty"`
 
-	CreatedAt int64 `json:"created_at"`
-	UpdatedAt int64 `json:"updated_at"`
+	Status    string `json:"status"` // e.g. "streaming", "done", "error"
+	CreatedAt int64  `json:"created_at"`
+	UpdatedAt int64  `json:"updated_at"`
 
 	Attachments []Attachment `json:"attachments,omitempty"`
 }
@@ -104,8 +107,8 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 	query := `
         SELECT
-            c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.last_message_at, c.created_at, c.updated_at,
-            m.id, m.role, m.model, m.content, m.reasoning, m.created_at, m.updated_at,
+            c.id, c.user_id, c.title, c.model, c.is_pinned, c.is_streaming, c.status, c.last_message_at, c.created_at, c.updated_at,
+            m.id, m.role, m.model, m.content, m.reasoning, m.status, m.created_at, m.updated_at,
             a.id, a.name, a.type, a.src, a.created_at
         FROM chats c
         LEFT JOIN messages m ON c.id = m.chat_id
@@ -127,19 +130,19 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var (
 			// Chat fields
-			cID, cUserID, cTitle, cModel           string
+			cID, cUserID, cTitle, cModel, cStatus  string
 			cIsPinned, cIsStreaming                int
 			cLastMessageAt, cCreatedAt, cUpdatedAt int64
 			// Message fields (nullable)
-			mID, mRole, mModel, mContent, mReasoning sql.NullString
-			mCreatedAt, mUpdatedAt, aCreatedAt       sql.NullInt64
+			mID, mRole, mModel, mContent, mReasoning, mStatus sql.NullString
+			mCreatedAt, mUpdatedAt, aCreatedAt                sql.NullInt64
 			// Attachment fields (nullable)
 			aID, aName, aType, aSrc sql.NullString
 		)
 
 		err := rows.Scan(
-			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
-			&mID, &mRole, &mModel, &mContent, &mReasoning, &mCreatedAt, &mUpdatedAt,
+			&cID, &cUserID, &cTitle, &cModel, &cIsPinned, &cIsStreaming, &cStatus, &cLastMessageAt, &cCreatedAt, &cUpdatedAt,
+			&mID, &mRole, &mModel, &mContent, &mReasoning, &mStatus, &mCreatedAt, &mUpdatedAt,
 			&aID, &aName, &aType, &aSrc, &aCreatedAt,
 		)
 		if err != nil {
@@ -156,6 +159,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 				Model:         cModel,
 				IsPinned:      cIsPinned == 1,
 				IsStreaming:   cIsStreaming == 1,
+				Status:        cStatus,
 				LastMessageAt: cLastMessageAt,
 				CreatedAt:     cCreatedAt,
 				UpdatedAt:     cUpdatedAt,
@@ -173,6 +177,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 					Model:       mModel.String,
 					Content:     mContent.String,
 					Reasoning:   mReasoning.String,
+					Status:      mStatus.String,
 					CreatedAt:   mCreatedAt.Int64,
 					UpdatedAt:   mUpdatedAt.Int64,
 					Attachments: []Attachment{},
