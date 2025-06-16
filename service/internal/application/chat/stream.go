@@ -24,7 +24,7 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the stream
+	// Subscribe to the stream
 	sub, ok := s.sp.Subscribe(streamID)
 	if !ok {
 		s.log.Debug("stream not found", "stream_id", streamID)
@@ -32,8 +32,6 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer sub.Cancel()
-
-	// Subscribe to the stream
 
 	w.WriteHeader(http.StatusOK)
 	for {
@@ -50,7 +48,7 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 				// write the SSE event
 				if _, err := fmt.Fprint(w,
 					"event: message_end\n",
-					"data: {}\n",
+					"data: {}\n\n",
 				); err != nil {
 					s.log.Debug("stream: write failed", "err", err)
 					return
