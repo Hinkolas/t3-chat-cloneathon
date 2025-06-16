@@ -344,13 +344,14 @@ func (s *Service) updateAttachmentsMessageID(attachmentIDs []string, messageID, 
 	placeholders := make([]string, len(attachmentIDs))
 	args := make([]interface{}, 0, len(attachmentIDs)+2)
 
+	args = append(args, messageID)
 	for i := range attachmentIDs {
 		placeholders[i] = "?"
 		args = append(args, attachmentIDs[i])
 	}
-	args = append(args, messageID, userID)
+	args = append(args, userID)
 
-	query := fmt.Sprintf("UPDATE attachments SET message_id = ? WHERE id IN (%s) AND user_id = ? AND message_id IS NULL",
+	query := fmt.Sprintf("UPDATE attachments SET message_id = ? WHERE id IN (%s) AND user_id = ? AND message_id = ''",
 		strings.Join(placeholders, ","))
 
 	result, err := s.db.Exec(query, args...)
