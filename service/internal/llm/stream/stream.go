@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+type CloseFunc func([]Chunk) error
+
 type Chunk struct {
 	Thinking string `json:"thinking,omitempty"`
 	Content  string `json:"content,omitempty"`
@@ -25,10 +27,8 @@ type Stream struct {
 	pub  chan Chunk   // where callers Publish
 	subs []chan Chunk // subscriber channels
 
-	closeFunc CloseFunc
+	closeFunc CloseFunc // callback for cleanup after finish
 }
-
-type CloseFunc func([]Chunk) error
 
 // New returns a Stream that’s ready to Start() / Publish().
 func New() *Stream {
