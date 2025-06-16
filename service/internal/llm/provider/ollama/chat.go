@@ -33,8 +33,8 @@ func StreamCompletion(req chat.Request) (*stream.Stream, error) {
 		Messages: make([]api.Message, len(req.Messages)),
 	}
 
-	*request.Think = req.Reasoning > 0 // Defined by the user
-	*request.Stream = true             // TODO: has to be true all the time for now
+	*request.Think = req.ReasoningEffort > 0 // Defined by the user
+	*request.Stream = true                   // TODO: has to be true all the time for now
 
 	// Add temperature to the ollama request options
 	if req.Temperature >= 0 && req.Temperature <= 1 {

@@ -12,9 +12,12 @@ import (
 )
 
 type ChatCompletionRequest struct {
-	Model     string `json:"model"`
-	Content   string `json:"content"`
-	Reasoning int32  `json:"reasoning"`
+	// Message
+	Content     string   `json:"content"`
+	Attachments []string `json:"attachments,omitempty"`
+	// Options
+	Model           string `json:"model"`
+	ReasoningEffort int32  `json:"reasoning_effort"`
 }
 
 func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +68,7 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		MaxCompletionTokens: 1024,
 		TopP:                1.0,
 		Stream:              true,
-		Reasoning:           body.Reasoning,
+		ReasoningEffort:     body.ReasoningEffort,
 		Stop:                nil,
 		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
 	}
@@ -205,7 +208,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		MaxCompletionTokens: 1024,
 		TopP:                1.0,
 		Stream:              true,
-		Reasoning:           body.Reasoning,
+		ReasoningEffort:     body.ReasoningEffort,
 		Stop:                nil,
 		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
 	}
