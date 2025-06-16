@@ -6,11 +6,16 @@ import (
 	"sync"
 )
 
-type CloseFunc func([]Chunk, error)
+type CloseFunc func(Chunk, error)
 
 type Chunk struct {
 	Reasoning string `json:"reasoning,omitempty"`
 	Content   string `json:"content,omitempty"`
+}
+
+func (c *Chunk) append(c2 Chunk) {
+	c.Reasoning += c2.Reasoning
+	c.Content += c2.Content
 }
 
 // Stream represents one ongoing streaming process.
@@ -20,9 +25,10 @@ type Stream struct {
 	wg        sync.WaitGroup
 	closeOnce sync.Once
 
-	chunks []Chunk // all chunks received so far
-	done   bool    // true once the stream finishes
-	err    error   // any terminal error
+	cache Chunk // accumulation of all chunks received so far
+
+	done bool  // true once the stream finishes
+	err  error // any terminal error
 
 	pub  chan Chunk   // where callers Publish
 	subs []chan Chunk // subscriber channels
@@ -33,8 +39,9 @@ type Stream struct {
 // New returns a Stream that’s ready to Start() / Publish().
 func New() *Stream {
 	s := &Stream{
+		cache:     Chunk{},
 		pub:       make(chan Chunk),
-		closeFunc: func([]Chunk, error) {},
+		closeFunc: func(Chunk, error) {},
 	}
 	// start a goroutine that fans-out anything sent on inCh
 	s.wg.Add(1)
@@ -48,7 +55,7 @@ func New() *Stream {
 	return s
 }
 
-func (s *Stream) OnClose(closeFunc func([]Chunk, error)) {
+func (s *Stream) OnClose(closeFunc func(Chunk, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.closeFunc = closeFunc
@@ -64,14 +71,15 @@ func (s *Stream) Subscribe(buffer int) <-chan Chunk {
 	ch := make(chan Chunk, buffer)
 	s.mu.Lock()
 	// replay buffered chunks
-	for _, c := range s.chunks {
-		select {
-		case ch <- c:
-		default:
-			// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
-			fmt.Println("subscriber is slow, blocking on replay")
-		}
-	}
+	// for _, c := range s.chunks {
+	// 	select {
+	// 	case ch <- c:
+	// 	default:
+	// 		// TODO: Handle subscriber not keeping up (e.g. cancel subscription)
+	// 		fmt.Println("subscriber is slow, blocking on replay")
+	// 	}
+	// }
+	ch <- s.cache
 	s.subs = append(s.subs, ch)
 	s.mu.Unlock()
 	return ch
@@ -98,7 +106,8 @@ func (s *Stream) Close() {
 // subscriber chans, and invokes handlers.
 func (s *Stream) emit(chunk Chunk) {
 	s.mu.Lock()
-	s.chunks = append(s.chunks, chunk)
+	// s.chunks = append(s.chunks, chunk)
+	s.cache.append(chunk)        // accumulate into cache for Close
 	subs := slices.Clone(s.subs) // snapshot subscribers
 	s.mu.Unlock()
 
@@ -133,6 +142,6 @@ func (s *Stream) finish() {
 			close(ch)
 		}
 		s.subs = nil
-		s.closeFunc(s.chunks, s.err)
+		s.closeFunc(s.cache, s.err)
 	})
 }
