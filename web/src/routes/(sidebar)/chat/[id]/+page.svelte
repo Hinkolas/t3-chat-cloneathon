@@ -10,7 +10,7 @@
 
 	let { data }: Props = $props();
 
-	import { ArrowUp, Brain, ChevronDown, Globe, Paperclip } from '@lucide/svelte';
+	import { ArrowUp, Brain, ChevronDown, Globe, Paperclip, X } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
@@ -34,6 +34,7 @@
 	let reasoningStates: Record<string, boolean> = $state({});
 	let reasoningEnabled = $state(false);
 	let webSearchEnabled = $state(false);
+	let isStreaming = $derived(() => messages.some((m) => m.status === 'streaming'));
 
 	let activeStreams = new Set<string>();
 	let eventSources = new Map<string, EventSource>();
@@ -144,6 +145,10 @@
 	let uploadingFile: File | null = $state(null);
 	let uploadError: string | null = $state(null);
 	let isDragOver = $state(false);
+
+	function cancelStreaming() {
+		// TODO: implement cancel logic
+	}
 
 	// Complete uploadFile function
 	async function uploadFile(file: File): Promise<boolean> {
@@ -509,7 +514,6 @@
 		});
 
 		eventSource.addEventListener('message_end', (event) => {
-
 			console.log('Received message_end event');
 			try {
 				// Create a new messages array and update status
@@ -768,18 +772,30 @@
 				</button>
 			</div>
 			<div class="button-group">
-				<button
-					class={message.length == 0 ? '' : 'active'}
-					onclick={() => {
-						sendMessage(message);
-						autoResize();
-						message = ''; // TODO: hanlde in sendMessage with state
-					}}
-					disabled={message.length == 0}
-					id="SendButton"
-				>
-					<ArrowUp size="20" />
-				</button>
+				{#if isStreaming()}
+					<button
+						class="active"
+						onclick={cancelStreaming}
+						id="SendButton"
+						aria-label="Cancel streaming"
+					>
+						<X size="20" />
+					</button>
+				{:else}
+					<button
+						class={message.length == 0 ? '' : 'active'}
+						onclick={() => {
+							sendMessage(message);
+							autoResize();
+							message = '';
+						}}
+						disabled={message.length == 0}
+						id="SendButton"
+						aria-label="Send message"
+					>
+						<ArrowUp size="20" />
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>
