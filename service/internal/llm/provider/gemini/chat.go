@@ -14,9 +14,13 @@ import (
 func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
 	// TODO: handle invalid user provided api key or validate on input
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if key, ok := opt["gemini_api_key"]; ok {
-		apiKey = key
+	env := os.Getenv("GEMINI_API_KEY")
+	if user, ok := opt["gemini_api_key"]; ok {
+		env = user
+	}
+
+	if env == "" {
+		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
 	s := stream.New()
@@ -25,7 +29,7 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 
 	// TODO: replace with a proper context
 	client, err := genai.NewClient(s.Context(), &genai.ClientConfig{
-		APIKey:  apiKey,
+		APIKey:  env,
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {
