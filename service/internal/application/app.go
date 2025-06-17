@@ -2,6 +2,7 @@ package application
 
 import (
 	"database/sql"
+	_ "embed"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
+
+//go:embed init.sql
+var initSQL string
 
 type App struct {
 	Config   Config
@@ -25,6 +29,21 @@ func NewApp(config Config) (*App, error) {
 	db, err := sql.Open("sqlite3", "data/app.db")
 	if err != nil {
 		panic(err)
+	}
+
+	// Check if database is initialized by looking for a known table
+	var tableName string
+	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1").Scan(&tableName)
+	if err == sql.ErrNoRows {
+		// Database is not initialized, run init SQL
+		_, err = db.Exec(initSQL)
+		if err != nil {
+			db.Close()
+			return nil, fmt.Errorf("failed to initialize database: %w", err)
+		}
+	} else if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to check database initialization: %w", err)
 	}
 
 	// Open the log file in append mode, create if it doesn't exist
