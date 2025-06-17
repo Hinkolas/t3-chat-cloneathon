@@ -162,15 +162,17 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 	s.sp.Add(message.StreamID.String(), compl)
 	compl.OnClose(func(chunk stream.Chunk, serr error) {
 
+		var err error
 		if serr != nil {
 			s.log.Error("stream failed", "stream_id", message.StreamID, "error", serr)
-			return
+			_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+				chunk.Content, chunk.Reasoning, "error", time.Now().UnixMilli(), message.ID,
+			)
+		} else {
+			_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+				chunk.Content, chunk.Reasoning, "done", time.Now().UnixMilli(), message.ID,
+			)
 		}
-
-		_, err := s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
-			chunk.Content, chunk.Reasoning, "done", time.Now().UnixMilli(), message.ID,
-		)
-
 		if err != nil {
 			s.log.Error("storing stream content failed", "stream_id", message.StreamID, "error", err)
 			return
@@ -324,15 +326,17 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	s.sp.Add(message.StreamID.String(), compl)
 	compl.OnClose(func(chunk stream.Chunk, serr error) {
 
+		var err error
 		if serr != nil {
 			s.log.Error("stream failed", "stream_id", message.StreamID, "error", serr)
-			return
+			_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+				chunk.Content, chunk.Reasoning, "error", time.Now().UnixMilli(), message.ID,
+			)
+		} else {
+			_, err = s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
+				chunk.Content, chunk.Reasoning, "done", time.Now().UnixMilli(), message.ID,
+			)
 		}
-
-		_, err := s.db.Exec("UPDATE messages SET content = ?, reasoning = ?, status = ?, updated_at = ? WHERE id = ?",
-			chunk.Content, chunk.Reasoning, "done", time.Now().UnixMilli(), message.ID,
-		)
-
 		if err != nil {
 			s.log.Error("storing stream content failed", "stream_id", message.StreamID, "error", err)
 			return
