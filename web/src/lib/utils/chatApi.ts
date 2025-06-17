@@ -1,6 +1,5 @@
 // lib/services/chatApi.ts
-import { PRIVATE_HOST_URL } from '$env/static/private';
-import type { ChatData } from '$lib/types';
+import { env } from '$env/dynamic/public';
 
 
 export class ChatApiService {
@@ -9,7 +8,7 @@ export class ChatApiService {
 	 */
 	static async deleteChat(id: string): Promise<void> {
 		try {
-			const response = await fetch(`${PRIVATE_HOST_URL}/v1/chats/${id}/`, {
+			const response = await fetch(`${env.PUBLIC_HOST_URL}/v1/chats/${id}/`, {
 				method: 'DELETE'
 			});
 
@@ -27,7 +26,7 @@ export class ChatApiService {
 	 */
 	static async updateChatPinStatus(chatId: string, isPinned: boolean): Promise<void> {
 		try {
-			const response = await fetch(`${PRIVATE_HOST_URL}/v1/chats/${chatId}/`, {
+			const response = await fetch(`${env.PUBLIC_HOST_URL}/v1/chats/${chatId}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
@@ -51,7 +50,7 @@ export class ChatApiService {
 	 */
 	static async updateChatTitle(chatId: string, newTitle: string): Promise<void> {
 		try {
-			const response = await fetch(`${PRIVATE_HOST_URL}/v1/chats/${chatId}/`, {
+			const response = await fetch(`${env.PUBLIC_HOST_URL}/v1/chats/${chatId}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
