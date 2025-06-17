@@ -1,0 +1,81 @@
+# /docker-compose.yml
+
+services:
+  # The Go API service
+  service:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    container_name: t3-go-service
+    restart: unless-stopped
+    # The 'expose' instruction makes the port available to other containers
+    # on the same network, but not to the host machine.
+    expose:
+      - "3141"
+    volumes:
+      # Persist data from the 'files' directory using a named volume
+      - go_data:/root/data
+      - ./config.yaml:/root/config.yaml:ro
+    networks:
+      - t3_network
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+    # TODO: Remove when using caddy in production
+    ports: 
+     - "3141:3141"
+
+
+  # The SvelteKit web frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: t3-svelte-app
+    restart: unless-stopped
+    # The SvelteKit app runs on port 3000 inside the container
+    expose:
+      - "3000"
+    networks:
+      - t3_network
+    environment:
+      - PUBLIC_API_URL=${PUBLIC_API_URL}
+      - PRIVATE_API_URL=${PRIVATE_API_URL}
+      - PUBLIC_HOST_URL=${PUBLIC_HOST_URL}
+    ports: 
+     - "3000:3000"
+
+  # # The Caddy reverse proxy
+  # caddy:
+  #   image: caddy:2-alpine
+  #   container_name: t3-caddy
+  #   restart: unless-stopped
+  #   ports:
+  #     # Publish HTTP and HTTPS ports to the host machine
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     # Mount the Caddyfile for configuration
+  #     - ./Caddyfile:/etc/caddy/Caddyfile
+  #     # Named volumes for Caddy's data (SSL certs) and config
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   networks:
+  #     - t3_network
+  #   # Ensures Caddy starts after the services it proxies to
+  #   depends_on:
+  #     - service
+  #     - web
+
+# Define the shared network for inter-container communication
+networks:
+  t3_network:
+    driver: bridge
+
+# Define the named volumes for data persistence
+volumes:
+  go_data:
+  caddy_data:
+  caddy_config:
