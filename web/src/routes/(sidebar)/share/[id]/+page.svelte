@@ -230,13 +230,13 @@
 		max-width: 100%;
 		word-wrap: break-word;
 		overflow-wrap: break-word;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		line-height: 1.7;
 	}
 
 	.single-chat.user {
 		background-color: #2b2430;
-		box-shadow: 0 0 2px #88888866;
+		box-shadow: 0 0 2px var(--border);
 		border-radius: 10px;
 		margin-left: auto;
 		padding: 16px;
@@ -258,12 +258,11 @@
 		flex-wrap: wrap;
 		gap: 16px;
 		max-width: 100%;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		line-height: 1.7;
 		margin-top: 8px;
 		margin-left: auto;
 		padding: 4px 6px;
-		background-color: #2b2430;
 		border-radius: 10px;
 	}
 
@@ -274,7 +273,7 @@
 		justify-content: center;
 		align-items: center;
 		width: 100%;
-		color: hsl(var(--secondary-foreground) / 0.8) !important;
+		color: var(--text-light) !important;
 		text-decoration: none;
 		font-size: 14px;
 		padding-top: 2px;
@@ -284,7 +283,8 @@
 
 	.attachment-link:not(:has(img)) {
 		padding: 16px;
-		background-color: hsl(var(--primary) / 0.5);
+		border: 1px solid var(--primary-border);
+		background-color: var(--primary-disabled);
 	}
 
 	.attachment-link img {
@@ -302,12 +302,18 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		transition: color 0.1s ease;
 	}
 
 	.attachment-link:hover:not(:has(img)) {
-		background-color: hsl(var(--primary) / 0.6);
+		background-color: var(--primary-background-light);
+	}
+
+	.reasoning-box {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 	}
 
 	.reasoning-button {
@@ -325,7 +331,7 @@
 	}
 
 	.reasoning-button:hover {
-		background-color: hsl(var(--primary) / 0.2);
+		background-color: var(--primary-disabled);
 	}
 
 	.reasoning-text {
@@ -553,9 +559,5 @@
 
 	.single-chat :global(strong) {
 		font-weight: 600;
-	}
-
-	.single-chat :global(em) {
-		font-style: italic;
 	}
 </style>

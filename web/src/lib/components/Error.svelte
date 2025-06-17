@@ -43,8 +43,8 @@
 		align-items: center;
 		justify-content: center;
 		width: 100%;
-		height: 100%;
-		color: white;
+		height: 100dvh;
+		color: var(--white);
 		text-align: center;
 		padding: 2rem;
 		animation: fadeIn 0.5s ease-out;
@@ -79,12 +79,12 @@
 
 	.error-details {
 		width: max-content;
-		background: #88888811;
+		background: var(--error-page-background);
 		border-radius: 12px;
 		padding: 1.5rem;
 		margin-bottom: 2rem;
 		backdrop-filter: blur(10px);
-		border: 1px solid #88888822;
+		border: 1px solid var(--error-page-border);
 	}
 
 	.error-details p {
@@ -112,8 +112,8 @@
 	}
 
 	.retry-button {
-		background: linear-gradient(45deg, hsl(var(--primary) / 0.5), hsl(var(--primary) / 0.8));
-		color: white;
+		background: linear-gradient(45deg, var(--primary-background-light), var(--primary-background));
+		color: var(--white);
 		border: none;
 		padding: 1rem 2rem;
 		border-radius: 50px;
@@ -124,12 +124,12 @@
 		align-items: center;
 		gap: 0.5rem;
 		margin: 0 auto;
-		box-shadow: 0 4px 15px hsl(var(--primary) / 0.5);
+		box-shadow: 0 4px 15px var(--primary-background-light);
 	}
 
 	.retry-button:hover {
-		box-shadow: 0 6px 20px hsl(var(--primary) / 0.5);
-		background: linear-gradient(45deg, hsl(var(--primary) / 0.8), hsl(var(--primary)));
+		box-shadow: 0 6px 20px var(--primary-background-light);
+		background: linear-gradient(45deg, var(--primary-background), var(--primary-background));
 	}
 
 	.retry-button:active {

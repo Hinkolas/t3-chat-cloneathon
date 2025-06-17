@@ -1,16 +1,18 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-		<meta name="theme-color" content="#211c25">
-		%sveltekit.head%
-	</head>
 
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<meta name="theme-color" content="#211c25">
+	%sveltekit.head%
+</head>
+
+<body data-sveltekit-preload-data="hover">
+	<div style="display: contents">%sveltekit.body%</div>
+</body>
+
 </html>
 
 <style>
@@ -30,6 +32,7 @@
 	}
 
 	:root {
+		/* Typography & Base Styles */
 		font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
 		font-size: 16px;
 		line-height: 24px;
@@ -38,6 +41,7 @@
 		color: #0f0f0f;
 		background-color: #f6f6f6;
 
+		/* Browser & Text Rendering */
 		font-synthesis: none;
 		text-rendering: optimizeLegibility;
 		-webkit-font-smoothing: antialiased;
@@ -45,8 +49,24 @@
 		-webkit-text-size-adjust: 100%;
 		letter-spacing: 0.24px;
 
+		/* Color Variables */
 		--primary: 332 100% 32%;
-		--border: 262.5 10% 15.7%;
+		--primary-background-inactive: #380F25;
+		--primary-background: #8B0647;
+		--primary-background-light: #53062b;
+		--primary-border: #450D2A;
+		--primary-background-hover: #870442;
+		--primary-background-hover-light: #450D2A;
+		--primary-disabled: #441D36;
+
+		--white: #ffffff;
+		--black: #000000;
+		--placeholder: #888888;
+
+		--text: #D3C7E1; /* text color */
+		--text-light: #c4bdc8; 
+		--border: #333333;
+		
 		--button-background-primary: #4d1f3a;
 		--button-border-primary: #742b4d;
 		--button-background-primary-disabled: #3b2335;
@@ -55,19 +75,53 @@
 		--chat-input-gradient: #29212e;
 		--chat-input-background: #2b2430;
 		--secondary: #bb5c8e;
-		--secondary-foreground: 270 30% 83%;
 		--sidebar-background: #1d131b;
-		--button-hover: #322d38;
 		--sidebar-chat-hover: #261922;
+		--sidebar-right-border: #2B2228;
+		--sidebar-search-icon: #888888;
 
+		--history-day: #B95B8D;
+		--history-chat-hover: #1d131b;
+
+		--text-shadow: 0 0 2px var(--primary-background);
+		--text-shadow-light: 0 0 2px var(--primary-background-light);
+		--box-shadow: 0 0 2px var(--primary-background);
+
+		--button-hover: #322d38;
+		--background-overlay: rgba(0, 0, 0, 0.8);
+
+		/* Additional UI Colors */
 		--popup-background: #21141e;
+		--popup-input-background: #30242D;
+
+		--context-menu-background: #211c25;
+		--context-menu-border: #2B2228;
+
+		--model-hover: #2c2931;
+		--model-selection-box-background: #100B0E;
 
 		--settings-background: #140e13;
+
+		--error-page-background: #29222C;
+		--error-page-border: #333333;
+
+		--sidebar-toggle-button: #2C222A;
+		--sidebar-toggle-button-border: #2C222A;
+		--sidebar-toggle-button-hover: #2C222A;
+
+		--button-gray-background: #29222C;
+		--button-gray-border: #333333;
+		--button-gray-hover: #302932;
+
+		--input-border: #29222C;
+		--input-background-pirmary: #2C2431;
+		--input-background-secondary: #25212B;
 
 		--button-background-danger: #341113;
 		--button-border-danger: #4a1215;
 		--button-hover-danger: #991b1b;
 	}
+
 
 	button {
 		user-select: none !important;

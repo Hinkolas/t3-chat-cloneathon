@@ -74,11 +74,11 @@
 		display: flex;
 		justify-self: center;
 		align-items: center;
-		border: 1px solid #88888822;
+		border: 1px solid var(--sidebar-toggle-button-border);
 		border-radius: 8px;
 		padding: 8px;
 		cursor: pointer;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		transition: background-color 0.15s ease-out;
 	}
 
@@ -89,7 +89,7 @@
 	}
 
 	.sidebar-button:hover {
-		background-color: #88888822;
+		background-color: var(--sidebar-toggle-button-hover);
 	}
 
 	.content {

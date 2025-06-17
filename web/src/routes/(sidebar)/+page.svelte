@@ -552,7 +552,6 @@
 						<span class="file-icon">{getFileIcon(uploadingFile)}</span>
 						<div class="file-info">
 							<span class="file-name">{uploadingFile.name}</span>
-							<span class="file-size">{formatFileSize(uploadingFile.size)}</span>
 						</div>
 						<div class="upload-progress">
 							<div class="spinner"></div>
@@ -723,7 +722,7 @@
 	.placeholder .title {
 		font-size: 30px;
 		font-weight: 600;
-		color: #ffffff;
+		color: var(--white);
 	}
 
 	.placeholder .buttons {
@@ -741,25 +740,25 @@
 		font-size: 14px;
 		font-weight: 500;
 		letter-spacing: 0.24px;
-		background-color: #88888811;
-		border: 1px solid #88888811;
+		background-color: var(--button-gray-background);
+		border: 1px solid var(--button-gray-border);
 		border-radius: 999px;
 		gap: 12px;
 		cursor: pointer;
 		transition: background-color 0.15s ease-out;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 	.placeholder .buttons button.active {
-		background-color: hsl(var(--primary) / 0.2);
-		box-shadow: 0px 0px 2px hsl(var(--primary) / 0.3);
+		background-color: var(--primary-background-light);
+		border: 1px solid var(--primary-border);
 	}
 
 	.placeholder .buttons button:hover {
-		background-color: #88888822;
+		background-color: var(--button-gray-hover);
 	}
 
 	.placeholder .buttons button.active:hover {
-		background-color: hsl(var(--primary) / 0.4);
+		background-color: var(--primary-background-light);
 	}
 
 	.placeholder .suggestions {
@@ -772,7 +771,7 @@
 	.placeholder .suggestions .divider {
 		width: 100%;
 		height: 1px;
-		background-color: #88888811;
+		background-color: var(--button-gray-background);
 	}
 
 	.placeholder .suggestions button {
@@ -789,11 +788,11 @@
 		gap: 12px;
 		cursor: pointer;
 		transition: background-color 0.15s ease-out;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.placeholder .suggestions button:hover {
-		background-color: #88888811;
+		background-color: var(--button-gray-background);
 	}
 
 	@media (max-width: 768px) {
@@ -825,9 +824,9 @@
 		padding-bottom: 0px;
 		border-top-left-radius: 20px;
 		border-top-right-radius: 20px;
-		border: 1px solid #88888811;
+		border: 1px solid var(--input-border);
 		border-bottom: none;
-		background-color: hsl(var(--chat-input-gradient));
+		background-color: var(--input-background-secondary);
 	}
 
 	.input-container {
@@ -838,9 +837,9 @@
 		border-top-left-radius: 12px;
 		border-top-right-radius: 12px;
 		padding-block: 12px;
-		border: 1px solid #88888811;
+		border: 1px solid var(--input-border);
 
-		background-color: var(--chat-input-background);
+		background-color: var(--input-background-pirmary);
 	}
 
 	textarea {
@@ -851,7 +850,7 @@
 		overflow-y: auto;
 		resize: none;
 		padding-inline: 12px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	textarea::-webkit-scrollbar {
@@ -859,7 +858,7 @@
 	}
 
 	textarea::placeholder {
-		color: #888888;
+		color: var(--placeholder);
 	}
 
 	.input-container .buttons {
@@ -888,8 +887,8 @@
 		font-size: 12px;
 		line-height: 1rem;
 		cursor: pointer;
-		border: 1px solid #88888833;
-		color: hsl(var(--secondary-foreground));
+		border: 1px solid var(--border);
+		color: var(--text);
 		transition: background-color 0.15s ease;
 	}
 
@@ -898,7 +897,7 @@
 	}
 
 	.reasoning-button-feature.active {
-		background-color: hsl(var(--primary) / 0.5);
+		background-color: var(--primary-background-light);
 	}
 
 	.selection-container {
@@ -912,7 +911,7 @@
 		position: absolute;
 		bottom: 110%;
 		left: 0;
-		background-color: #0f0a0e;
+		background-color: var(--model-selection-box-background);
 		border-radius: 8px;
 		display: flex;
 		flex-direction: column;
@@ -953,20 +952,20 @@
 		justify-content: center;
 		align-items: center;
 		padding: 8px;
-		background-color: hsl(var(--primary) / 0.2);
-		box-shadow: 0px 0px 2px hsl(var(--primary));
+		background-color: var(--primary-disabled);
+		box-shadow: 0px 0px 2px var(--primary-background);
 		border-radius: 8px;
 		cursor: pointer;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		transition: background-color 0.15s ease;
 	}
 
 	#SendButton.active {
-		background-color: hsl(var(--primary) / 0.4);
+		background-color: var(--primary-background-light);
 	}
 
 	#SendButton:hover:not(:disabled) {
-		background-color: hsl(var(--primary) / 0.8);
+		background-color: var(--primary-background);
 	}
 
 	#SendButton:disabled {
@@ -979,11 +978,11 @@
 		}
 
 		#SendButton:hover {
-			background-color: hsl(var(--primary) / 0.2);
+			background-color: var(--primary-background-light);
 		}
 
 		#SendButton.active:hover {
-			background-color: hsl(var(--primary) / 0.4);
+			background-color: var(--primary-background-light);
 		}
 	}
 
@@ -993,7 +992,7 @@
 		}
 
 		.selection-button.active {
-			background-color: #88888811;
+			background-color: var(--button-gray-background);
 		}
 	}
 
@@ -1014,8 +1013,8 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		background-color: hsl(var(--primary) / 0.1);
-		border: 1px solid hsl(var(--primary) / 0.3);
+		background-color: var(--primary-disabled);
+		border: 1px solid var(--primary-border);
 		border-radius: 8px;
 		padding: 6px 12px;
 		font-size: 14px;
@@ -1051,7 +1050,7 @@
 	}
 
 	.file-name {
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		font-weight: 500;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -1059,30 +1058,23 @@
 		max-width: 120px;
 	}
 
-	.file-size {
-		color: #888;
-		font-size: 12px;
-	}
-
 	.remove-file {
 		all: unset;
 		cursor: pointer;
-		color: #888;
+		color: var(--placeholder);
 		font-size: 18px;
 		line-height: 1;
-		padding: 0px;
+		padding: 0px 1px 2px 3px; /* TODO: Fix this shit*/
 		border-radius: 4px;
 		transition: all 0.15s ease;
-		min-width: 16px;
-		height: 16px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.remove-file:hover {
-		color: #ff6b6b;
-		background-color: rgba(255, 107, 107, 0.1);
+		color: var(--button-hover-danger);
+		background-color: var(--button-background-danger);
 	}
 
 	.upload-progress {
@@ -1096,8 +1088,8 @@
 	.button-spinner {
 		width: 16px;
 		height: 16px;
-		border: 2px solid #333;
-		border-top: 2px solid hsl(var(--primary));
+		border: 2px solid var(--border);
+		border-top: 2px solid var(--primary-background);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
@@ -1165,8 +1157,8 @@
 	}
 
 	button.has-file {
-		background-color: hsl(var(--primary) / 0.2);
-		border-color: hsl(var(--primary) / 0.4);
+		background-color: var(--primary-background-light);
+		border-color: var(--primary-border);
 	}
 
 	button:disabled {
@@ -1196,7 +1188,7 @@
 		text-align: center;
 		color: white;
 		padding: 40px;
-		border: 2px dashed hsl(var(--primary));
+		border: 2px dashed var(--primary-border);
 		border-radius: 12px;
 		background-color: rgba(0, 0, 0, 0.5);
 	}
@@ -1209,14 +1201,14 @@
 	.drag-content p {
 		font-size: 18px;
 		margin: 0;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.drag-content small {
 		display: block;
 		margin-top: 8px;
 		font-size: 14px;
-		color: #888;
+		color: var(--placeholder);
 	}
 
 	.uploaded-files {

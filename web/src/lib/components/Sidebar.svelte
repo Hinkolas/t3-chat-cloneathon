@@ -253,7 +253,7 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: #00000088;
+		background-color: var(--background-overlay);
 	}
 
 	/* Hide overlay on desktop (when sidebar is not absolute) */
@@ -285,7 +285,7 @@
 			left: 0;
 			top: 0;
 			height: 100%;
-			border-right: 1px solid #88888822;
+			border-right: 1px solid var(--sidebar-right-border);
 			background-color: var(--sidebar-background);
 		}
 	}
@@ -306,10 +306,10 @@
 	}
 
 	.title {
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		font-size: 18px;
 		font-weight: 700;
-		text-shadow: 0 0 4px hsl(var(--primary) / 0.3);
+		text-shadow: var(--text-shadow);
 	}
 
 	.newChatButton {
@@ -325,20 +325,20 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background-color: hsl(var(--primary) / 0.2);
-		box-shadow: 0px 0px 2px hsl(var(--primary));
+		background-color: var(--primary-background-inactive);
+		box-shadow: var(--box-shadow);
 		border-radius: 8px;
 		cursor: pointer;
 		font-size: 14px;
 		font-weight: 600;
 		line-height: 20px;
-		color: hsl(var(--secondary-foreground));
-		text-shadow: 0 0 4px hsl(var(--primary) / 0.5);
+		color: var(--text);
+		text-shadow: var(--text-shadow);
 		transition: background-color 0.15s ease;
 	}
 
 	.newChatButton:hover a {
-		background-color: hsl(var(--primary) / 0.8);
+		background-color: var(--primary-background-hover);
 	}
 
 	.search-container {
@@ -372,7 +372,7 @@
 		left: 0;
 		right: 0;
 		height: 20px;
-		background: linear-gradient(to top, transparent, #1d131b);
+		background: linear-gradient(to top, transparent, var(--sidebar-background));
 		pointer-events: none;
 		z-index: 1;
 	}
@@ -384,12 +384,11 @@
 		left: 0;
 		right: 0;
 		height: 20px;
-		background: linear-gradient(to bottom, transparent, #1d131b);
+		background: linear-gradient(to bottom, transparent, var(--sidebar-background));
 		pointer-events: none;
 		z-index: 1;
 	}
 
-	/* Hide scrollbar */
 	.chats-container::-webkit-scrollbar {
 		width: 0px !important;
 		height: 0px !important;
@@ -400,7 +399,7 @@
 		font-size: 12px;
 		font-weight: 600;
 		color: var(--secondary);
-		text-shadow: 0 0 4px hsl(var(--primary) / 0.2);
+		text-shadow: var(--text-shadow);
 		display: flex;
 		align-items: center;
 		gap: 4px;
@@ -418,13 +417,14 @@
 		padding-inline: 12px;
 	}
 
-	.login-button {
+	.login-button,
+	.account-button {
 		all: unset;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		font-size: 14px;
 		font-weight: 500;
 		white-space: nowrap;
-		text-shadow: 0px 0px 4px hsl(var(--primary) / 0.8);
+		text-shadow: var(--text-shadow-light);
 
 		display: flex;
 		justify-content: center;
@@ -438,34 +438,16 @@
 		transition: background-color 0.15s ease-out;
 	}
 
-	.login-button:hover {
-		background-color: hsl(var(--primary) / 0.3);
-	}
-
 	.account-button {
-		all: unset;
-		color: hsl(var(--secondary-foreground));
-		font-size: 14px;
-		font-weight: 500;
-		white-space: nowrap;
-		text-shadow: 0px 0px 4px hsl(var(--primary) / 0.8);
-
-		display: flex;
 		justify-content: flex-start;
-		align-items: center;
-		gap: 12px;
-		width: 100%;
 		padding: 8px;
-		cursor: pointer;
-		border-radius: 8px;
-		background-color: transparent;
-		transition: background-color 0.15s ease-out;
 	}
 
+	.login-button:hover,
 	.account-button:hover {
-		background-color: hsl(var(--primary) / 0.3);
+		background-color: var(--primary-background-hover-light);
 	}
-
+	
 	.account-button img {
 		width: 32px;
 		height: 32px;
