@@ -13,6 +13,7 @@ import (
 
 func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
+	// TODO: handle invalid user provided api key or validate on input
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 	if key, ok := opt["anthropic_api_key"]; ok {
 		apiKey = key

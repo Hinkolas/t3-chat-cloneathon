@@ -13,6 +13,7 @@ import (
 
 func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error) {
 
+	// TODO: handle invalid user provided api key or validate on input
 	env := os.Getenv("OLLAMA_BASE_URL")
 	if user, ok := opt["ollama_base_url"]; ok {
 		env = user
