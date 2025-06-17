@@ -24,13 +24,14 @@
 
 	const iconSize = 16;
 
+	// svelte-ignore non_reactive_update
 	let scrollContainer: HTMLElement;
 	let textarea: HTMLElement;
 	let message = $state('');
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models || {});
-	let messages: MessageData[] = $state(data.chat.messages);
+	let messages: MessageData[] = $state(data.chat.messages || []);
 	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models)[0] || 'Empty');
 
 	let reasoningStates: Record<string, boolean> = $state({});
