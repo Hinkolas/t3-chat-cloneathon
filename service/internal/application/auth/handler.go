@@ -69,11 +69,12 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Instruct the client to store the session token in a cookie
 	cookie := &http.Cookie{
-		Name:     "session_token",
-		Value:    session.Token,
-		Path:     "/",
-		HttpOnly: true,
-		Expires:  time.Unix(session.IssuedAt+session.TimeToLive, 0), // Set to the Unix epoch (very past date)
+		Name:        "session_token",
+		Value:       session.Token,
+		Path:        "/",
+		HttpOnly:    true,
+		Expires:     time.Unix(session.IssuedAt+session.TimeToLive, 0), // Set to the Unix epoch (very past date)
+		Partitioned: true,
 	}
 	http.SetCookie(w, cookie)
 
