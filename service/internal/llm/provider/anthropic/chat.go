@@ -52,6 +52,13 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 		}
 	}
 
+	// Add system message to the ollama request messages
+	if req.System != "" {
+		request.System = []anthropic.TextBlockParam{
+			{Text: req.System},
+		}
+	}
+
 	// Convert universal format to ollama message format
 	for i, message := range req.Messages {
 		request.Messages[i] = anthropic.MessageParam{}

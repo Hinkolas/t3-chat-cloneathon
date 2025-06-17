@@ -35,7 +35,7 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 		Think:    new(bool),
 		Stream:   new(bool),
 		Options:  make(map[string]any),
-		Messages: make([]api.Message, len(req.Messages)),
+		Messages: make([]api.Message, 0),
 	}
 
 	*request.Think = req.ReasoningEffort > 0 // Defined by the user
@@ -46,13 +46,21 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 		request.Options["temperature"] = req.Temperature
 	}
 
+	// Add system message to the ollama request messages
+	if req.System != "" {
+		request.Messages = append(request.Messages, api.Message{
+			Role:    "system",
+			Content: req.System,
+		})
+	}
+
 	// Convert universal format to ollama message format
-	for i, message := range req.Messages {
-		request.Messages[i] = api.Message{
+	for _, message := range req.Messages {
+		request.Messages = append(request.Messages, api.Message{
 			Role:     message.Role,
 			Content:  message.Content,
 			Thinking: message.Reasoning, // TODO: Maybe remove to save ressources
-		}
+		})
 	}
 
 	s := stream.New()
@@ -64,6 +72,7 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 			return err
 		}
 		if resp.Done {
+			fmt.Println("Ollama stream completed!")
 			s.Close()
 		} else {
 			s.Publish(stream.Chunk{

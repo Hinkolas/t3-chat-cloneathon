@@ -21,6 +21,8 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 
 	s := stream.New()
 
+	config := genai.GenerateContentConfig{}
+
 	// TODO: replace with a proper context
 	client, err := genai.NewClient(s.Context(), &genai.ClientConfig{
 		APIKey:  apiKey,
@@ -28,6 +30,26 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Add temperature to the ollama request options
+	if req.Temperature >= 0 && req.Temperature <= 1 {
+		temp := float32(req.Temperature)
+		config.Temperature = &temp
+	}
+
+	if req.ReasoningEffort > 0 {
+		config.ThinkingConfig = &genai.ThinkingConfig{
+			IncludeThoughts: true,
+			ThinkingBudget:  &req.ReasoningEffort,
+		}
+	}
+
+	// Add system message to the ollama request messages
+	if req.System != "" {
+		config.SystemInstruction = &genai.Content{
+			Parts: []*genai.Part{{Text: req.System}},
+		}
 	}
 
 	messages := make([]*genai.Content, len(req.Messages)-1)
@@ -42,21 +64,6 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 			messages[i].Role = genai.RoleModel
 		} else if message.Role == "user" {
 			messages[i].Role = genai.RoleUser
-		}
-	}
-
-	config := genai.GenerateContentConfig{}
-
-	// Add temperature to the ollama request options
-	if req.Temperature >= 0 && req.Temperature <= 1 {
-		temp := float32(req.Temperature)
-		config.Temperature = &temp
-	}
-
-	if req.ReasoningEffort > 0 {
-		config.ThinkingConfig = &genai.ThinkingConfig{
-			IncludeThoughts: true,
-			ThinkingBudget:  &req.ReasoningEffort,
 		}
 	}
 
