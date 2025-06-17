@@ -22,3 +22,10 @@ tasks:
       - npm install
       - npm run dev -- --host
     silent: false
+
+  register:
+    desc: "Register a new user"
+    dir: service
+    cmds:
+      - go run main.go register -c "../config.yaml" {{.CLI_ARGS}}
+    silent: false
