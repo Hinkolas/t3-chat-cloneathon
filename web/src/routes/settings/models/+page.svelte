@@ -15,7 +15,7 @@
 	import { fade } from 'svelte/transition';
 
 	// State for filtering
-	let filteredModels: ModelsResponse = $state(data.models);
+	let filteredModels: ModelsResponse = $state(data.models || {});
 	let activeFilters: Set<string> = $state(new Set());
 	let showFilterDropdown = $state(false);
 

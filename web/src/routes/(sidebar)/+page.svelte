@@ -289,9 +289,26 @@
 	}
 
 	// Updated remove file function
-	function removeFile(index: number) {
-		uploadedFiles = uploadedFiles.filter((_, i) => i !== index);
-		uploadError = null;
+	async function removeFile(index: number) {
+		const uploadedFile = uploadedFiles[index];
+		if (!uploadedFile) return;
+
+		try {
+			const url = 'http://localhost:3141';
+
+			// Delete the attachment using the stored ID
+			const delRes = await fetch(`${url}/v1/attachments/${uploadedFile.id}/`, {
+				method: 'DELETE'
+			});
+			if (!delRes.ok) throw new Error('Failed to delete attachment');
+
+			// Remove from local state if successful
+			uploadedFiles = uploadedFiles.filter((_, i) => i !== index);
+			uploadError = null;
+		} catch (error) {
+			console.error('Error removing file:', error);
+			uploadError = error instanceof Error ? error.message : 'Failed to remove file';
+		}
 	}
 
 	function clearAllFiles() {
