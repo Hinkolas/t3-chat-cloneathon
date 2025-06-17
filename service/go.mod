@@ -6,7 +6,6 @@ require (
 	github.com/anthropics/anthropic-sdk-go v1.4.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
-	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/ollama/ollama v0.9.0
 	github.com/rs/cors v1.11.1
