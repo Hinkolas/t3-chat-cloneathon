@@ -3,9 +3,11 @@ package auth
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Session represents a authenticated session.
@@ -36,7 +38,7 @@ func (s *Service) CreateSession(ctx context.Context, user *User) (*Session, erro
 	}
 
 	// Get current unix timestamp for issued_at and renewed_at fields
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 
 	var session = Session{
 		ID:         sessionID,
@@ -44,7 +46,7 @@ func (s *Service) CreateSession(ctx context.Context, user *User) (*Session, erro
 		Token:      hex.EncodeToString(sessionToken),
 		IssuedAt:   now,
 		RenewedAt:  now,
-		TimeToLive: 3600,
+		TimeToLive: 3600 * 1000,
 		IsVerified: !user.MFAActive,
 	}
 
@@ -90,4 +92,26 @@ func (s *Service) DeleteSession(ctx context.Context, sessionID uuid.UUID) error 
 
 	return nil
 
+}
+
+func (s *Service) GetSession(ctx context.Context, sessionID uuid.UUID) (*Session, error) {
+	var session Session
+
+	err := s.db.QueryRowContext(ctx, `
+		SELECT id, user_id, token, issued_at, renewed_at, time_to_live, is_verified
+		FROM sessions WHERE id = ?;`,
+		sessionID,
+	).Scan(
+		&session.ID, &session.UserID, &session.Token,
+		&session.IssuedAt, &session.RenewedAt, &session.TimeToLive,
+		&session.IsVerified,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrSessionNotFound
+		}
+		return nil, err
+	}
+
+	return &session, nil
 }

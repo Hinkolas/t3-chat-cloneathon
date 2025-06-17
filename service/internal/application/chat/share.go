@@ -5,19 +5,20 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 type SharedChat struct {
-	ID       string          `json:"id"`
-	UserID   string          `json:"user_id"`
+	ID       uuid.UUID       `json:"id,omitzero"`
+	UserID   uuid.UUID       `json:"user_id,omitzero"`
 	Title    string          `json:"title"`
 	Model    string          `json:"model"`
 	Messages []SharedMessage `json:"messages"`
 }
 
 type SharedMessage struct {
-	ID          string             `json:"id"`
+	ID          uuid.UUID          `json:"id,omitzero"`
 	Role        string             `json:"role"`
 	Model       string             `json:"model"`
 	Content     string             `json:"content"`
@@ -26,10 +27,10 @@ type SharedMessage struct {
 }
 
 type SharedAttachment struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
-	Src  string `json:"src"`
+	ID   uuid.UUID `json:"id,omitzero"`
+	Name string    `json:"name"`
+	Type string    `json:"type"`
+	Src  string    `json:"src"`
 }
 
 func (s *Service) GetSharedChat(w http.ResponseWriter, r *http.Request) {
@@ -81,8 +82,8 @@ func (s *Service) GetSharedChat(w http.ResponseWriter, r *http.Request) {
 		// Initialize chat on first row
 		if chat == nil {
 			chat = &SharedChat{
-				ID:       cID,
-				UserID:   cUserID,
+				ID:       uuid.MustParse(cID),
+				UserID:   uuid.MustParse(cUserID),
 				Title:    cTitle,
 				Model:    cModel,
 				Messages: []SharedMessage{},
@@ -94,7 +95,7 @@ func (s *Service) GetSharedChat(w http.ResponseWriter, r *http.Request) {
 			message, exists := messages[mID.String]
 			if !exists {
 				message = &SharedMessage{
-					ID:          mID.String,
+					ID:          uuid.MustParse(mID.String),
 					Role:        mRole.String,
 					Model:       mModel.String,
 					Content:     mContent.String,
@@ -108,7 +109,7 @@ func (s *Service) GetSharedChat(w http.ResponseWriter, r *http.Request) {
 			// Add attachment if it exists
 			if aID.Valid {
 				attachment := SharedAttachment{
-					ID:   aID.String,
+					ID:   uuid.MustParse(aID.String),
 					Name: aName.String,
 					Type: aType.String,
 					Src:  aSrc.String,
@@ -116,7 +117,7 @@ func (s *Service) GetSharedChat(w http.ResponseWriter, r *http.Request) {
 
 				// Find the message in chat.Messages and add attachment
 				for i := range chat.Messages {
-					if chat.Messages[i].ID == mID.String {
+					if chat.Messages[i].ID == uuid.MustParse(mID.String) {
 						chat.Messages[i].Attachments = append(chat.Messages[i].Attachments, attachment)
 						break
 					}

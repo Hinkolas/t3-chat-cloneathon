@@ -35,7 +35,7 @@ func (s *Service) CreateUser(ctx context.Context, email string, username string,
 	}
 
 	// Get current unix timestamp for issued_at and renewed_at fields
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 
 	var user = User{
 		ID:           userID,
@@ -54,7 +54,7 @@ func (s *Service) CreateUser(ctx context.Context, email string, username string,
 			id, email, username, password_hash,
 			created_at, updated_at,
 			is_verified, mfa_active
-		) VALUES (?, ?, ?, ?, ?, ?, ?);`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
 		user.ID, user.Email, user.Username, user.PasswordHash,
 		user.CreatedAt, user.UpdatedAt,
 		user.IsVerified, user.MFAActive,

@@ -5,10 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
+
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
+	_ = userID // TODO: Handle auth for streams
 
 	streamID := mux.Vars(r)["id"]
 
@@ -80,6 +90,16 @@ func (s *Service) OpenStream(w http.ResponseWriter, r *http.Request) {
 
 // TODO: Consider creating a database table to keep track of ongoing streams
 func (s *Service) CancelStream(w http.ResponseWriter, r *http.Request) {
+
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
+	_ = userID // TODO: Handle auth for streams
+
 	streamID := mux.Vars(r)["id"]
 	s.sp.Cancel(streamID)
 }

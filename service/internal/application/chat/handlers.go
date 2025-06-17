@@ -31,7 +31,7 @@ func (s *Service) Handle(r *mux.Router) {
 
 	router = r.PathPrefix("/v1/profile").Subrouter()
 	router.HandleFunc("/", s.GetUserProfile).Methods("GET")
-	router.HandleFunc("/", s.PatchUserProfile).Methods("PATCH")
+	router.HandleFunc("/", s.UpsertUserProfile).Methods("PATCH")
 
 	router = r.PathPrefix("/v1/share").Subrouter()
 	router.HandleFunc("/{id}/", s.GetSharedChat).Methods("GET")

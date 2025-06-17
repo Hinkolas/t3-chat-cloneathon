@@ -8,22 +8,29 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 type Attachment struct {
-	ID        string `json:"id"`
-	UserId    string `json:"user_id,omitempty"`
-	MessageID string `json:"message_id,omitempty"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Src       string `json:"src"`
-	CreatedAt int64  `json:"created_at"`
+	ID        uuid.UUID `json:"id,omitzero"`
+	UserId    uuid.UUID `json:"user_id,omitzero"`
+	MessageID uuid.UUID `json:"message_id,omitzero"`
+	Name      string    `json:"name"`
+	Type      string    `json:"type"`
+	Src       string    `json:"src"`
+	CreatedAt int64     `json:"created_at"`
 }
 
 func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	attachments := make([]Attachment, 0)
 
@@ -58,7 +65,13 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
@@ -82,7 +95,13 @@ func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	// Parse multipart form
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max
@@ -101,7 +120,8 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 	// Create attachment record
 	now := time.Now()
 	attachment := Attachment{
-		ID:        fmt.Sprintf("att_%d", now.UnixNano()),
+		// ID:        fmt.Sprintf("att_%d", now.UnixNano()),
+		ID:        uuid.New(),
 		UserId:    userID,
 		Name:      header.Filename,
 		Type:      header.Header.Get("Content-Type"),
@@ -145,7 +165,13 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 

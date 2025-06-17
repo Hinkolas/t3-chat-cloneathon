@@ -11,13 +11,14 @@ import (
 
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/chat"
 	"github.com/Hinkolas/t3-chat-cloneathon/service/internal/llm/stream"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 type ChatCompletionRequest struct {
 	// Message
-	Content     string   `json:"content"`
-	Attachments []string `json:"attachments,omitempty"`
+	Content     string      `json:"content"`
+	Attachments []uuid.UUID `json:"attachments,omitempty"`
 	// Options
 	Model           string `json:"model"`
 	ReasoningEffort int32  `json:"reasoning_effort"`
@@ -25,7 +26,13 @@ type ChatCompletionRequest struct {
 
 func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	var body ChatCompletionRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -34,7 +41,13 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chatID := mux.Vars(r)["id"]
+	chatID, err := uuid.Parse(mux.Vars(r)["id"])
+	if err != nil {
+		s.log.Debug("invalid uuid", "error", err)
+		http.Error(w, "invalid_id", http.StatusBadRequest)
+		return
+	}
+
 	messages := make([]chat.Message, 0)
 	rows, err := s.db.Query("SELECT role, content, reasoning FROM messages WHERE chat_id = ? AND user_id = ? ORDER BY created_at ASC", chatID, userID)
 	if err != nil {
@@ -67,7 +80,8 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	message := Message{
-		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		// ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		ID:        uuid.New(),
 		ChatID:    chatID,
 		UserID:    userID,
 		Role:      "user",
@@ -117,12 +131,13 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now = time.Now()
-	streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
+	// streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
 	message = Message{
-		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		// ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		ID:        uuid.New(),
 		ChatID:    chatID,
 		UserID:    userID,
-		StreamID:  streamID,
+		StreamID:  uuid.New(),
 		Role:      "assistant",
 		Status:    "streaming",
 		Model:     req.Model,
@@ -144,11 +159,11 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add stream to stream pool and return id
-	s.sp.Add(streamID, compl)
+	s.sp.Add(message.StreamID.String(), compl)
 	compl.OnClose(func(chunk stream.Chunk, serr error) {
 
 		if serr != nil {
-			s.log.Error("stream failed", "stream_id", streamID, "error", serr)
+			s.log.Error("stream failed", "stream_id", message.StreamID, "error", serr)
 			return
 		}
 
@@ -157,17 +172,17 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			s.log.Error("storing stream content failed", "stream_id", streamID, "error", err)
+			s.log.Error("storing stream content failed", "stream_id", message.StreamID, "error", err)
 			return
 		}
 
 	})
 
-	s.log.Debug("stream was started sucessfully", "chat_id", chatID, "stream_id", streamID)
+	s.log.Debug("stream was started sucessfully", "chat_id", chatID, "stream_id", message.StreamID)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(map[string]string{
-		"stream_id": streamID,
+	if err := json.NewEncoder(w).Encode(map[string]any{
+		"stream_id": message.StreamID,
 	}); err != nil {
 		s.log.Error("failed to encode response", "error", err)
 	}
@@ -176,7 +191,13 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	var body ChatCompletionRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -186,9 +207,9 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	chatID := fmt.Sprintf("chat_%d", time.Now().UnixNano())
+	// chatID := fmt.Sprintf("chat_%d", time.Now().UnixNano())
 	newChat := Chat{
-		ID:            chatID,
+		ID:            uuid.New(),
 		UserID:        userID,
 		Title:         fmt.Sprintf("New Chat %d", time.Now().Unix()), // TODO: Generate title based on the first message using a lightweight model
 		Model:         body.Model,
@@ -221,7 +242,8 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	now = time.Now()
 	message := Message{
-		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		// ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		ID:        uuid.New(),
 		ChatID:    newChat.ID,
 		UserID:    userID,
 		Role:      "user",
@@ -271,12 +293,13 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now = time.Now()
-	streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
+	// streamID := fmt.Sprintf("stream_%d", now.UnixNano()) // TODO: Consider replacing with uuid
 	message = Message{
-		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
-		ChatID:    chatID,
+		// ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
+		ID:        uuid.New(),
+		ChatID:    newChat.ID,
 		UserID:    userID,
-		StreamID:  streamID,
+		StreamID:  uuid.New(),
 		Role:      "assistant",
 		Status:    "streaming",
 		Model:     req.Model,
@@ -298,11 +321,11 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add stream to stream pool and return id
-	s.sp.Add(streamID, compl)
+	s.sp.Add(message.StreamID.String(), compl)
 	compl.OnClose(func(chunk stream.Chunk, serr error) {
 
 		if serr != nil {
-			s.log.Error("stream failed", "stream_id", streamID, "error", serr)
+			s.log.Error("stream failed", "stream_id", message.StreamID, "error", serr)
 			return
 		}
 
@@ -311,65 +334,26 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			s.log.Error("storing stream content failed", "stream_id", streamID, "error", err)
+			s.log.Error("storing stream content failed", "stream_id", message.StreamID, "error", err)
 			return
 		}
 
 	})
 
-	s.log.Debug("stream was started sucessfully", "chat_id", newChat.ID, "stream_id", streamID)
+	s.log.Debug("stream was started sucessfully", "chat_id", newChat.ID, "stream_id", message.StreamID)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"chat_id":   newChat.ID,
-		"stream_id": streamID,
+		"stream_id": message.StreamID,
 	}); err != nil {
 		s.log.Error("failed to encode response", "error", err)
 	}
 
 }
 
-// Helper method to update attachments
-func (s *Service) updateAttachmentsMessageID(attachmentIDs []string, messageID, userID string) error {
-	if len(attachmentIDs) == 0 {
-		return nil
-	}
-
-	// Create placeholders for the IN clause
-	placeholders := make([]string, len(attachmentIDs))
-	args := make([]interface{}, 0, len(attachmentIDs)+2)
-
-	args = append(args, messageID)
-	for i := range attachmentIDs {
-		placeholders[i] = "?"
-		args = append(args, attachmentIDs[i])
-	}
-	args = append(args, userID)
-
-	query := fmt.Sprintf("UPDATE attachments SET message_id = ? WHERE id IN (%s) AND user_id = ? AND message_id = ''",
-		strings.Join(placeholders, ","))
-
-	result, err := s.db.Exec(query, args...)
-	if err != nil {
-		return fmt.Errorf("failed to update attachments: %w", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	}
-
-	if int(rowsAffected) != len(attachmentIDs) {
-		s.log.Warn("not all attachments were updated",
-			"expected", len(attachmentIDs),
-			"updated", rowsAffected)
-	}
-
-	return nil
-}
-
 // LoadAndUpdateAttachments updates message_id on the given attachments and returns their mime_type+data.
-func (s *Service) loadAndUpdateAttachments(attachmentIDs []string, messageID, userID string) ([]chat.Attachment, error) {
+func (s *Service) loadAndUpdateAttachments(attachmentIDs []uuid.UUID, messageID, userID uuid.UUID) ([]chat.Attachment, error) {
 
 	if len(attachmentIDs) == 0 {
 		return []chat.Attachment{}, nil
@@ -435,7 +419,7 @@ func (s *Service) loadAndUpdateAttachments(attachmentIDs []string, messageID, us
 }
 
 // Helper function to encode image to base64
-func getAttachmentData(attachmentID string) ([]byte, error) {
+func getAttachmentData(attachmentID uuid.UUID) ([]byte, error) {
 
 	filePath := fmt.Sprintf("data/files/%s", attachmentID)
 

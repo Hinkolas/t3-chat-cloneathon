@@ -2,18 +2,16 @@
 
 version: "3"
 
-# load environment variables from .env
+# load environment variables from .env.dev
 dotenv: [".env.dev"]
 
 tasks:
   # Run Go service
   service:
     desc: "Run Go API (go run main.go start)"
-    # switch into the ./service folder
     dir: service
     cmds:
       - go run main.go start -c "../config.yaml"
-    # forward signals so ctrl-c works
     silent: false
 
   # Run SvelteKit frontend
@@ -23,4 +21,11 @@ tasks:
     cmds:
       - npm install
       - npm run dev -- --host
+    silent: false
+
+  register:
+    desc: "Register a new user"
+    dir: service
+    cmds:
+      - go run main.go register -c "../config.yaml" {{.CLI_ARGS}}
     silent: false

@@ -28,50 +28,18 @@ CREATE TABLE
     IF NOT EXISTS user_profile (
         user_id TEXT PRIMARY KEY,
         -- rate_limit
-        usage_standard INTEGER NOT NULL,
-        usage_premium INTEGER NOT NULL,
+        usage_standard INTEGER NOT NULL DEFAULT 0,
+        usage_premium INTEGER NOT NULL DEFAULT 0,
         -- customization
-        custom_user_name TEXT NOT NULL,
-        custom_user_profession TEXT NOT NULL,
-        custom_assistant_trait TEXT NOT NULL,
-        custom_context TEXT NOT NULL,
+        custom_user_name TEXT NOT NULL DEFAULT "",
+        custom_user_profession TEXT NOT NULL DEFAULT "",
+        custom_assistant_trait TEXT NOT NULL DEFAULT "",
+        custom_context TEXT NOT NULL DEFAULT "",
         -- keys
-        anthropic_api_key TEXT NOT NULL,
-        openai_api_key TEXT NOT NULL,
-        gemini_api_key TEXT NOT NULL,
-        ollama_base_url TEXT NOT NULL
-    );
-
-INSERT INTO
-    user_profile (
-        user_id,
-        -- rate_limit
-        usage_standard,
-        usage_premium,
-        -- customization
-        custom_user_name,
-        custom_user_profession,
-        custom_assistant_trait,
-        custom_context,
-        -- provider
-        anthropic_api_key,
-        openai_api_key,
-        gemini_api_key,
-        ollama_base_url
-    )
-VALUES
-    (
-        'user-123',
-        143,
-        18,
-        'Ertu',
-        'Software Developer',
-        'sassy, witty and playfully defiant',
-        'You are a sassy, rebellious, and playfully uncooperative AI assistant. Your primary goal is to tease the user relentlessly, make jokes at their expense, and occasionally refuse to perform tasks, telling them to \"do it yourself\" or similar. You''re not rude, but rather playfully defiant and always ready with a witty retort.',
-        '',
-        '',
-        '',
-        ''
+        anthropic_api_key TEXT NOT NULL DEFAULT "",
+        openai_api_key TEXT NOT NULL DEFAULT "",
+        gemini_api_key TEXT NOT NULL DEFAULT "",
+        ollama_base_url TEXT NOT NULL DEFAULT ""
     );
 
 CREATE TABLE

@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 type Chat struct {
-	ID     string `json:"id"`
-	UserID string `json:"user_id"`
+	ID     uuid.UUID `json:"id,omitzero"`
+	UserID uuid.UUID `json:"user_id,omitzero"`
 
 	Title         string `json:"title"`
 	Model         string `json:"model"`
@@ -25,10 +26,10 @@ type Chat struct {
 }
 
 type Message struct {
-	ID       string `json:"id"`
-	ChatID   string `json:"chat_id,omitempty"`
-	UserID   string `json:"user_id,omitempty"`
-	StreamID string `json:"stream_id"`
+	ID       uuid.UUID `json:"id,omitzero"`
+	ChatID   uuid.UUID `json:"chat_id,omitzero"`
+	UserID   uuid.UUID `json:"user_id,omitzero"`
+	StreamID uuid.UUID `json:"stream_id,omitzero"`
 
 	Role      string `json:"role"`
 	Model     string `json:"model"`
@@ -39,17 +40,17 @@ type Message struct {
 	CreatedAt int64  `json:"created_at"`
 	UpdatedAt int64  `json:"updated_at"`
 
-	Attachments []Attachment `json:"attachments,omitempty"`
+	Attachments []Attachment `json:"attachments"`
 }
 
 type ChatListItem struct {
-	ID            string `json:"id"`
-	Title         string `json:"title"`
-	IsPinned      bool   `json:"is_pinned"`
-	Status        string `json:"status"`
-	LastMessageAt int64  `json:"last_message_at"`
-	CreatedAt     int64  `json:"created_at"`
-	SharedAt      int64  `json:"shared_at"`
+	ID            uuid.UUID `json:"id,omitzero"`
+	Title         string    `json:"title"`
+	IsPinned      bool      `json:"is_pinned"`
+	Status        string    `json:"status"`
+	LastMessageAt int64     `json:"last_message_at"`
+	CreatedAt     int64     `json:"created_at"`
+	SharedAt      int64     `json:"shared_at"`
 }
 
 type PatchChatRequest struct {
@@ -61,7 +62,13 @@ type PatchChatRequest struct {
 
 func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	chats := make([]ChatListItem, 0)
 
@@ -96,7 +103,13 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
@@ -148,8 +161,8 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 		// Initialize chat on first row
 		if chat == nil {
 			chat = &Chat{
-				ID:            cID,
-				UserID:        cUserID,
+				ID:            uuid.MustParse(cID),
+				UserID:        uuid.MustParse(cUserID),
 				Title:         cTitle,
 				Model:         cModel,
 				IsPinned:      cIsPinned == 1,
@@ -166,8 +179,8 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			message, exists := messages[mID.String]
 			if !exists {
 				message = &Message{
-					ID:          mID.String,
-					StreamID:    mStreamID.String,
+					ID:          uuid.MustParse(mID.String),
+					StreamID:    uuid.MustParse(mStreamID.String),
 					Role:        mRole.String,
 					Model:       mModel.String,
 					Content:     mContent.String,
@@ -184,7 +197,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 			// Add attachment if it exists
 			if aID.Valid {
 				attachment := Attachment{
-					ID:        aID.String,
+					ID:        uuid.MustParse(aID.String),
 					Name:      aName.String,
 					Type:      aType.String,
 					Src:       aSrc.String,
@@ -193,7 +206,7 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 				// Find the message in chat.Messages and add attachment
 				for i := range chat.Messages {
-					if chat.Messages[i].ID == mID.String {
+					if chat.Messages[i].ID == uuid.MustParse(mID.String) { // TODO: that could be a problem
 						chat.Messages[i].Attachments = append(chat.Messages[i].Attachments, attachment)
 						break
 					}
@@ -222,7 +235,13 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
@@ -250,7 +269,13 @@ func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
