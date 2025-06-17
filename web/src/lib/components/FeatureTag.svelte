@@ -98,5 +98,6 @@
 		padding: 2px 6px;
 		gap: 4px;
 		font-size: 12px;
+		white-space: nowrap;
 	}
 </style>

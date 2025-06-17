@@ -205,7 +205,9 @@
 		{:else}
 			{#each Object.entries(filteredModels) as [modelId, model]}
 				<div class="model">
-					<ModelIcon {model} size="40" />
+					<div class="provider-icon">
+						<ModelIcon {model} />
+					</div>
 					<div class="details">
 						<div class="name">{model.title}</div>
 						<div class="description">
@@ -327,11 +329,23 @@
 		border-radius: 5px;
 	}
 
+	.model .provider-icon {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-width: 24px;
+		max-width: 40px;
+		min-height: 24px;
+		max-height: 40px;
+		color: hsl(var(--secondary-foreground));
+	}
+
 	.model .details {
 		width: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
+		overflow: hidden;
 	}
 
 	.model .name {
@@ -343,6 +357,19 @@
 	.model .description {
 		font-size: 14px;
 		font-weight: 500;
+		text-wrap: break-word;
+	}
+
+	@media (max-width: 768px) {
+		.model .name {
+			font-size: 14px;
+			font-weight: 600;
+			letter-spacing: 0.24px;
+		}
+		.model .description {
+			font-size: 12px;
+			font-weight: 500;
+		}
 	}
 
 	.model .tail {
@@ -356,6 +383,14 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		overflow-x: auto;
+
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.model .tail .features::-webkit-scrollbar {
+		display: none;
 	}
 
 	.model .search-url-button {
@@ -373,6 +408,12 @@
 
 	.model .search-url-button:hover {
 		background-color: #29212a;
+	}
+
+	@media (max-width: 768px) {
+		.model .search-url-button {
+			display: none;
+		}
 	}
 
 	.filter-container {

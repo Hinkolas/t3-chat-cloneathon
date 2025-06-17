@@ -119,13 +119,13 @@
 				<div class="head">
 					<button onclick={toggleSelectAll}>
 						<div class="square" class:checked={selectAll}></div>
-						Select All
+						<span>Select All</span>
 					</button>
 				</div>
 				<div class="tail">
 					<button disabled={selectedChats.size === 0} onclick={exportSelectedChats}>
 						<Upload size="14" />
-						Export
+						<span>Export</span>
 					</button>
 					<button
 						class="delete-button"
@@ -133,11 +133,11 @@
 						onclick={deleteSelectedChats}
 					>
 						<Trash2 size="14" />
-						Delete
+						<span>Delete</span>
 					</button>
 					<button>
 						<Download size="14" />
-						Import
+						<span>Import</span>
 					</button>
 				</div>
 			</div>
@@ -245,6 +245,16 @@
 	.header button.delete-button:disabled {
 		border: 1px solid #621734;
 		background-color: #621734;
+	}
+
+	@media (max-width: 768px) {
+		.header button {
+			padding: 10px 12px;
+			font-size: 12px;
+		}
+		.header button span {
+			display: none;
+		}
 	}
 
 	.history-box {

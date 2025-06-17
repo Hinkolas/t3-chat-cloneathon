@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { model, size } = $props();
+	let { model, size = '100%' } = $props();
 
 	// TODO: combine into single object (model: { viewbox, path })
 	const providerPath: { [key: string]: string } = {

@@ -42,6 +42,12 @@
 		gap: 24px;
 	}
 
+	@media (max-width: 1024px) {
+		.container {
+			display: none;
+		}
+	}
+
 	.account {
 		display: flex;
 		flex-direction: column;

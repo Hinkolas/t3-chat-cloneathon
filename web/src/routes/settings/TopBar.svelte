@@ -58,6 +58,16 @@
 		padding: 4px;
 		border-radius: 8px;
 		width: max-content;
+		max-width: 100%;
+		overflow-x: auto;
+		min-height: 40px; /* TODO: Fix */
+
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.tabs::-webkit-scrollbar {
+		display: none;
 	}
 
 	.tab {
