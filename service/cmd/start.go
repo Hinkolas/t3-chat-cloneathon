@@ -19,7 +19,7 @@ func init() {
 	// Start Command Flags
 	startCmd.Flags().BoolP("verbose", "v", false, "Output log messages to stdout in addition to the log file")
 	startCmd.Flags().StringP("log-level", "l", "info", "Set the logging level (\"debug\", \"info\", \"warn\", \"error\", \"fatal\") (default \"info\")")
-	startCmd.Flags().StringP("config", "c", "data/config.yaml", "Path to config file")
+	startCmd.Flags().StringP("config", "c", "config.yaml", "Path to config file")
 }
 
 var startCmd = &cobra.Command{

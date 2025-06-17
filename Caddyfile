@@ -1,0 +1,16 @@
+# /Caddyfile
+{
+    email {$CERTBOT_EMAIL}
+}
+
+# Rule for the SvelteKit frontend
+{$WEB_HOSTNAME} {
+    # Proxy all requests to the 'web' service (container name) on port 3000
+    reverse_proxy web:3000
+}
+
+# Rule for the Go API backend
+{$API_HOSTNAME} {
+    # Proxy all requests to the 'service' service (container name) on port 3141
+    reverse_proxy service:3141
+}

@@ -1,0 +1,26 @@
+# https://taskfile.dev
+
+version: "3"
+
+# load environment variables from .env
+dotenv: [".env.dev"]
+
+tasks:
+  # Run Go service
+  service:
+    desc: "Run Go API (go run main.go start)"
+    # switch into the ./service folder
+    dir: service
+    cmds:
+      - go run main.go start
+    # forward signals so ctrl-c works
+    silent: false
+
+  # Run SvelteKit frontend
+  web:
+    desc: "Run SvelteKit dev server (npm run dev -- --host)"
+    dir: web
+    cmds:
+      - npm install
+      - npm run dev -- --host
+    silent: false
