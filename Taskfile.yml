@@ -1,9 +1,9 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 # load environment variables from .env
-dotenv: ['.env.dev']
+dotenv: [".env.dev"]
 
 tasks:
   # Run Go service
@@ -24,10 +24,3 @@ tasks:
       - npm install
       - npm run dev -- --host
     silent: false
-
-  # convenience: run both in parallel
-  all:
-    desc: "Run both service and web in parallel"
-    deps:
-      - service
-      - web
