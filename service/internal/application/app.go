@@ -25,6 +25,12 @@ type App struct {
 
 func NewApp(config Config) (*App, error) {
 
+	// Create data directory if it doesn't exist
+	err := os.MkdirAll("data", 0755)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create data directory: %w", err)
+	}
+
 	// TODO: Maybe replace with postgres in production
 	db, err := sql.Open("sqlite3", "data/app.db")
 	if err != nil {
