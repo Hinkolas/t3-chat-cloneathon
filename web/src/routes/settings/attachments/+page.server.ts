@@ -1,13 +1,13 @@
 import type { PageServerLoad } from './$types';
 import type { AttachmentResponse } from '$lib/types';
 import { error } from '@sveltejs/kit';
+import { PRIVATE_HOST_URL } from '$env/static/private';
 
 export const load = (async ({ params, url, fetch }) => {
-	const apiUrl = 'http://localhost:3141';
 
 	try {
 		// Fetch models
-		const attachmentsResponse = await fetch(`${apiUrl}/v1/attachments/`);
+		const attachmentsResponse = await fetch(`${PRIVATE_HOST_URL}/v1/attachments/`);
 		if (!attachmentsResponse.ok) {
 			throw error(500, 'Failed to fetch attachments');
 		}

@@ -1,12 +1,13 @@
 import type { PageServerLoad } from './$types';
 import type { ModelsResponse, ChatResponse } from '$lib/types';
+import { PRIVATE_HOST_URL } from '$env/static/private';
 
 export const load = (async () => {
-	const url = 'http://localhost:3141';
+	const apiUrl = PRIVATE_HOST_URL + '/v1/models/';
 
 	try {
 		// Fetch models
-		const modelResponse = await fetch(`${url}/v1/models/`);
+		const modelResponse = await fetch(apiUrl);
 
 		if (!modelResponse.ok) {
 			throw new Error('Something happened during Record');

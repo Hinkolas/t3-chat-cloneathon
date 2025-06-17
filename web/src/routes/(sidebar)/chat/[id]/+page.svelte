@@ -20,6 +20,7 @@
 	import 'highlight.js/styles/github-dark.css';
 	import { fade } from 'svelte/transition';
 	import { addChatId, removeChatId } from '$lib/store';
+	import { PUBLIC_HOST_URL } from '$env/static/public';
 
 	const iconSize = 16;
 
@@ -48,7 +49,7 @@
 		activeStreams.clear();
 
 		// Update the reactive state
-		messages = data.chat.messages;
+		messages = data.chat.messages || [];
 		filteredModels = data.models;
 		modelSearchTerm = '';
 		modelSelectionOpen = false;
@@ -229,7 +230,6 @@
 
 	// Updated uploadFile function
 	async function uploadFile(file: File): Promise<UploadedFileWithId | null> {
-		const url: string = 'http://localhost:3141';
 
 		// Validate file type against selected model
 		const selectedModel = data.models[selectedModelKey];
@@ -249,7 +249,7 @@
 			formData.append('file', file);
 			formData.append('chat_id', data.chat.id);
 
-			const response = await fetch(`${url}/v1/attachments/`, {
+			const response = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/`, {
 				method: 'POST',
 				body: formData
 			});
@@ -363,10 +363,9 @@
 		if (!uploadedFile) return;
 
 		try {
-			const url = 'http://localhost:3141';
 
 			// Delete the attachment using the stored ID
-			const delRes = await fetch(`${url}/v1/attachments/${uploadedFile.id}/`, {
+			const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
@@ -505,7 +504,6 @@
 
 	async function sendMessage(message: string) {
 		const tempMessage = message;
-		const url = 'http://localhost:3141';
 
 		const userChat: MessageData = {
 			id: '', //TODO: add id
@@ -521,7 +519,7 @@
 			attachments: uploadedFiles.map((f) => ({
 				id: f.id,
 				name: f.file.name,
-				src: `${url}/v1/attachments/${f.id}/`,
+				src: `${PUBLIC_HOST_URL}/v1/attachments/${f.id}/`,
 				type: f.file.type,
 				created_at: Date.now()
 			}))
@@ -529,7 +527,7 @@
 		messages.push(userChat);
 
 		try {
-			const response = await fetch(`${url}/v1/chats/${data.chat.id}/`, {
+			const response = await fetch(`${PUBLIC_HOST_URL}/v1/chats/${data.chat.id}/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -571,7 +569,6 @@
 	}
 
 	function startStreamingForMessage(stream_id: string, messageIndex: number) {
-		const url = 'http://localhost:3141';
 		let accumulatedContent = '';
 		let accumulatedReasoning = '';
 
@@ -581,7 +578,7 @@
 			return;
 		}
 
-		const eventSource = new EventSource(`${url}/v1/streams/${stream_id}/`);
+		const eventSource = new EventSource(`${PUBLIC_HOST_URL}/v1/streams/${stream_id}/`);
 
 		// Store the EventSource instance
 		eventSources.set(stream_id, eventSource);
@@ -669,7 +666,6 @@
 			acceptTypes.push('.jpg', '.jpeg', '.png', 'image/jpeg', 'image/png');
 		}
 
-		console.log('Accept types:', acceptTypes);
 		return acceptTypes.join(',');
 	}
 
@@ -774,8 +770,6 @@
 								{/if}
 							{:else if message.status === 'streaming'}
 								{@html renderMarkdown(message.content)}
-								<!-- Optional: Add a typing indicator -->
-								<div class="typing-indicator">●●●</div>
 							{/if}
 						</div>
 					</div>

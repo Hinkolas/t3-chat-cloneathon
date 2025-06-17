@@ -1,14 +1,14 @@
 import type { PageServerLoad } from './$types';
 import type { ModelsResponse, ChatResponse } from '$lib/types';
 import { error, redirect } from '@sveltejs/kit';
+import { PRIVATE_HOST_URL } from '$env/static/private';
 
 export const load = (async ({ params, url, fetch }) => {
-	const apiUrl = 'http://localhost:3141';
 
 	const id = params.id;
 
 	try {
-		const chatResponse = await fetch(`${apiUrl}/v1/chats/${id}/`);
+		const chatResponse = await fetch(`${PRIVATE_HOST_URL}/v1/chats/${id}/`);
 		if (chatResponse.status === 404) {
 			console.error('Server error fetching chat:', chatResponse.statusText);
 			throw redirect(302, '/');
@@ -16,7 +16,7 @@ export const load = (async ({ params, url, fetch }) => {
 		const chat: ChatResponse = await chatResponse.json();
 
 		// Fetch models
-		const modelResponse = await fetch(`${apiUrl}/v1/models/`);
+		const modelResponse = await fetch(`${PRIVATE_HOST_URL}/v1/models/`);
 		if (!modelResponse.ok) {
 			throw error(500, 'Failed to fetch models');
 		}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PUBLIC_HOST_URL } from '$env/static/public';
 	import type { AttachmentData, AttachmentResponse } from '$lib/types.js';
 
 	interface Props {
@@ -50,9 +51,8 @@
 		deleteError = null;
 
 		try {
-			const url = 'http://localhost:3141';
 			const deletePromises = Array.from(selectedAttachments).map(async (id) => {
-				const delRes = await fetch(`${url}/v1/attachments/${id}/`, {
+				const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${id}/`, {
 					method: 'DELETE'
 				});
 				if (!delRes.ok) throw new Error(`Failed to delete attachment ${id}`);
@@ -83,10 +83,9 @@
 		deleteError = null;
 
 		try {
-			const url = 'http://localhost:3141';
 
 			// Delete the attachment using the ID
-			const delRes = await fetch(`${url}/v1/attachments/${id}/`, {
+			const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
