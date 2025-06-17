@@ -75,6 +75,8 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 		HttpOnly:    true,
 		Expires:     time.Unix(session.IssuedAt+session.TimeToLive, 0), // Set to the Unix epoch (very past date)
 		Partitioned: true,
+		SameSite:    http.SameSiteNoneMode, // TODO: Replace with somehting more secure
+		// TODO: add secure in prod
 	}
 	http.SetCookie(w, cookie)
 
