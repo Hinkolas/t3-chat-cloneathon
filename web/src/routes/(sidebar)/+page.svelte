@@ -414,7 +414,6 @@
 	async function sendMessage(messageText: string) {
 		const tempMessage = messageText;
 		showPlaceholder = false;
-		message = '';
 
 		try {
 			const response = await fetch(`${PUBLIC_HOST_URL}/v1/chats/`, {
@@ -437,11 +436,13 @@
 
 			const res = await response.json();
 
+			message = '';
 			goto(`/chat/${res.chat_id}/`);
 			refreshChatHistory();
 			clearAllFiles();
 		} catch (error) {
 			console.log('Error:', error);
+			showPlaceholder = true;
 		}
 	}
 
@@ -685,6 +686,7 @@
 				<button
 					class={message.length == 0 ? '' : 'active'}
 					onclick={() => {
+						if (message.length == 0) return;
 						sendMessage(message);
 					}}
 					disabled={message.length == 0 || Object.keys(data.models).length === 0}
