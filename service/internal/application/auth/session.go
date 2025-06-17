@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Session represents a authenticated session.
@@ -36,7 +37,7 @@ func (s *Service) CreateSession(ctx context.Context, user *User) (*Session, erro
 	}
 
 	// Get current unix timestamp for issued_at and renewed_at fields
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 
 	var session = Session{
 		ID:         sessionID,
@@ -44,7 +45,7 @@ func (s *Service) CreateSession(ctx context.Context, user *User) (*Session, erro
 		Token:      hex.EncodeToString(sessionToken),
 		IssuedAt:   now,
 		RenewedAt:  now,
-		TimeToLive: 3600,
+		TimeToLive: 3600 * 1000,
 		IsVerified: !user.MFAActive,
 	}
 

@@ -82,7 +82,7 @@ func (s *Service) Authorize(ctx context.Context, sessionToken string) (*Session,
 	}
 
 	// Check if the session is expired
-	if time.Now().Unix() >= session.RenewedAt+session.TimeToLive {
+	if time.Now().UnixMilli() >= session.RenewedAt+session.TimeToLive {
 		return nil, ErrSessionExpired
 	}
 
