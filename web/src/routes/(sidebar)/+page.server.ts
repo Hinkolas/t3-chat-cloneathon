@@ -1,9 +1,9 @@
 import type { PageServerLoad } from './$types';
 import type { ModelsResponse, ChatResponse } from '$lib/types';
-import { PRIVATE_API_URL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export const load = (async () => {
-	const apiUrl = PRIVATE_API_URL + '/v1/models/';
+	const apiUrl = env.PRIVATE_API_URL + '/v1/models/';
 
 	try {
 		// Fetch models

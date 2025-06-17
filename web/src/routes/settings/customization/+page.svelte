@@ -1,12 +1,12 @@
 <script>
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 
 	let { data } = $props();
 
 	let profile = $state(data.profile);
 
 	async function savePreferences() {
-		const res = await fetch(`${PUBLIC_API_URL}/v1/profile/`, {
+		const res = await fetch(`${env.PUBLIC_API_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -59,11 +59,13 @@
 		<div class="form-group">
 			<label for="name">Anything else Your Chat should know about you?</label>
 			<div class="input-container">
-				<input
+				<textarea
 					bind:value={profile.custom_context}
-					type="text"
+					rows="4"
+					maxlength="3000"
+					cols="50"
 					placeholder="Interests, values, or preferences to keep in mind"
-				/>
+				></textarea>
 				<div class="chars">{profile.custom_context.length}/3000</div>
 			</div>
 		</div>
@@ -158,6 +160,31 @@
 		bottom: 0;
 		right: 6px;
 		font-size: 11px;
+		color: hsl(var(--secondary-foreground) / 0.6);
+	}
+
+	.form-group .input-container textarea {
+		all: unset;
+		padding: 8px 12px;
+		font-size: 14px;
+		background-color: transparent;
+		border: none;
+		border-radius: 8px;
+		box-shadow: 0 0 2px #483039;
+		width: 100%;
+		color: hsl(var(--secondary-foreground) / 0.8);
+		outline: none;
+		min-height: 120px;
+		max-height: 500px;
+		resize: vertical;
+	}
+
+	.form-group .input-container textarea:focus {
+		color: hsl(var(--secondary-foreground));
+		box-shadow: 0 0 2px hsl(var(--primary));
+	}
+
+	.form-group .input-container textarea::placeholder {
 		color: hsl(var(--secondary-foreground) / 0.6);
 	}
 </style>

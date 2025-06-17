@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import type { AttachmentData, AttachmentResponse } from '$lib/types.js';
 
 	interface Props {
@@ -51,7 +51,7 @@
 
 		try {
 			const deletePromises = Array.from(selectedAttachments).map(async (id) => {
-				const delRes = await fetch(`${PUBLIC_API_URL}/v1/attachments/${id}/`, {
+				const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${id}/`, {
 					method: 'DELETE'
 				});
 				if (!delRes.ok) throw new Error(`Failed to delete attachment ${id}`);
@@ -83,7 +83,7 @@
 
 		try {
 			// Delete the attachment using the ID
-			const delRes = await fetch(`${PUBLIC_API_URL}/v1/attachments/${id}/`, {
+			const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');

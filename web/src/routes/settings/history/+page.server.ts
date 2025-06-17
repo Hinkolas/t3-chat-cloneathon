@@ -1,11 +1,11 @@
 import type { PageServerLoad } from './$types';
 import type { ChatHistoryResponse } from '$lib/types';
 import { error } from '@sveltejs/kit';
-import { PRIVATE_API_URL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export const load = (async ({ params, url, fetch }) => {
 	try {
-		const chatHistoryResponse = await fetch(`${PRIVATE_API_URL}/v1/chats/`);
+		const chatHistoryResponse = await fetch(`${env.PRIVATE_API_URL}/v1/chats/`);
 		if (!chatHistoryResponse.ok) {
 			throw error(500, 'Failed to fetch chats');
 		}

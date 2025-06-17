@@ -1,13 +1,13 @@
 import type { PageServerLoad } from './$types';
 import type { ChatResponse } from '$lib/types';
 import { error, redirect } from '@sveltejs/kit';
-import { PRIVATE_API_URL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export const load = (async ({ params, url, fetch }) => {
     const id = params.id;
 
     try {
-        const chatResponse = await fetch(`${PRIVATE_API_URL}/v1/chats/${id}/`);
+        const chatResponse = await fetch(`${env.PRIVATE_API_URL}/v1/chats/${id}/`);
         if (chatResponse.status === 404) {
             console.error('Server error fetching shared chat:', chatResponse.statusText);
             throw redirect(302, '/');

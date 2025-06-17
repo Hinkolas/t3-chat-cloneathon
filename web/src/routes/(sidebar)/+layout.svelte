@@ -14,7 +14,7 @@
 	import Error from '$lib/components/Error.svelte';
 	import { toggleSidebar } from '$lib/store';
 	import { sidebarState } from '$lib/store';
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 
 	let chats = $state(data.chats);
 	let models = $state(data.models || {});
@@ -28,7 +28,7 @@
 	async function refreshChats() {
 		try {
 			// Fetch chat history
-			const chatHistoryResponse = await fetch(`${PUBLIC_API_URL}/v1/chats/`);
+			const chatHistoryResponse = await fetch(`${env.PUBLIC_API_URL}/v1/chats/`);
 			if (!chatHistoryResponse.ok) {
 				console.error(500, 'Failed to fetch chats');
 			}

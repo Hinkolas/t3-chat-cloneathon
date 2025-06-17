@@ -1,7 +1,5 @@
 import type { PageServerLoad } from './$types';
-import type { ModelsResponse, ChatResponse } from '$lib/types';
-import { error, redirect } from '@sveltejs/kit';
-import { PRIVATE_API_URL } from '$env/static/private';
+import { redirect } from '@sveltejs/kit';
 
 export const load = (async ({ params, url, fetch }) => {
     throw redirect(302, '/');    

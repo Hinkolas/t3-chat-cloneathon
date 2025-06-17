@@ -3,7 +3,7 @@
 	import { X, PinOff, Pin, TextCursor, Share2 } from '@lucide/svelte';
 	import { scale } from 'svelte/transition';
 	import { showConfirmationPopup } from '$lib/store';
-	import { PUBLIC_API_URL, PUBLIC_HOST_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 
 	let {
 		chat,
@@ -58,7 +58,7 @@
 			primaryButtonFunction: () => {
 				shareChat();
 				onContextMenuOpen(null);
-				navigator.clipboard.writeText(`${PUBLIC_HOST_URL}/share/${chat.id}/`);
+				navigator.clipboard.writeText(`${env.PUBLIC_HOST_URL}/share/${chat.id}/`);
 			}
 		});
 		onContextMenuOpen(null);
@@ -67,7 +67,7 @@
 	async function shareChat() {
 		try {
 			const now = new Date();
-			const response = await fetch(`${PUBLIC_API_URL}/v1/chats/${chat.id}/`, {
+			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${chat.id}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'

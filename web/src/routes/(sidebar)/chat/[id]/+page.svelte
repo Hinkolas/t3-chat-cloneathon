@@ -20,7 +20,7 @@
 	import 'highlight.js/styles/github-dark.css';
 	import { fade } from 'svelte/transition';
 	import { addChatId, removeChatId } from '$lib/store';
-	import { PUBLIC_API_URL } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 
 	const iconSize = 16;
 
@@ -146,6 +146,7 @@
 		id: string;
 	}
 
+	// svelte-ignore non_reactive_update
 	let fileInput: HTMLInputElement;
 	let uploadedFiles: UploadedFileWithId[] = $state([]);
 	let uploadingFile: File | null = $state(null);
@@ -153,9 +154,8 @@
 	let isDragOver = $state(false);
 
 	async function cancelStreaming(streamId: string) {
-		// TODO: implement cancel logic
 		try {
-			const response = await fetch(`${PUBLIC_API_URL}/v1/streams/${streamId}/`, {
+			const response = await fetch(`${env.PUBLIC_API_URL}/v1/streams/${streamId}/`, {
 				method: 'DELETE'
 			});
 
@@ -259,7 +259,7 @@
 			formData.append('file', file);
 			formData.append('chat_id', data.chat.id);
 
-			const response = await fetch(`${PUBLIC_API_URL}/v1/attachments/`, {
+			const response = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/`, {
 				method: 'POST',
 				body: formData
 			});
@@ -374,7 +374,7 @@
 
 		try {
 			// Delete the attachment using the stored ID
-			const delRes = await fetch(`${PUBLIC_API_URL}/v1/attachments/${uploadedFile.id}/`, {
+			const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
@@ -528,7 +528,7 @@
 			attachments: uploadedFiles.map((f) => ({
 				id: f.id,
 				name: f.file.name,
-				src: `${PUBLIC_API_URL}/v1/attachments/${f.id}/`,
+				src: `${env.PUBLIC_API_URL}/v1/attachments/${f.id}/`,
 				type: f.file.type,
 				created_at: Date.now()
 			}))
@@ -536,7 +536,7 @@
 		messages.push(userChat);
 
 		try {
-			const response = await fetch(`${PUBLIC_API_URL}/v1/chats/${data.chat.id}/`, {
+			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${data.chat.id}/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -570,6 +570,7 @@
 				updated_at: 0
 			};
 
+			message = '';
 			messages.push(assistantChat);
 			clearAllFiles(); // clear up
 		} catch (error) {
@@ -587,7 +588,7 @@
 			return;
 		}
 
-		const eventSource = new EventSource(`${PUBLIC_API_URL}/v1/streams/${stream_id}/`);
+		const eventSource = new EventSource(`${env.PUBLIC_API_URL}/v1/streams/${stream_id}/`);
 
 		// Store the EventSource instance
 		eventSources.set(stream_id, eventSource);
@@ -855,7 +856,6 @@
 					if (message.length == 0) return;
 					sendMessage(message);
 					autoResize();
-					message = ''; // TODO: handle in sendMessage with state
 				}
 			}}
 		></textarea>
@@ -948,7 +948,6 @@
 						onclick={() => {
 							sendMessage(message);
 							autoResize();
-							message = '';
 						}}
 						disabled={message.length == 0}
 						id="SendButton"

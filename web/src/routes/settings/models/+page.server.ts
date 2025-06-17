@@ -1,12 +1,12 @@
 import type { PageServerLoad } from './$types';
 import type { ModelsResponse, ChatResponse } from '$lib/types';
 import { error } from '@sveltejs/kit';
-import { PRIVATE_API_URL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export const load = (async ({ params, url, fetch }) => {
 	try {
 		// Fetch models
-		const modelResponse = await fetch(`${PRIVATE_API_URL}/v1/models/`);
+		const modelResponse = await fetch(`${env.PRIVATE_API_URL}/v1/models/`);
 		if (!modelResponse.ok) {
 			throw error(500, 'Failed to fetch models');
 		}
