@@ -4,7 +4,6 @@ import { error, redirect } from '@sveltejs/kit';
 import { PRIVATE_HOST_URL } from '$env/static/private';
 
 export const load = (async ({ params, url, fetch }) => {
-
 	const id = params.id;
 
 	try {

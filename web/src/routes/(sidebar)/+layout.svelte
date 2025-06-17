@@ -26,7 +26,6 @@
 	});
 
 	async function refreshChats() {
-
 		try {
 			// Fetch chat history
 			const chatHistoryResponse = await fetch(`${PUBLIC_HOST_URL}/v1/chats/`);
@@ -43,7 +42,7 @@
 </script>
 
 <div class="container">
-	{#if !models }
+	{#if !models}
 		<Error />
 	{:else}
 		<Popup />

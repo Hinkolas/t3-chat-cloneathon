@@ -1,7 +1,6 @@
 // lib/services/chatApi.ts
 import { env } from '$env/dynamic/public';
 
-
 export class ChatApiService {
 	/**
 	 * Delete a chat by ID

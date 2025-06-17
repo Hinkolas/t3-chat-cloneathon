@@ -230,7 +230,6 @@
 
 	// Updated uploadFile function
 	async function uploadFile(file: File): Promise<UploadedFileWithId | null> {
-
 		// Validate file type against selected model
 		const selectedModel = data.models[selectedModelKey];
 		const validation = validateFileType(file, selectedModel);
@@ -363,7 +362,6 @@
 		if (!uploadedFile) return;
 
 		try {
-
 			// Delete the attachment using the stored ID
 			const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE'

@@ -4,7 +4,6 @@ import { error } from '@sveltejs/kit';
 import { PRIVATE_HOST_URL } from '$env/static/private';
 
 export const load = (async ({ params, url, fetch }) => {
-
 	try {
 		const chatHistoryResponse = await fetch(`${PRIVATE_HOST_URL}/v1/chats/`);
 		if (!chatHistoryResponse.ok) {

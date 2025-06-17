@@ -161,8 +161,8 @@
 		display: none;
 		width: 16px;
 		height: 16px;
-		border: 2px solid #9D989C;
-		border-top: 2px solid hsl(var(--primary)/.5);
+		border: 2px solid #9d989c;
+		border-top: 2px solid hsl(var(--primary) / 0.5);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}

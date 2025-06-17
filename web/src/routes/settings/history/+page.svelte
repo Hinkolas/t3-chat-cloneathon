@@ -19,7 +19,7 @@
 		if (selectAll) {
 			selectedChats.clear();
 		} else {
-			selectedChats = new Set(chats.map(chat => chat.id));
+			selectedChats = new Set(chats.map((chat) => chat.id));
 		}
 	}
 
@@ -38,15 +38,13 @@
 
 		try {
 			// Delete all selected chats
-			const deletePromises = Array.from(selectedChats).map(id => 
-				ChatApiService.deleteChat(id)
-			);
-			
+			const deletePromises = Array.from(selectedChats).map((id) => ChatApiService.deleteChat(id));
+
 			await Promise.all(deletePromises);
-			
+
 			// Remove deleted chats from the local state
-			chats = chats.filter(chat => !selectedChats.has(chat.id));
-			
+			chats = chats.filter((chat) => !selectedChats.has(chat.id));
+
 			// Clear selection
 			selectedChats.clear();
 		} catch (error) {
@@ -56,15 +54,13 @@
 
 	async function deleteAllChats() {
 		if (chats.length === 0) return;
-		
+
 		try {
 			// Delete all chats
-			const deletePromises = chats.map(chat => 
-				ChatApiService.deleteChat(chat.id)
-			);
-			
+			const deletePromises = chats.map((chat) => ChatApiService.deleteChat(chat.id));
+
 			await Promise.all(deletePromises);
-			
+
 			// Clear all chats
 			chats = [];
 			selectedChats.clear();
@@ -75,11 +71,11 @@
 
 	function exportSelectedChats() {
 		if (selectedChats.size === 0) return;
-		
-		const selectedChatData = chats.filter(chat => selectedChats.has(chat.id));
+
+		const selectedChatData = chats.filter((chat) => selectedChats.has(chat.id));
 		const dataStr = JSON.stringify(selectedChatData, null, 2);
 		const dataBlob = new Blob([dataStr], { type: 'application/json' });
-		
+
 		const url = URL.createObjectURL(dataBlob);
 		const link = document.createElement('a');
 		link.href = url;
@@ -127,15 +123,12 @@
 					</button>
 				</div>
 				<div class="tail">
-					<button 
-						disabled={selectedChats.size === 0}
-						onclick={exportSelectedChats}
-					>
+					<button disabled={selectedChats.size === 0} onclick={exportSelectedChats}>
 						<Upload size="14" />
 						Export
 					</button>
-					<button 
-						class="delete-button" 
+					<button
+						class="delete-button"
 						disabled={selectedChats.size === 0}
 						onclick={deleteSelectedChats}
 					>
