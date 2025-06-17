@@ -5,10 +5,13 @@ export class ChatApiService {
 	/**
 	 * Delete a chat by ID
 	 */
-	static async deleteChat(id: string): Promise<void> {
+	static async deleteChat(id: string, session_token: string): Promise<void> {
 		try {
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${id}/`, {
-				method: 'DELETE'
+				method: 'DELETE',
+				headers: {
+					Authorization: `Bearer ${session_token}`
+				}
 			});
 
 			if (!response.ok) {
@@ -23,12 +26,17 @@ export class ChatApiService {
 	/**
 	 * Update chat pin status
 	 */
-	static async updateChatPinStatus(chatId: string, isPinned: boolean): Promise<void> {
+	static async updateChatPinStatus(
+		chatId: string,
+		isPinned: boolean,
+		session_token: string
+	): Promise<void> {
 		try {
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${chatId}/`, {
 				method: 'PATCH',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${session_token}`
 				},
 				body: JSON.stringify({
 					is_pinned: isPinned
@@ -47,12 +55,17 @@ export class ChatApiService {
 	/**
 	 * Update chat title
 	 */
-	static async updateChatTitle(chatId: string, newTitle: string): Promise<void> {
+	static async updateChatTitle(
+		chatId: string,
+		newTitle: string,
+		session_token: string
+	): Promise<void> {
 		try {
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${chatId}/`, {
 				method: 'PATCH',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${session_token}`
 				},
 				body: JSON.stringify({
 					title: newTitle

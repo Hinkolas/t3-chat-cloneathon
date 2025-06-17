@@ -3,7 +3,7 @@ import type { ChatResponse } from '$lib/types';
 import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
-export const load = (async ({ params, url, fetch }) => {
+export const load = (async ({ cookies, params, url, fetch }) => {
     const id = params.id;
 
     try {

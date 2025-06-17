@@ -5,6 +5,7 @@
 	interface Props {
 		data: {
 			attachments: AttachmentData[];
+			SESSION_TOKEN: string;
 		};
 	}
 
@@ -16,6 +17,7 @@
 	let selectedAttachments = $state(new Set<string>());
 	let deleteError = $state<string | null>(null);
 	let isDeleting = $state(false);
+	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
 
 	// Check if all attachments are selected
 	let allSelected = $derived(
@@ -52,7 +54,10 @@
 		try {
 			const deletePromises = Array.from(selectedAttachments).map(async (id) => {
 				const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${id}/`, {
-					method: 'DELETE'
+					method: 'DELETE',
+					headers: {
+						'Authorization': `Bearer ${SESSION_TOKEN}`,
+					}
 				});
 				if (!delRes.ok) throw new Error(`Failed to delete attachment ${id}`);
 				return id;
@@ -84,7 +89,10 @@
 		try {
 			// Delete the attachment using the ID
 			const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${id}/`, {
-				method: 'DELETE'
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${SESSION_TOKEN}`,
+				}
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
 

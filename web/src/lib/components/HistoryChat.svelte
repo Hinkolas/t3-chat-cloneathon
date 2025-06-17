@@ -12,6 +12,7 @@
 		openPopup,
 		renameChat,
 		activeContextMenuId,
+		SESSION_TOKEN,
 		onContextMenuOpen
 	} = $props();
 
@@ -70,7 +71,8 @@
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${chat.id}/`, {
 				method: 'PATCH',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${SESSION_TOKEN}`
 				},
 				body: JSON.stringify({ shared_at: now.getTime() })
 			});

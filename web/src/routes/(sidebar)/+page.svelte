@@ -5,6 +5,7 @@
 	interface Props {
 		data: {
 			models: ModelsResponse;
+			SESSION_TOKEN: string;
 		};
 	}
 
@@ -196,6 +197,9 @@
 
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/`, {
 				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${data.SESSION_TOKEN}`
+				},
 				body: formData
 			});
 
@@ -309,7 +313,10 @@
 		try {
 			// Delete the attachment using the stored ID
 			const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${uploadedFile.id}/`, {
-				method: 'DELETE'
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${data.SESSION_TOKEN}`
+				}
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
 
@@ -419,7 +426,8 @@
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/`, {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${data.SESSION_TOKEN}`
 				},
 				body: JSON.stringify({
 					model: selectedModelKey,

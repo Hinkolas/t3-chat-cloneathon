@@ -3,6 +3,7 @@
 
 	interface Props {
 		data: {
+			SESSION_TOKEN: string;
 			chat: ChatData;
 			models: ModelsResponse;
 		};
@@ -28,6 +29,7 @@
 	let scrollContainer: HTMLElement;
 	let textarea: HTMLElement;
 	let message = $state('');
+	let SESSION_TOKEN: string = $state(data.SESSION_TOKEN || '');
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models || {});
@@ -165,7 +167,10 @@
 	async function cancelStreaming(streamId: string) {
 		try {
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/streams/${streamId}/`, {
-				method: 'DELETE'
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${SESSION_TOKEN}`,
+				}
 			});
 
 			if (!response.ok) {
@@ -270,6 +275,9 @@
 
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/`, {
 				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${SESSION_TOKEN}`
+				},
 				body: formData
 			});
 
@@ -384,7 +392,10 @@
 		try {
 			// Delete the attachment using the stored ID
 			const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${uploadedFile.id}/`, {
-				method: 'DELETE'
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${SESSION_TOKEN}`
+				}
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
 
@@ -552,7 +563,8 @@
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${data.chat.id}/`, {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${SESSION_TOKEN}`
 				},
 				body: JSON.stringify({
 					model: selectedModelKey,

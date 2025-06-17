@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { chats = $bindable() } = $props();
+	let { chats = $bindable(), SESSION_TOKEN } = $props();
 
 	import { fade } from 'svelte/transition';
 	import { Pin, LogOut } from '@lucide/svelte';
@@ -69,7 +69,7 @@
 						chat.title = newTitle;
 
 						try {
-							await ChatApiService.updateChatTitle(chat.id, newTitle);
+							await ChatApiService.updateChatTitle(chat.id, newTitle, SESSION_TOKEN);
 							chats = [...chats];
 						} catch (error) {
 							chat.title = oldTitle;
@@ -83,7 +83,7 @@
 
 	async function deleteChat(id: string) {
 		try {
-			await ChatApiService.deleteChat(id);
+			await ChatApiService.deleteChat(id,SESSION_TOKEN);
 			const index = chats.findIndex((chat: ChatHistoryData) => chat.id === id);
 			if (index > -1) {
 				chats.splice(index, 1);
@@ -98,7 +98,7 @@
 
 	async function patchChat(chat: ChatHistoryData, pin: boolean) {
 		try {
-			await ChatApiService.updateChatPinStatus(chat.id, pin);
+			await ChatApiService.updateChatPinStatus(chat.id, pin, SESSION_TOKEN);
 			chat.is_pinned = pin;
 		} catch (error) {
 			showConfirmationPopup({
@@ -218,6 +218,7 @@
 								{openPopup}
 								{renameChat}
 								{activeContextMenuId}
+								{SESSION_TOKEN}
 								onContextMenuOpen={handleContextMenuOpen}
 							/>
 						{/each}

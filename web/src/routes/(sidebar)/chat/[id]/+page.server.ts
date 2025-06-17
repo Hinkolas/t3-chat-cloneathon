@@ -3,11 +3,17 @@ import type { ModelsResponse, ChatResponse } from '$lib/types';
 import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
-export const load = (async ({ params, url, fetch }) => {
+export const load = (async ({ cookies, params, url, fetch }) => {
 	const id = params.id;
 
+	const sessionToken = cookies.get('session_token');
+
 	try {
-		const chatResponse = await fetch(`${env.PRIVATE_API_URL}/v1/chats/${id}/`);
+		const chatResponse = await fetch(`${env.PRIVATE_API_URL}/v1/chats/${id}/`, {
+			headers: {
+				Authorization: `Bearer ${sessionToken}`
+			}
+		});
 		if (chatResponse.status === 404) {
 			console.error('Server error fetching chat:', chatResponse.statusText);
 			throw redirect(302, '/');
@@ -15,13 +21,18 @@ export const load = (async ({ params, url, fetch }) => {
 		const chat: ChatResponse = await chatResponse.json();
 
 		// Fetch models
-		const modelResponse = await fetch(`${env.PRIVATE_API_URL}/v1/models/`);
+		const modelResponse = await fetch(`${env.PRIVATE_API_URL}/v1/models/`, {
+			headers: {
+				Authorization: `Bearer ${sessionToken}`
+			}
+		});
 		if (!modelResponse.ok) {
 			throw error(500, 'Failed to fetch models');
 		}
 		const models: ModelsResponse = await modelResponse.json();
 
 		return {
+			SESSION_TOKEN: sessionToken,
 			chat,
 			models
 		};

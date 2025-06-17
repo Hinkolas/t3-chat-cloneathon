@@ -2,6 +2,7 @@
 	import type { ModelsResponse, ChatHistoryResponse } from '$lib//types';
 	interface Props {
 		data: {
+			SESSION_TOKEN: string;
 			models: ModelsResponse;
 			chats: ChatHistoryResponse;
 		};
@@ -16,8 +17,9 @@
 	import { sidebarState } from '$lib/store';
 	import { env } from '$env/dynamic/public';
 
-	let chats = $state(data.chats);
+	let chats = $state(data.chats || {});
 	let models = $state(data.models || {});
+	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
 
 	$effect(() => {
 		if ($sidebarState.refresh) {
@@ -28,7 +30,11 @@
 	async function refreshChats() {
 		try {
 			// Fetch chat history
-			const chatHistoryResponse = await fetch(`${env.PUBLIC_API_URL}/v1/chats/`);
+			const chatHistoryResponse = await fetch(`${env.PUBLIC_API_URL}/v1/chats/`, {
+				headers: {
+					Authorization: `Bearer ${SESSION_TOKEN}`
+				}
+			});
 			if (!chatHistoryResponse.ok) {
 				console.error(500, 'Failed to fetch chats');
 			}
@@ -49,7 +55,7 @@
 		<button onclick={toggleSidebar} class="sidebar-button">
 			<PanelLeft size="16" />
 		</button>
-		<Sidebar {chats} />
+		<Sidebar {chats} {SESSION_TOKEN} />
 		<div class="content">
 			<slot />
 		</div>

@@ -1,11 +1,19 @@
 <script lang="ts">
-	import type { ChatHistoryData } from '$lib/types.js';
+	import type { ChatHistoryResponse } from '$lib/types.js';
 	import { ChatApiService } from '$lib/utils/chatApi.js';
 	import { Upload, Trash2, Download, Pin } from '@lucide/svelte';
 
-	let { data } = $props();
+	interface Props {
+		data: {
+			SESSION_TOKEN: string;
+			chats: ChatHistoryResponse
+		};
+	}
+
+	let { data }:Props = $props();
 
 	let chats = $state(data.chats || []);
+	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
 	let selectedChats = $state(new Set<string>());
 	let selectAll = $state(false);
 
@@ -38,7 +46,7 @@
 
 		try {
 			// Delete all selected chats
-			const deletePromises = Array.from(selectedChats).map((id) => ChatApiService.deleteChat(id));
+			const deletePromises = Array.from(selectedChats).map((id) => ChatApiService.deleteChat(id,SESSION_TOKEN));
 
 			await Promise.all(deletePromises);
 
@@ -57,7 +65,7 @@
 
 		try {
 			// Delete all chats
-			const deletePromises = chats.map((chat) => ChatApiService.deleteChat(chat.id));
+			const deletePromises = chats.map((chat) => ChatApiService.deleteChat(chat.id, SESSION_TOKEN));
 
 			await Promise.all(deletePromises);
 

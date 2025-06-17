@@ -1,45 +1,37 @@
 <script>
+
     let { form } = $props();
 
-    let email = $state('');
-    let password = $state('');
+	let username = $state('');
+	let password = $state('');
 
-    let isDisabled = $derived(!email && !password);
+	let isDisabled = $derived(!username || !password); // Fixed logic
+
 </script>
 
 <div class="container">
-    <form method="POST" action="/login">
-        <h1> Kamino Chat</h1>
-        <h2>Sign in to your account</h2>
+	<form method="POST" action="/login">
+		<h1>Kamino Chat</h1>
+		<h2>Sign in to your account</h2>
 
-        <label for="email">Email</label>
-        <input
-            type="email"
-            name="email"
-            bind:value={email}
-            placeholder="Email"
-        />
+		<label for="username">Username</label>
+		<input type="text" name="username" bind:value={username} placeholder="Username" />
 
-        <label for="password">Password</label>
-        <input
-            type="password"
-            name="password"
-            bind:value={password}
-            placeholder="Password"
-        />
+		<label for="password">Password</label>
+		<input type="text" name="password" bind:value={password} placeholder="Password" />
 
-        <button type="submit" disabled={isDisabled}>Sign In</button>
-    </form>
+		<button type="submit" disabled={isDisabled}>Sign In</button>
+	</form>
 </div>
 
 <style>
 	.container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 		padding: 16px;
-        width: 100%;
-        height: 100dvh;
+		width: 100%;
+		height: 100dvh;
 	}
 
 	form {
@@ -77,16 +69,22 @@
 		padding: 0 10px;
 		margin-top: 8px;
 		font-size: 14px;
-        outline: none;
+		outline: none;
 	}
 
 	::placeholder {
 		color: var(--placeholder);
 	}
 
-    :focus {
-        border-color: var(--primary-background);
-    }
+	:focus {
+		border-color: var(--primary-background);
+	}
+
+	:disabled {
+		background-color: var(--primary-background-light);
+		color: var(--placeholder);
+		cursor: not-allowed;
+	}
 
 	button {
 		margin-top: 30px;
