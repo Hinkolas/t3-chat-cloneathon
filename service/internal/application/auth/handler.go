@@ -18,6 +18,7 @@ func (s *Service) Handle(r *mux.Router) {
 
 	router.HandleFunc("/login/", s.Login)
 	router.HandleFunc("/logout/", s.Logout)
+	router.HandleFunc("/session/", s.GetCurrentSession)
 
 }
 
@@ -116,5 +117,31 @@ func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{})
+
+}
+
+func (s *Service) GetCurrentSession(w http.ResponseWriter, r *http.Request) {
+
+	// Get sessionID from auth middleware, ok if authenticated
+	sessionID, ok := r.Context().Value("session_id").(uuid.UUID)
+	if !ok {
+		s.log.Debug("Unauthorized request to get current session handler")
+		http.Error(w, "not_authorized", http.StatusUnauthorized)
+		return
+	}
+
+	session, err := s.GetSession(r.Context(), sessionID)
+	if err != nil {
+		s.log.Warn("Failed to get session", "session_id", sessionID, "error", err)
+		http.Error(w, "failed_get_session", http.StatusInternalServerError)
+		return
+	}
+
+	// Send success status and session details to client
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{
+		"session": session,
+	})
 
 }
