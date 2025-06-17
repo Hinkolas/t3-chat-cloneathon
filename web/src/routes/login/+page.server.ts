@@ -2,7 +2,7 @@ import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 interface LoginResponse {
-	session?: Session;
+    session?: Session;
 }
 
 interface Session {
@@ -23,13 +23,11 @@ export const actions: Actions = {
 
 			// Validate input
 			if (!username || !password) {
-				return fail(400, {
+				return fail(400, { 
 					error: 'Username and password are required',
-					username
+					username 
 				});
 			}
-
-			console.log('login:', username);
 
 			const response = await fetch(`${env.PRIVATE_API_URL}/v1/auth/login/`, {
 				method: 'POST',
@@ -42,19 +40,19 @@ export const actions: Actions = {
 			if (!response.ok) {
 				// Handle different HTTP error codes
 				if (response.status === 401) {
-					return fail(401, {
+					return fail(401, { 
 						error: 'Invalid username or password',
-						username
+						username 
 					});
 				} else if (response.status === 429) {
-					return fail(429, {
+					return fail(429, { 
 						error: 'Too many login attempts. Please try again later.',
-						username
+						username 
 					});
 				} else {
-					return fail(response.status, {
+					return fail(response.status, { 
 						error: 'Login failed. Please try again.',
-						username
+						username 
 					});
 				}
 			}
@@ -63,14 +61,12 @@ export const actions: Actions = {
 
 			// Validate response data
 			if (!data.session?.id) {
-				return fail(500, {
+				return fail(500, { 
 					error: 'Invalid response from server',
-					username
+					username 
 				});
 			}
-
-			console.log('login success');
-
+			
 			cookies.set('session_token', data.session.token, {
 				path: '/',
 				sameSite: 'strict',
@@ -78,20 +74,21 @@ export const actions: Actions = {
 				httpOnly: true, // Recommended for security
 				maxAge: 60 * 60 * 24 * 7 // 7 days
 			});
+
 		} catch (error) {
 			// Handle network errors, JSON parsing errors, etc.
 			if (error instanceof Error && error.message.includes('redirect')) {
 				// Re-throw redirect errors (SvelteKit redirects are thrown as errors)
 				throw error;
 			}
-
+			
 			console.error('Login error:', error);
-
-			return fail(500, {
-				error: 'An unexpected error occurred. Please try again.'
+			
+			return fail(500, { 
+				error: 'An unexpected error occurred. Please try again.',
 			});
 		}
 
-		throw redirect(302, '/');
+        throw redirect(302, '/');
 	}
 };

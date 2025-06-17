@@ -1,10 +1,15 @@
 <script>
-	let { form } = $props();
+	import { Eye, EyeOff } from "@lucide/svelte";
 
 	let username = $state('');
 	let password = $state('');
+	let showPassword = $state(false);
 
-	let isDisabled = $derived(!username || !password); // Fixed logic
+	let isDisabled = $derived(!username || !password);
+
+	function togglePasswordVisibility() {
+		showPassword = !showPassword;
+	}
 </script>
 
 <div class="container">
@@ -12,11 +17,34 @@
 		<h1>Kamino Chat</h1>
 		<h2>Sign in to your account</h2>
 
-		<label for="username">Username</label>
-		<input type="text" name="username" bind:value={username} placeholder="Username" />
+		<div class="form-group">
+			<label for="username">Username</label>
+			<input type="text" name="username" bind:value={username} placeholder="Username" />
+		</div>
 
-		<label for="password">Password</label>
-		<input type="text" name="password" bind:value={password} placeholder="Password" />
+		<div class="form-group">
+			<label for="password">Password</label>
+			<div class="password-input-container">
+				<input 
+					type={showPassword ? "text" : "password"} 
+					name="password" 
+					bind:value={password} 
+					placeholder="Password" 
+				/>
+				<button 
+					type="button" 
+					class="password-toggle" 
+					onclick={togglePasswordVisibility}
+					aria-label={showPassword ? "Hide password" : "Show password"}
+				>
+					{#if showPassword}
+						<EyeOff size={16} />
+					{:else}
+						<Eye size={16} />
+					{/if}
+				</button>
+			</div>
+		</div>
 
 		<button type="submit" disabled={isDisabled}>Sign In</button>
 	</form>
@@ -45,6 +73,41 @@
 		border-radius: 8px;
 	}
 
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+
+	.password-input-container {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.password-toggle {
+		width: 24px;
+		height: 24px;
+		position: absolute;
+		bottom: 50%;
+		transform: translateY(70%);
+		right: 10px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--text);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4px;
+		border-radius: 4px;
+		transition: background-color 0.2s ease;
+	}
+
+	.password-toggle:hover {
+		background-color: var(--primary-border);
+	}
+
 	img {
 		height: 50px;
 		margin: 16px;
@@ -70,6 +133,10 @@
 		outline: none;
 	}
 
+	.password-input-container input {
+		padding-right: 45px; /* Make space for the toggle button */
+	}
+
 	::placeholder {
 		color: var(--placeholder);
 	}
@@ -84,7 +151,7 @@
 		cursor: not-allowed;
 	}
 
-	button {
+	button[type="submit"] {
 		margin-top: 30px;
 		width: 100%;
 		background-color: var(--primary-background-light);
