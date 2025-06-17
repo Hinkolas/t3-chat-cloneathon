@@ -539,7 +539,7 @@
 			});
 
 			if (!response.ok) {
-				console.log('error');
+				console.error('Failed to send message');
 				throw new Error('Failed to send message');
 			}
 
@@ -562,7 +562,7 @@
 			messages.push(assistantChat);
 			clearAllFiles(); // clear up
 		} catch (error) {
-			console.log('Error:', error);
+			console.error('Error sending a Message:', error);
 		}
 	}
 

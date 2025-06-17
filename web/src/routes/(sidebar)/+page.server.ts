@@ -16,7 +16,7 @@ export const load = (async () => {
 
 		return { models };
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 	}
 
 	return {};

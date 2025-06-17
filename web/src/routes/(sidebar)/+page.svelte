@@ -430,7 +430,7 @@
 			});
 
 			if (!response.ok) {
-				console.log('error');
+				console.error('Failed to send message');
 				throw new Error('Failed to send message');
 			}
 
@@ -441,7 +441,7 @@
 			refreshChatHistory();
 			clearAllFiles();
 		} catch (error) {
-			console.log('Error:', error);
+			console.error('Error sending a Message:', error);
 			showPlaceholder = true;
 		}
 	}
@@ -471,7 +471,6 @@
 			acceptTypes.push('.jpg', '.jpeg', '.png', 'image/jpeg', 'image/png');
 		}
 
-		console.log('Accept types:', acceptTypes);
 		return acceptTypes.join(',');
 	}
 
