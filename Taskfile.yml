@@ -12,7 +12,7 @@ tasks:
     # switch into the ./service folder
     dir: service
     cmds:
-      - go run main.go start
+      - go run main.go start -c "../config.yaml"
     # forward signals so ctrl-c works
     silent: false
 
