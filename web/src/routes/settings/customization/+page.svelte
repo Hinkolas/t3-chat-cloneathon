@@ -1,24 +1,28 @@
 <script>
-	let form = $state({
-		name: '',
-		job: '',
-		traits: '',
-		information: ''
-	});
+	let { data } = $props();
 
-	let initialForm = {
-		name: '',
-		job: '',
-		traits: '',
-		information: ''
-	};
+	let profile = $state(data.profile);
 
-	let hasChanged = $derived(
-		form.name !== initialForm.name ||
-			form.job !== initialForm.job ||
-			form.traits !== initialForm.traits ||
-			form.information !== initialForm.information
-	);
+	async function savePreferences() {
+		const url = 'http://localhost:3141';
+		
+		const res = await fetch(`${url}/v1/profile/`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(profile)
+		});
+
+		if (!res.ok) {
+			console.error(`Failed to save preferences: ${res.status} ${res.statusText}`);
+			return;
+		}
+
+		const updatedProfile = await res.json();
+		profile = { ...profile, ...updatedProfile };
+
+	}
 </script>
 
 <div class="container">
@@ -27,40 +31,44 @@
 		<div class="form-group">
 			<label for="name">What should Your Chat call you?</label>
 			<div class="input-container">
-				<input bind:value={form.name} type="text" placeholder="Enter your name" />
-				<div class="chars">{form.name.length}/50</div>
+				<input bind:value={profile.custom_user_name} type="text" placeholder="Enter your name" />
+				<div class="chars">{profile.custom_user_name.length}/50</div>
 			</div>
 		</div>
 		<div class="form-group">
 			<label for="name">What do you do?</label>
 			<div class="input-container">
-				<input bind:value={form.job} type="text" placeholder="Engineer, student, etc." />
-				<div class="chars">{form.job.length}/100</div>
+				<input
+					bind:value={profile.custom_user_profession}
+					type="text"
+					placeholder="Engineer, student, etc."
+				/>
+				<div class="chars">{profile.custom_user_profession.length}/100</div>
 			</div>
 		</div>
 		<div class="form-group">
 			<label for="name">What traits should Your Chat have?</label>
 			<div class="input-container">
 				<input
-					bind:value={form.traits}
+					bind:value={profile.custom_assistant_trait}
 					type="text"
 					placeholder="Type a trait and press Enter or Tab"
 				/>
-				<div class="chars">{form.traits.length}/50</div>
+				<div class="chars">{profile.custom_assistant_trait.length}/50</div>
 			</div>
 		</div>
 		<div class="form-group">
 			<label for="name">Anything else Your Chat should know about you?</label>
 			<div class="input-container">
 				<input
-					bind:value={form.information}
+					bind:value={profile.custom_context}
 					type="text"
 					placeholder="Interests, values, or preferences to keep in mind"
 				/>
-				<div class="chars">{form.information.length}/3000</div>
+				<div class="chars">{profile.custom_context.length}/3000</div>
 			</div>
 		</div>
-		<button disabled={!hasChanged}>Save Preferences</button>
+		<button onclick={savePreferences}>Save Preferences</button>
 	</form>
 </div>
 
@@ -133,11 +141,12 @@
 		border-radius: 8px;
 		box-shadow: 0 0 2px #483039;
 		width: 100%;
-		color: hsl(var(--secondary-foreground));
+		color: hsl(var(--secondary-foreground)/ 0.8);
 		outline: none;
 	}
 
 	.form-group .input-container input:focus {
+		color: hsl(var(--secondary-foreground));
 		box-shadow: 0 0 2px hsl(var(--primary));
 	}
 

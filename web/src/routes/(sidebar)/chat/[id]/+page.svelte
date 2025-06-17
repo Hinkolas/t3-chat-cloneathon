@@ -162,12 +162,17 @@
 		const fileType = file.type.toLowerCase();
 		const fileName = file.name.toLowerCase();
 
+		// Always allow text files regardless of model features
+		if (fileType.startsWith('text/')) {
+			return { isValid: true };
+		}
+
 		// Check if model has PDF support
 		const hasPdf = selectedModel.features.has_pdf;
 		// Check if model has vision support
 		const hasVision = selectedModel.features.has_vision;
 
-		// If model has neither PDF nor vision support, reject all files
+		// If model has neither PDF nor vision support, reject all non-text files
 		if (!hasPdf && !hasVision) {
 			return {
 				isValid: false,
@@ -204,7 +209,7 @@
 		}
 
 		// If file type is not supported by any feature
-		const supportedTypes = [];
+		const supportedTypes = ['text files'];
 		if (hasPdf) supportedTypes.push('PDF');
 		if (hasVision) supportedTypes.push('images (JPG, PNG, JPEG)');
 
@@ -214,7 +219,15 @@
 		};
 	}
 
-	// Complete uploadFile function
+	// Helper function to set error with timeout
+	function setUploadErrorWithTimeout(message: string) {
+		uploadError = message;
+		setTimeout(() => {
+			uploadError = null;
+		}, 2000);
+	}
+
+	// Updated uploadFile function
 	async function uploadFile(file: File): Promise<UploadedFileWithId | null> {
 		const url: string = 'http://localhost:3141';
 
@@ -223,7 +236,7 @@
 		const validation = validateFileType(file, selectedModel);
 
 		if (!validation.isValid) {
-			uploadError = validation.errorMessage || 'File type not supported';
+			setUploadErrorWithTimeout(validation.errorMessage || 'File type not supported');
 			return null;
 		}
 
@@ -258,12 +271,12 @@
 		} catch (error) {
 			console.error('Error uploading file:', error);
 			uploadingFile = null;
-			uploadError = error instanceof Error ? error.message : 'Upload failed';
+			setUploadErrorWithTimeout(error instanceof Error ? error.message : 'Upload failed');
 			return null;
 		}
 	}
 
-	// Upload multiple files sequentially
+	// Updated uploadMultipleFiles function
 	async function uploadMultipleFiles(files: FileList | File[]): Promise<void> {
 		const fileArray = Array.from(files);
 		const selectedModel = data.models[selectedModelKey];
@@ -281,7 +294,7 @@
 
 				if (!validation.isValid) {
 					// Set error for the first invalid file and stop
-					uploadError = validation.errorMessage || 'File type not supported';
+					setUploadErrorWithTimeout(validation.errorMessage || 'File type not supported');
 					break;
 				}
 
@@ -363,7 +376,7 @@
 			uploadError = null;
 		} catch (error) {
 			console.error('Error removing file:', error);
-			uploadError = error instanceof Error ? error.message : 'Failed to remove file';
+			setUploadErrorWithTimeout(error instanceof Error ? error.message : 'Failed to remove file');
 		}
 	}
 
@@ -635,7 +648,18 @@
 		const selectedModel = data.models[selectedModelKey];
 		if (!selectedModel) return '';
 
-		const acceptTypes = [];
+		const acceptTypes = [
+			'text/*',
+			'.txt',
+			'text/plain',
+			'text/csv',
+			'text/html',
+			'text/markdown',
+			'text/xml',
+			'text/css',
+			'text/javascript',
+			'text/x-python'
+		];
 
 		if (selectedModel.features.has_pdf) {
 			acceptTypes.push('.pdf', 'application/pdf');
@@ -645,6 +669,7 @@
 			acceptTypes.push('.jpg', '.jpeg', '.png', 'image/jpeg', 'image/png');
 		}
 
+		console.log('Accept types:', acceptTypes);
 		return acceptTypes.join(',');
 	}
 
@@ -728,27 +753,31 @@
 							{/if}
 							{#if message.status === 'done'}
 								{@html renderMarkdown(message.content)}
+								{#if message.attachments && message.attachments.length > 0}
+									<div class="attachments">
+										{#each message.attachments as attachment}
+											<a
+												href={attachment.src}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="attachment-link"
+											>
+												{#if attachment.type.startsWith('image/')}
+													<img src={attachment.src} alt={attachment.name} />
+												{:else}
+													<FileText size="24" />
+													<div class="extension">{attachment.name}</div>
+												{/if}
+											</a>
+										{/each}
+									</div>
+								{/if}
 							{:else if message.status === 'streaming'}
 								{@html renderMarkdown(message.content)}
 								<!-- Optional: Add a typing indicator -->
 								<div class="typing-indicator">●●●</div>
 							{/if}
 						</div>
-						{#if message.attachments && message.attachments.length > 0}
-							<div class="attachments">
-								{#each message.attachments as attachment}
-									<a
-										href={attachment.src}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="attachment-link"
-									>
-										<FileText size="24" />
-										<div class="extension">{attachment.type.split('/').pop()}</div>
-									</a>
-								{/each}
-							</div>
-						{/if}
 					</div>
 				{/each}
 			{/if}
@@ -978,9 +1007,9 @@
 
 	.attachments {
 		display: flex;
+		flex-direction: column;
 		justify-content: center;
-		align-items: center;
-		flex-direction: row;
+		align-items: flex-end;
 		width: max-content;
 		flex-wrap: wrap;
 		gap: 16px;
@@ -992,35 +1021,49 @@
 		padding: 4px 6px;
 		background-color: #2b2430;
 		border-radius: 10px;
-		box-shadow: 0 0 2px #88888866;
 	}
 
 	.attachment-link {
 		position: relative;
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
+		justify-content: center;
 		align-items: center;
-		color: hsl(var(--secondary-foreground));
+		width: 100%;
+		color: hsl(var(--secondary-foreground) / 0.8) !important;
 		text-decoration: none;
 		font-size: 14px;
 		padding-top: 2px;
-		transition: color 0.1s ease;
+		border-radius: 8px;
+		transition: background-color 0.1s ease;
+	}
+
+	.attachment-link:not(:has(img)) {
+		padding: 16px;
+		background-color: hsl(var(--primary) / 0.5);
+	}
+
+	.attachment-link img {
+		max-width: 700px;
+		max-height: 400px;
+		border-radius: 8px;
+		object-fit: cover;
 	}
 
 	.extension {
 		font-size: 12px;
+		font-weight: 600;
 		padding: 2px 4px;
 		border-radius: 8px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		color: hsl(var(--secondary-foreground));
 		transition: color 0.1s ease;
 	}
 
-	.attachment-link:hover {
-		color: hsl(var(--primary) / 0.4);
-	}
-
-	.attachment-link:hover .extension {
-		color: hsl(var(--primary) / 0.4);
+	.attachment-link:hover:not(:has(img)) {
+		background-color: hsl(var(--primary) / 0.6);
 	}
 
 	.reasoning-box {
