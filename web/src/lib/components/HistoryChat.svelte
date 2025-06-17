@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { closeSidebar, sidebarState } from '$lib/store';
-	import { X, PinOff, Pin, TextCursor } from '@lucide/svelte';
+	import { X, PinOff, Pin, TextCursor, Share2 } from '@lucide/svelte';
 	import { scale } from 'svelte/transition';
+	import { showConfirmationPopup } from '$lib/store';
+	import { PUBLIC_API_URL, PUBLIC_HOST_URL } from '$env/static/public';
 
 	let {
 		chat,
@@ -42,6 +44,43 @@
 		e.preventDefault();
 		patchChat(chat, !chat.is_pinned);
 		onContextMenuOpen(null);
+	}
+
+	function handleShare() {
+		if (!chat.id) {
+			console.error('Chat ID is not available for sharing.');
+			return;
+		}
+		showConfirmationPopup({
+			title: 'Share Thread',
+			description: `Are you sure you want to share this chat? It will be publicly accessible.`,
+			primaryButtonName: 'Confirm',
+			primaryButtonFunction: () => {
+				shareChat();
+				onContextMenuOpen(null);
+				navigator.clipboard.writeText(`${PUBLIC_HOST_URL}/share/${chat.id}/`);
+			}
+		});
+		onContextMenuOpen(null);
+	}
+
+	async function shareChat() {
+		try {
+			const now = new Date();
+			const response = await fetch(`${PUBLIC_API_URL}/v1/chats/${chat.id}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ shared_at: now.getTime() })
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to share chat');
+			}
+		} catch (error) {
+			console.error('Error sharing chat:', error);
+		}
 	}
 
 	function handleDelete(e: Event) {
@@ -122,6 +161,10 @@
 		<button class="context-menu-item" onclick={handleRename}>
 			<TextCursor size="16" />
 			Rename
+		</button>
+		<button class="context-menu-item" onclick={handleShare}>
+			<Share2 size="16" />
+			Share
 		</button>
 		<button class="context-menu-item" onclick={handleDelete}>
 			<X size="16" />

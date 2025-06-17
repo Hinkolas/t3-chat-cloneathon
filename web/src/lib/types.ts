@@ -80,6 +80,7 @@ export interface ChatData {
 	last_message_at: number;
 	created_at: number;
 	updated_at: number;
+	shared_at: number;
 	messages: MessageData[];
 }
 

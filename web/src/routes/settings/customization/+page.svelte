@@ -1,12 +1,12 @@
 <script>
-	import { PUBLIC_HOST_URL } from '$env/static/public';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	let { data } = $props();
 
 	let profile = $state(data.profile);
 
 	async function savePreferences() {
-		const res = await fetch(`${PUBLIC_HOST_URL}/v1/profile/`, {
+		const res = await fetch(`${PUBLIC_API_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'

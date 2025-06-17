@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Key, Trash, Check } from '@lucide/svelte';
 	import type { ProfileData } from '$lib/types';
-	import { PUBLIC_HOST_URL } from '$env/static/public';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	let { data } = $props();
 
@@ -59,7 +59,7 @@
 			return;
 		}
 
-		const res = await fetch(`${PUBLIC_HOST_URL}/v1/profile/`, {
+		const res = await fetch(`${PUBLIC_API_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -96,7 +96,7 @@
 			return;
 		}
 
-		const res = await fetch(`${PUBLIC_HOST_URL}/v1/profile/`, {
+		const res = await fetch(`${PUBLIC_API_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -109,7 +109,6 @@
 			return;
 		}
 
-		console.log(`Deleted ${provider} key successfully`);
 		const updatedProfile = await res.json();
 		profile = { ...profile, ...updatedProfile };
 

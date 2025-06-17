@@ -20,7 +20,7 @@
 	import 'highlight.js/styles/github-dark.css';
 	import { fade } from 'svelte/transition';
 	import { addChatId, removeChatId } from '$lib/store';
-	import { PUBLIC_HOST_URL } from '$env/static/public';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	const iconSize = 16;
 
@@ -248,7 +248,7 @@
 			formData.append('file', file);
 			formData.append('chat_id', data.chat.id);
 
-			const response = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/`, {
+			const response = await fetch(`${PUBLIC_API_URL}/v1/attachments/`, {
 				method: 'POST',
 				body: formData
 			});
@@ -363,7 +363,7 @@
 
 		try {
 			// Delete the attachment using the stored ID
-			const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${uploadedFile.id}/`, {
+			const delRes = await fetch(`${PUBLIC_API_URL}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
@@ -517,7 +517,7 @@
 			attachments: uploadedFiles.map((f) => ({
 				id: f.id,
 				name: f.file.name,
-				src: `${PUBLIC_HOST_URL}/v1/attachments/${f.id}/`,
+				src: `${PUBLIC_API_URL}/v1/attachments/${f.id}/`,
 				type: f.file.type,
 				created_at: Date.now()
 			}))
@@ -525,7 +525,7 @@
 		messages.push(userChat);
 
 		try {
-			const response = await fetch(`${PUBLIC_HOST_URL}/v1/chats/${data.chat.id}/`, {
+			const response = await fetch(`${PUBLIC_API_URL}/v1/chats/${data.chat.id}/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -576,7 +576,7 @@
 			return;
 		}
 
-		const eventSource = new EventSource(`${PUBLIC_HOST_URL}/v1/streams/${stream_id}/`);
+		const eventSource = new EventSource(`${PUBLIC_API_URL}/v1/streams/${stream_id}/`);
 
 		// Store the EventSource instance
 		eventSources.set(stream_id, eventSource);

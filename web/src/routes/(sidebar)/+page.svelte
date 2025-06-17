@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PUBLIC_HOST_URL } from '$env/static/public';
+	import { PUBLIC_API_URL } from '$env/static/public';
 	import type { ModelsResponse, ModelData, MessageData } from '$lib/types';
 
 	interface Props {
@@ -194,7 +194,7 @@
 			const formData = new FormData();
 			formData.append('file', file);
 
-			const response = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/`, {
+			const response = await fetch(`${PUBLIC_API_URL}/v1/attachments/`, {
 				method: 'POST',
 				body: formData
 			});
@@ -308,7 +308,7 @@
 
 		try {
 			// Delete the attachment using the stored ID
-			const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${uploadedFile.id}/`, {
+			const delRes = await fetch(`${PUBLIC_API_URL}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
@@ -416,7 +416,7 @@
 		showPlaceholder = false;
 
 		try {
-			const response = await fetch(`${PUBLIC_HOST_URL}/v1/chats/`, {
+			const response = await fetch(`${PUBLIC_API_URL}/v1/chats/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
