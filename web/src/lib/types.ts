@@ -86,14 +86,13 @@ export interface ChatData {
 export type ProfileResponse = ProfileData;
 
 export interface ProfileData {
-  user_id: string;
-  anthropic_api_key: string;
-  openai_api_key: string;
-  gemini_api_key: string;
-  ollama_base_url: string;
-  custom_user_name: string;
-  custom_user_profession: string;
-  custom_assistant_trait: string;
-  custom_context: string;
+	user_id: string;
+	anthropic_api_key: string;
+	openai_api_key: string;
+	gemini_api_key: string;
+	ollama_base_url: string;
+	custom_user_name: string;
+	custom_user_profession: string;
+	custom_assistant_trait: string;
+	custom_context: string;
 }
-

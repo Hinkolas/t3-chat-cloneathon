@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PUBLIC_HOST_URL } from '$env/static/public';
 	import type { AttachmentData, AttachmentResponse } from '$lib/types.js';
 
 	interface Props {
@@ -18,8 +19,7 @@
 
 	// Check if all attachments are selected
 	let allSelected = $derived(
-		filteredAttachments.length > 0 &&
-			selectedAttachments.size === filteredAttachments.length
+		filteredAttachments.length > 0 && selectedAttachments.size === filteredAttachments.length
 	);
 
 	// Toggle individual attachment selection
@@ -37,7 +37,7 @@
 		if (allSelected) {
 			selectedAttachments.clear();
 		} else {
-			selectedAttachments = new Set(filteredAttachments.map(att => att.id));
+			selectedAttachments = new Set(filteredAttachments.map((att) => att.id));
 		}
 		selectedAttachments = new Set(selectedAttachments);
 	}
@@ -45,14 +45,13 @@
 	// Delete selected attachments
 	async function deleteSelected() {
 		if (selectedAttachments.size === 0) return;
-		
+
 		isDeleting = true;
 		deleteError = null;
 
 		try {
-			const url = 'http://localhost:3141';
 			const deletePromises = Array.from(selectedAttachments).map(async (id) => {
-				const delRes = await fetch(`${url}/v1/attachments/${id}/`, {
+				const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${id}/`, {
 					method: 'DELETE'
 				});
 				if (!delRes.ok) throw new Error(`Failed to delete attachment ${id}`);
@@ -64,7 +63,7 @@
 
 			// Remove deleted attachments from filteredAttachments
 			filteredAttachments = filteredAttachments.filter(
-				attachment => !deletedIds.includes(attachment.id)
+				(attachment) => !deletedIds.includes(attachment.id)
 			);
 
 			// Clear selection
@@ -83,18 +82,14 @@
 		deleteError = null;
 
 		try {
-			const url = 'http://localhost:3141';
-
 			// Delete the attachment using the ID
-			const delRes = await fetch(`${url}/v1/attachments/${id}/`, {
+			const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
 
 			// Remove from local state if successful
-			filteredAttachments = filteredAttachments.filter(
-				attachment => attachment.id !== id
-			);
+			filteredAttachments = filteredAttachments.filter((attachment) => attachment.id !== id);
 
 			// Remove from selection if it was selected
 			if (selectedAttachments.has(id)) {
@@ -117,7 +112,7 @@
 		the relevant threads, but not delete the threads. This may lead to unexpected behavior if you
 		delete a file that is still being used in a thread.
 	</div>
-	
+
 	{#if deleteError}
 		<div class="error-message">
 			{deleteError}
@@ -136,10 +131,7 @@
 			</button>
 		</div>
 		<div class="tail">
-			<button 
-				onclick={deleteSelected} 
-				disabled={selectedAttachments.size === 0 || isDeleting}
-			>
+			<button onclick={deleteSelected} disabled={selectedAttachments.size === 0 || isDeleting}>
 				{#if isDeleting}
 					Deleting...
 				{:else}

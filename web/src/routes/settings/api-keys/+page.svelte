@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Key, Trash, Check } from '@lucide/svelte';
 	import type { ProfileData } from '$lib/types';
+	import { PUBLIC_HOST_URL } from '$env/static/public';
 
 	let { data } = $props();
 
@@ -45,7 +46,6 @@
 	async function saveKey(provider: 'anthropic' | 'openai' | 'google' | 'ollama', keyValue: string) {
 		if (!keyValue || keyValue.length === 0) return;
 
-		const url = 'http://localhost:3141';
 		// Map provider to profile key
 		const providerKeyMap: Record<string, string> = {
 			anthropic: 'anthropic_api_key',
@@ -59,7 +59,7 @@
 			return;
 		}
 
-		const res = await fetch(`${url}/v1/profile/`, {
+		const res = await fetch(`${PUBLIC_HOST_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -83,7 +83,6 @@
 	}
 
 	async function deleteKey(provider: 'anthropic' | 'openai' | 'google' | 'ollama') {
-		const url = 'http://localhost:3141';
 		// Map provider to profile key
 		const providerKeyMap: Record<string, string> = {
 			anthropic: 'anthropic_api_key',
@@ -97,7 +96,7 @@
 			return;
 		}
 
-		const res = await fetch(`${url}/v1/profile/`, {
+		const res = await fetch(`${PUBLIC_HOST_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'

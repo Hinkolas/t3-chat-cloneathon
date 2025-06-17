@@ -1,12 +1,12 @@
 <script>
+	import { PUBLIC_HOST_URL } from '$env/static/public';
+
 	let { data } = $props();
 
 	let profile = $state(data.profile);
 
 	async function savePreferences() {
-		const url = 'http://localhost:3141';
-		
-		const res = await fetch(`${url}/v1/profile/`, {
+		const res = await fetch(`${PUBLIC_HOST_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -21,7 +21,6 @@
 
 		const updatedProfile = await res.json();
 		profile = { ...profile, ...updatedProfile };
-
 	}
 </script>
 
@@ -141,7 +140,7 @@
 		border-radius: 8px;
 		box-shadow: 0 0 2px #483039;
 		width: 100%;
-		color: hsl(var(--secondary-foreground)/ 0.8);
+		color: hsl(var(--secondary-foreground) / 0.8);
 		outline: none;
 	}
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PUBLIC_HOST_URL } from '$env/static/public';
 	import type { ModelsResponse, ModelData, MessageData } from '$lib/types';
 
 	interface Props {
@@ -176,8 +177,6 @@
 
 	// Updated uploadFile function
 	async function uploadFile(file: File): Promise<UploadedFileWithId | null> {
-		const url: string = 'http://localhost:3141';
-
 		// Validate file type against selected model
 		const selectedModel = data.models[selectedModelKey];
 		const validation = validateFileType(file, selectedModel);
@@ -195,7 +194,7 @@
 			const formData = new FormData();
 			formData.append('file', file);
 
-			const response = await fetch(`${url}/v1/attachments/`, {
+			const response = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/`, {
 				method: 'POST',
 				body: formData
 			});
@@ -308,10 +307,8 @@
 		if (!uploadedFile) return;
 
 		try {
-			const url = 'http://localhost:3141';
-
 			// Delete the attachment using the stored ID
-			const delRes = await fetch(`${url}/v1/attachments/${uploadedFile.id}/`, {
+			const delRes = await fetch(`${PUBLIC_HOST_URL}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE'
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
@@ -418,10 +415,9 @@
 		const tempMessage = messageText;
 		showPlaceholder = false;
 		message = '';
-		const url = 'http://localhost:3141';
 
 		try {
-			const response = await fetch(`${url}/v1/chats/`, {
+			const response = await fetch(`${PUBLIC_HOST_URL}/v1/chats/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
