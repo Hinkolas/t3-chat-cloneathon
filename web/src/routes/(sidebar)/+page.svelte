@@ -109,12 +109,17 @@
 		const fileType = file.type.toLowerCase();
 		const fileName = file.name.toLowerCase();
 
+		// Always allow text files regardless of model features
+		if (fileType.startsWith('text/')) {
+			return { isValid: true };
+		}
+
 		// Check if model has PDF support
 		const hasPdf = selectedModel.features.has_pdf;
 		// Check if model has vision support
 		const hasVision = selectedModel.features.has_vision;
 
-		// If model has neither PDF nor vision support, reject all files
+		// If model has neither PDF nor vision support, reject all non-text files
 		if (!hasPdf && !hasVision) {
 			return {
 				isValid: false,
@@ -151,7 +156,7 @@
 		}
 
 		// If file type is not supported by any feature
-		const supportedTypes = [];
+		const supportedTypes = ['text files'];
 		if (hasPdf) supportedTypes.push('PDF');
 		if (hasVision) supportedTypes.push('images (JPG, PNG, JPEG)');
 
@@ -161,27 +166,34 @@
 		};
 	}
 
-	// Update uploadFile to store id with file
-	async function uploadFile(file: File, chatId?: string): Promise<UploadedFileWithId | null> {
-		const url: string = 'http://localhost:3141';
-		const selectedModel = data.models[selectedModelKey];
+	// Helper function to set error with timeout
+	function setUploadErrorWithTimeout(message: string) {
+		uploadError = message;
+		setTimeout(() => {
+			uploadError = null;
+		}, 2000);
+	}
 
-		// Validate file type before upload
+	// Updated uploadFile function
+	async function uploadFile(file: File): Promise<UploadedFileWithId | null> {
+		const url: string = 'http://localhost:3141';
+
+		// Validate file type against selected model
+		const selectedModel = data.models[selectedModelKey];
 		const validation = validateFileType(file, selectedModel);
+
 		if (!validation.isValid) {
-			uploadError = validation.errorMessage || 'File type not supported';
+			setUploadErrorWithTimeout(validation.errorMessage || 'File type not supported');
 			return null;
 		}
 
+		// Set uploading state
 		uploadingFile = file;
 		uploadError = null;
 
 		try {
 			const formData = new FormData();
 			formData.append('file', file);
-			if (chatId) {
-				formData.append('chat_id', chatId);
-			}
 
 			const response = await fetch(`${url}/v1/attachments/`, {
 				method: 'POST',
@@ -194,8 +206,10 @@
 
 			const result = await response.json();
 
+			// Reset uploading state
 			uploadingFile = null;
 
+			// Create uploaded file with ID
 			const uploaded: UploadedFileWithId = { file, id: result.id };
 			uploadedFiles = [...uploadedFiles, uploaded];
 
@@ -203,12 +217,12 @@
 		} catch (error) {
 			console.error('Error uploading file:', error);
 			uploadingFile = null;
-			uploadError = error instanceof Error ? error.message : 'Upload failed';
+			setUploadErrorWithTimeout(error instanceof Error ? error.message : 'Upload failed');
 			return null;
 		}
 	}
 
-	// Upload multiple files sequentially
+	// Updated uploadMultipleFiles function
 	async function uploadMultipleFiles(files: FileList | File[]): Promise<void> {
 		const fileArray = Array.from(files);
 		const selectedModel = data.models[selectedModelKey];
@@ -226,7 +240,7 @@
 
 				if (!validation.isValid) {
 					// Set error for the first invalid file and stop
-					uploadError = validation.errorMessage || 'File type not supported';
+					setUploadErrorWithTimeout(validation.errorMessage || 'File type not supported');
 					break;
 				}
 
@@ -439,7 +453,18 @@
 		const selectedModel = data.models[selectedModelKey];
 		if (!selectedModel) return '';
 
-		const acceptTypes = [];
+		const acceptTypes = [
+			'text/*',
+			'.txt',
+			'text/plain',
+			'text/csv',
+			'text/html',
+			'text/markdown',
+			'text/xml',
+			'text/css',
+			'text/javascript',
+			'text/x-python'
+		];
 
 		if (selectedModel.features.has_pdf) {
 			acceptTypes.push('.pdf', 'application/pdf');
@@ -449,6 +474,7 @@
 			acceptTypes.push('.jpg', '.jpeg', '.png', 'image/jpeg', 'image/png');
 		}
 
+		console.log('Accept types:', acceptTypes);
 		return acceptTypes.join(',');
 	}
 
