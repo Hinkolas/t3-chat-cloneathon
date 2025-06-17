@@ -152,8 +152,19 @@
 	let uploadError: string | null = $state(null);
 	let isDragOver = $state(false);
 
-	function cancelStreaming() {
+	async function cancelStreaming(streamId: string) {
 		// TODO: implement cancel logic
+		try {
+			const response = await fetch(`${PUBLIC_API_URL}/v1/streams/${streamId}/`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				throw new Error(`Cancel failed: ${response.status} ${response.statusText}`);
+			}
+		} catch (error) {
+			console.error('Error canceling streaming:', error);
+		}
 	}
 
 	function validateFileType(
@@ -915,7 +926,17 @@
 				{#if isStreaming()}
 					<button
 						class="active"
-						onclick={cancelStreaming}
+						onclick={() => {
+							const streamingMessage = messages.find(
+								(m) => m.status === 'streaming' && m.stream_id
+							);
+							if (streamingMessage && streamingMessage.stream_id) {
+								cancelStreaming(streamingMessage.stream_id);
+								messages = messages.map((m) =>
+									m.id === streamingMessage.id ? { ...m, status: 'done' } : m
+								);
+							}
+						}}
 						id="SendButton"
 						aria-label="Cancel streaming"
 					>
