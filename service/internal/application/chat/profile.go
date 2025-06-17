@@ -7,23 +7,25 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
+
+	"github.com/google/uuid"
 )
 
 //go:embed system.txt
 var systemTemplate string
 
 type UserProfile struct {
-	UserID string `db:"user_id" json:"user_id"`
+	UserID uuid.UUID `json:"user_id,omitzero"`
 	// Provider Options
-	AnthropicAPIKey string `db:"anthropic_api_key" json:"anthropic_api_key"`
-	OpenAIAPIKey    string `db:"openai_api_key" json:"openai_api_key"`
-	GeminiAPIKey    string `db:"gemini_api_key" json:"gemini_api_key"`
-	OllamaBaseURL   string `db:"ollama_base_url" json:"ollama_base_url"`
+	AnthropicAPIKey string `json:"anthropic_api_key"`
+	OpenAIAPIKey    string `json:"openai_api_key"`
+	GeminiAPIKey    string `json:"gemini_api_key"`
+	OllamaBaseURL   string `json:"ollama_base_url"`
 	// Customization
-	CustomUserName       string `db:"custom_user_name" json:"custom_user_name"`
-	CustomUserProfession string `db:"custom_user_profession" json:"custom_user_profession"`
-	CustomAssistantTrait string `db:"custom_assistant_trait" json:"custom_assistant_trait"`
-	CustomContext        string `db:"custom_context" json:"custom_context"`
+	CustomUserName       string `json:"custom_user_name"`
+	CustomUserProfession string `json:"custom_user_profession"`
+	CustomAssistantTrait string `json:"custom_assistant_trait"`
+	CustomContext        string `json:"custom_context"`
 }
 
 func (p *UserProfile) SystemPrompt() string {
@@ -62,7 +64,7 @@ func (p *UserProfile) Options() map[string]string {
 	return options
 }
 
-func (s *Service) getUserProfile(userID string) (*UserProfile, error) {
+func (s *Service) getUserProfile(userID uuid.UUID) (*UserProfile, error) {
 	profile := &UserProfile{}
 	err := s.db.QueryRow("SELECT user_id, anthropic_api_key, openai_api_key, gemini_api_key, ollama_base_url, custom_user_name, custom_user_profession, custom_assistant_trait, custom_context FROM user_profile WHERE user_id = ?", userID).Scan(
 		&profile.UserID, &profile.AnthropicAPIKey, &profile.OpenAIAPIKey, &profile.GeminiAPIKey, &profile.OllamaBaseURL, &profile.CustomUserName, &profile.CustomUserProfession, &profile.CustomAssistantTrait, &profile.CustomContext)
@@ -83,7 +85,7 @@ type PatchProfileRequest struct {
 func (s *Service) UpsertUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	// Get userID from auth middleware, ok if authenticated
-	userID, ok := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
 	if !ok {
 		s.log.Debug("User is not authenticated")
 		http.Error(w, "not_authenticated", http.StatusUnauthorized)
@@ -154,7 +156,7 @@ func (s *Service) UpsertUserProfile(w http.ResponseWriter, r *http.Request) {
 func (s *Service) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	// Get userID from auth middleware, ok if authenticated
-	userID, ok := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
 	if !ok {
 		s.log.Debug("User is not authenticated")
 		http.Error(w, "not_authenticated", http.StatusUnauthorized)

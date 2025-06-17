@@ -8,23 +8,24 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 type Attachment struct {
-	ID        string `json:"id"`
-	UserId    string `json:"user_id,omitempty"`
-	MessageID string `json:"message_id,omitempty"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Src       string `json:"src"`
-	CreatedAt int64  `json:"created_at"`
+	ID        uuid.UUID `json:"id,omitzero"`
+	UserId    uuid.UUID `json:"user_id,omitzero"`
+	MessageID uuid.UUID `json:"message_id,omitzero"`
+	Name      string    `json:"name"`
+	Type      string    `json:"type"`
+	Src       string    `json:"src"`
+	CreatedAt int64     `json:"created_at"`
 }
 
 func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
 	// Get userID from auth middleware, ok if authenticated
-	userID, ok := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
 	if !ok {
 		s.log.Debug("User is not authenticated")
 		http.Error(w, "not_authenticated", http.StatusUnauthorized)
@@ -65,7 +66,7 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
 	// Get userID from auth middleware, ok if authenticated
-	userID, ok := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
 	if !ok {
 		s.log.Debug("User is not authenticated")
 		http.Error(w, "not_authenticated", http.StatusUnauthorized)
@@ -95,7 +96,7 @@ func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 
 	// Get userID from auth middleware, ok if authenticated
-	userID, ok := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
 	if !ok {
 		s.log.Debug("User is not authenticated")
 		http.Error(w, "not_authenticated", http.StatusUnauthorized)
@@ -119,7 +120,8 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 	// Create attachment record
 	now := time.Now()
 	attachment := Attachment{
-		ID:        fmt.Sprintf("att_%d", now.UnixNano()),
+		// ID:        fmt.Sprintf("att_%d", now.UnixNano()),
+		ID:        uuid.New(),
 		UserId:    userID,
 		Name:      header.Filename,
 		Type:      header.Header.Get("Content-Type"),
@@ -164,7 +166,7 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 func (s *Service) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
 
 	// Get userID from auth middleware, ok if authenticated
-	userID, ok := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
 	if !ok {
 		s.log.Debug("User is not authenticated")
 		http.Error(w, "not_authenticated", http.StatusUnauthorized)
