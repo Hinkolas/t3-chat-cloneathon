@@ -3,7 +3,7 @@
 
 	interface Props {
 		data: {
-			attachments: AttachmentData;
+			attachments: AttachmentData[];
 		};
 	}
 
@@ -11,13 +11,15 @@
 
 	import { ExternalLink, FileText, Trash, Check } from '@lucide/svelte';
 
-	let filteredAttachments: AttachmentData = $state(data.attachments || []);
+	let filteredAttachments: AttachmentData[] = $state(data.attachments || []);
 	let selectedAttachments = $state(new Set<string>());
+	let deleteError = $state<string | null>(null);
+	let isDeleting = $state(false);
 
 	// Check if all attachments are selected
 	let allSelected = $derived(
-		Object.keys(filteredAttachments).length > 0 &&
-			selectedAttachments.size === Object.keys(filteredAttachments).length
+		filteredAttachments.length > 0 &&
+			selectedAttachments.size === filteredAttachments.length
 	);
 
 	// Toggle individual attachment selection
@@ -35,28 +37,76 @@
 		if (allSelected) {
 			selectedAttachments.clear();
 		} else {
-			selectedAttachments = new Set(Object.keys(filteredAttachments));
+			selectedAttachments = new Set(filteredAttachments.map(att => att.id));
 		}
 		selectedAttachments = new Set(selectedAttachments);
 	}
 
 	// Delete selected attachments
-	function deleteSelected() {
-		// TODO: delete selected files
-		// if (selectedAttachments.size === 0) return;
-		// // Remove selected attachments from filteredAttachments
-		// const newAttachments = { ...filteredAttachments };
-		// for (const id of selectedAttachments) {
-		// 	delete newAttachments[id];
-		// }
-		// filteredAttachments = newAttachments;
-		// // Clear selection
-		// selectedAttachments.clear();
-		// selectedAttachments = new Set(selectedAttachments);
+	async function deleteSelected() {
+		if (selectedAttachments.size === 0) return;
+		
+		isDeleting = true;
+		deleteError = null;
+
+		try {
+			const url = 'http://localhost:3141';
+			const deletePromises = Array.from(selectedAttachments).map(async (id) => {
+				const delRes = await fetch(`${url}/v1/attachments/${id}/`, {
+					method: 'DELETE'
+				});
+				if (!delRes.ok) throw new Error(`Failed to delete attachment ${id}`);
+				return id;
+			});
+
+			// Wait for all deletions to complete
+			const deletedIds = await Promise.all(deletePromises);
+
+			// Remove deleted attachments from filteredAttachments
+			filteredAttachments = filteredAttachments.filter(
+				attachment => !deletedIds.includes(attachment.id)
+			);
+
+			// Clear selection
+			selectedAttachments.clear();
+			selectedAttachments = new Set(selectedAttachments);
+		} catch (error) {
+			console.error('Error deleting selected files:', error);
+			deleteError = error instanceof Error ? error.message : 'Failed to delete selected files';
+		} finally {
+			isDeleting = false;
+		}
 	}
 
-	function deleteAttachment(id: string) {
-		console.log('attachment to delete', id);
+	async function deleteAttachment(id: string) {
+		isDeleting = true;
+		deleteError = null;
+
+		try {
+			const url = 'http://localhost:3141';
+
+			// Delete the attachment using the ID
+			const delRes = await fetch(`${url}/v1/attachments/${id}/`, {
+				method: 'DELETE'
+			});
+			if (!delRes.ok) throw new Error('Failed to delete attachment');
+
+			// Remove from local state if successful
+			filteredAttachments = filteredAttachments.filter(
+				attachment => attachment.id !== id
+			);
+
+			// Remove from selection if it was selected
+			if (selectedAttachments.has(id)) {
+				selectedAttachments.delete(id);
+				selectedAttachments = new Set(selectedAttachments);
+			}
+		} catch (error) {
+			console.error('Error removing file:', error);
+			deleteError = error instanceof Error ? error.message : 'Failed to remove file';
+		} finally {
+			isDeleting = false;
+		}
 	}
 </script>
 
@@ -67,9 +117,16 @@
 		the relevant threads, but not delete the threads. This may lead to unexpected behavior if you
 		delete a file that is still being used in a thread.
 	</div>
+	
+	{#if deleteError}
+		<div class="error-message">
+			{deleteError}
+		</div>
+	{/if}
+
 	<div class="header">
 		<div class="head">
-			<button onclick={toggleSelectAll}>
+			<button onclick={toggleSelectAll} disabled={isDeleting}>
 				<div class="square" class:selected={allSelected}>
 					{#if allSelected}
 						<Check size="12" />
@@ -79,13 +136,20 @@
 			</button>
 		</div>
 		<div class="tail">
-			<button onclick={deleteSelected} disabled={selectedAttachments.size === 0}>
-				Delete Selected ({selectedAttachments.size})
+			<button 
+				onclick={deleteSelected} 
+				disabled={selectedAttachments.size === 0 || isDeleting}
+			>
+				{#if isDeleting}
+					Deleting...
+				{:else}
+					Delete Selected ({selectedAttachments.size})
+				{/if}
 			</button>
 		</div>
 	</div>
 	<div class="attachments">
-		{#if Object.keys(filteredAttachments).length === 0}
+		{#if filteredAttachments.length === 0}
 			<div class="empty-state">
 				<div class="empty-title">No Attachments</div>
 				<div class="empty-description">
@@ -93,11 +157,11 @@
 				</div>
 			</div>
 		{:else}
-			{#each Object.entries(filteredAttachments) as [idx, attachment]}
+			{#each filteredAttachments as attachment, index}
 				<div
 					class="attachment"
 					onclick={() => {
-						toggleAttachment(attachment.id);
+						if (!isDeleting) toggleAttachment(attachment.id);
 					}}
 					role="button"
 					aria-label="Select Attachment"
@@ -132,6 +196,7 @@
 								e.stopPropagation();
 								deleteAttachment(attachment.id);
 							}}
+							disabled={isDeleting}
 						>
 							<Trash size="16" />
 						</button>
@@ -142,6 +207,7 @@
 	</div>
 </div>
 
+<!-- Keep the same styles as before -->
 <style>
 	.container {
 		display: flex;
@@ -162,6 +228,15 @@
 		font-size: 14px;
 		font-weight: 500;
 		color: hsl(var(--secondary-foreground));
+	}
+
+	.error-message {
+		padding: 12px 16px;
+		background-color: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.3);
+		border-radius: 6px;
+		color: #ef4444;
+		font-size: 14px;
 	}
 
 	.header {
@@ -312,8 +387,13 @@
 		transition: background-color 0.1s ease-out;
 	}
 
-	.attachment .buttons button:hover {
+	.attachment .buttons button:hover:not(:disabled) {
 		background-color: var(--button-hover-danger);
+	}
+
+	.attachment .buttons button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
 	}
 
 	.empty-state {
