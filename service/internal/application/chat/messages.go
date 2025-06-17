@@ -3,7 +3,9 @@ package chat
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -63,23 +65,6 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		s.log.Warn("failed to get user profile", "error", err)
 	}
 
-	messages = append(messages, chat.Message{
-		Role:    "user",
-		Content: body.Content,
-	})
-
-	req := chat.Request{
-		Model:               body.Model,
-		Temperature:         0,
-		MaxCompletionTokens: 8192,
-		TopP:                1.0,
-		Stream:              true,
-		ReasoningEffort:     body.ReasoningEffort,
-		Stop:                nil,
-		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
-		System:              profile.SystemPrompt(),
-	}
-
 	now := time.Now()
 	message := Message{
 		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
@@ -87,7 +72,7 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		UserID:    userID,
 		Role:      "user",
 		Status:    "done",
-		Model:     req.Model,
+		Model:     body.Model,
 		Content:   body.Content,
 		CreatedAt: now.UnixMilli(),
 		UpdatedAt: now.UnixMilli(),
@@ -106,14 +91,22 @@ func (s *Service) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Replace with a more elegant solution
-	// Update attachments with the message ID
-	if len(body.Attachments) > 0 {
-		err = s.updateAttachmentsMessageID(body.Attachments, message.ID, userID)
-		if err != nil {
-			s.log.Warn("failed to update attachments with message ID", "error", err)
-			// Note: Consider whether this should be a fatal error or just logged
-		}
+	attachments, err := s.loadAndUpdateAttachments(body.Attachments, message.ID, userID)
+	if err != nil {
+		s.log.Warn("failed to attach all attachments to message", "message_id", message.ID, "error", err)
+		// Note: Consider whether this should be a fatal error or just logged
+	}
+
+	req := chat.Request{
+		Model:               body.Model,
+		Temperature:         0.7,
+		MaxCompletionTokens: 8192,
+		TopP:                1.0,
+		Stream:              true,
+		ReasoningEffort:     body.ReasoningEffort,
+		Stop:                nil,
+		Messages:            append(messages, chat.Message{Role: "user", Content: body.Content, Attachments: attachments}), // TODO: Consider to split history and new message for better compatibility
+		System:              profile.SystemPrompt(),
 	}
 
 	compl, err := s.mr.StreamCompletion(req, profile.Options())
@@ -226,25 +219,6 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		s.log.Warn("failed to get user profile", "error", err)
 	}
 
-	messages := []chat.Message{
-		{
-			Role:    "user",
-			Content: body.Content,
-		},
-	}
-
-	req := chat.Request{
-		Model:               body.Model,
-		Temperature:         0,
-		MaxCompletionTokens: 8192,
-		TopP:                1.0,
-		Stream:              true,
-		ReasoningEffort:     body.ReasoningEffort,
-		Stop:                nil,
-		Messages:            messages, // TODO: Consider to split history and new message for better compatibility
-		System:              profile.SystemPrompt(),
-	}
-
 	now = time.Now()
 	message := Message{
 		ID:        fmt.Sprintf("msg_%d", now.UnixNano()),
@@ -252,7 +226,7 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		UserID:    userID,
 		Role:      "user",
 		Status:    "done",
-		Model:     req.Model,
+		Model:     body.Model,
 		Content:   body.Content,
 		CreatedAt: now.UnixMilli(),
 		UpdatedAt: now.UnixMilli(),
@@ -271,14 +245,22 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Replace with a more elegant solution
-	// Update attachments with the message ID
-	if len(body.Attachments) > 0 {
-		err = s.updateAttachmentsMessageID(body.Attachments, message.ID, userID)
-		if err != nil {
-			s.log.Warn("failed to update attachments with message ID", "error", err)
-			// Note: Consider whether this should be a fatal error or just logged
-		}
+	attachments, err := s.loadAndUpdateAttachments(body.Attachments, message.ID, userID)
+	if err != nil {
+		s.log.Warn("failed to attach all attachments to message", "message_id", message.ID, "error", err)
+		// Note: Consider whether this should be a fatal error or just logged
+	}
+
+	req := chat.Request{
+		Model:               body.Model,
+		Temperature:         0.7,
+		MaxCompletionTokens: 8192,
+		TopP:                1.0,
+		Stream:              true,
+		ReasoningEffort:     body.ReasoningEffort,
+		Stop:                nil,
+		Messages:            []chat.Message{{Role: "user", Content: body.Content, Attachments: attachments}}, // TODO: Consider to split history and new message for better compatibility
+		System:              profile.SystemPrompt(),
 	}
 
 	compl, err := s.mr.StreamCompletion(req, profile.Options())
@@ -384,4 +366,89 @@ func (s *Service) updateAttachmentsMessageID(attachmentIDs []string, messageID, 
 	}
 
 	return nil
+}
+
+// LoadAndUpdateAttachments updates message_id on the given attachments and returns their mime_type+data.
+func (s *Service) loadAndUpdateAttachments(attachmentIDs []string, messageID, userID string) ([]chat.Attachment, error) {
+
+	if len(attachmentIDs) == 0 {
+		return []chat.Attachment{}, nil
+	}
+
+	// 1) Build the IN-clause placeholders and args:
+	placeholders := make([]string, len(attachmentIDs))
+	args := make([]any, 0, len(attachmentIDs)+2)
+
+	// first arg is the new message_id
+	args = append(args, messageID)
+	// next come the attachment IDs
+	for i, id := range attachmentIDs {
+		placeholders[i] = "?"
+		args = append(args, id)
+	}
+	// last arg is the user_id
+	args = append(args, userID)
+
+	// Update the attachments to link to the message and return src+mime_type:
+	query := fmt.Sprintf("UPDATE attachments SET message_id = ? WHERE id IN (%s) AND user_id = ? AND message_id = '' RETURNING id, type", strings.Join(placeholders, ","))
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("update attachments with returning: %w", err)
+	}
+	defer rows.Close()
+
+	// Scan out the returned rows into chat.Attachment
+	var attachments []Attachment
+	for rows.Next() {
+		var attachment Attachment
+		if err := rows.Scan(&attachment.ID, &attachment.Type); err != nil {
+			return nil, fmt.Errorf("scan returned attachment: %w", err)
+		}
+		attachments = append(attachments, attachment)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating returned attachments: %w", err)
+	}
+
+	var output []chat.Attachment
+	for i := range attachments {
+		data, err := getAttachmentData(attachments[i].ID)
+		if err != nil {
+			continue
+		}
+		output = append(output, chat.Attachment{
+			MimeType: attachments[i].Type,
+			Data:     data,
+		})
+	}
+
+	// 4) (optional) warn if we didn't get back as many as we asked for
+	if len(output) != len(attachmentIDs) {
+		s.log.Warn("mismatch in attachments updated vs requested",
+			"requested", len(attachmentIDs),
+			"returned", len(output),
+		)
+	}
+
+	return output, nil
+}
+
+// Helper function to encode image to base64
+func getAttachmentData(attachmentID string) ([]byte, error) {
+
+	filePath := fmt.Sprintf("data/files/%s", attachmentID)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open image file: %w", err)
+	}
+	defer file.Close()
+
+	imageData, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read image file: %w", err)
+	}
+
+	return imageData, nil
 }

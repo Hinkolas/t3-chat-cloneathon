@@ -14,9 +14,15 @@ type Request struct {
 }
 
 type Message struct {
-	Role      string `json:"role"`
-	Content   string `json:"content"`
-	Reasoning string `json:"reasoning"`
+	Role        string       `json:"role"`
+	Content     string       `json:"content"`
+	Reasoning   string       `json:"reasoning"`
+	Attachments []Attachment `json:"attachments,omitempty"` // Image attachments as byte slices
+}
+
+type Attachment struct {
+	MimeType string `json:"mime_type"` // MIME type of attachment
+	Data     []byte `json:"data"`
 }
 
 type Options map[string]string
