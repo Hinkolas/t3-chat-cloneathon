@@ -68,11 +68,22 @@ func (s *Service) getUserProfile(userID string) (*UserProfile, error) {
 	return profile, err
 }
 
+type PatchProfileRequest struct {
+	AnthropicAPIKey      *string `json:"anthropic_api_key,omitempty"`
+	OpenAIAPIKey         *string `json:"openai_api_key,omitempty"`
+	GeminiAPIKey         *string `json:"gemini_api_key,omitempty"`
+	OllamaBaseURL        *string `json:"ollama_base_url,omitempty"`
+	CustomUserName       *string `json:"custom_user_name,omitempty"`
+	CustomUserProfession *string `json:"custom_user_profession,omitempty"`
+	CustomAssistantTrait *string `json:"custom_assistant_trait,omitempty"`
+	CustomContext        *string `json:"custom_context,omitempty"`
+}
+
 func (s *Service) PatchUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	userID := "user-123" // TODO: Replace with context from auth middleware
 
-	var updates UserProfile
+	var updates PatchProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
@@ -81,37 +92,37 @@ func (s *Service) PatchUserProfile(w http.ResponseWriter, r *http.Request) {
 	var setParts []string
 	var args []any
 
-	if updates.AnthropicAPIKey != "" {
+	if updates.AnthropicAPIKey != nil {
 		setParts = append(setParts, "anthropic_api_key = ?")
-		args = append(args, updates.AnthropicAPIKey)
+		args = append(args, *updates.AnthropicAPIKey)
 	}
-	if updates.OpenAIAPIKey != "" {
+	if updates.OpenAIAPIKey != nil {
 		setParts = append(setParts, "openai_api_key = ?")
-		args = append(args, updates.OpenAIAPIKey)
+		args = append(args, *updates.OpenAIAPIKey)
 	}
-	if updates.GeminiAPIKey != "" {
+	if updates.GeminiAPIKey != nil {
 		setParts = append(setParts, "gemini_api_key = ?")
-		args = append(args, updates.GeminiAPIKey)
+		args = append(args, *updates.GeminiAPIKey)
 	}
-	if updates.OllamaBaseURL != "" {
+	if updates.OllamaBaseURL != nil {
 		setParts = append(setParts, "ollama_base_url = ?")
-		args = append(args, updates.OllamaBaseURL)
+		args = append(args, *updates.OllamaBaseURL)
 	}
-	if updates.CustomUserName != "" {
+	if updates.CustomUserName != nil {
 		setParts = append(setParts, "custom_user_name = ?")
-		args = append(args, updates.CustomUserName)
+		args = append(args, *updates.CustomUserName)
 	}
-	if updates.CustomUserProfession != "" {
+	if updates.CustomUserProfession != nil {
 		setParts = append(setParts, "custom_user_profession = ?")
-		args = append(args, updates.CustomUserProfession)
+		args = append(args, *updates.CustomUserProfession)
 	}
-	if updates.CustomAssistantTrait != "" {
+	if updates.CustomAssistantTrait != nil {
 		setParts = append(setParts, "custom_assistant_trait = ?")
-		args = append(args, updates.CustomAssistantTrait)
+		args = append(args, *updates.CustomAssistantTrait)
 	}
-	if updates.CustomContext != "" {
+	if updates.CustomContext != nil {
 		setParts = append(setParts, "custom_context = ?")
-		args = append(args, updates.CustomContext)
+		args = append(args, *updates.CustomContext)
 	}
 
 	if len(setParts) == 0 {
