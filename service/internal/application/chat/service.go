@@ -30,9 +30,3 @@ func NewService(app *application.App) (*Service, error) {
 	}, nil
 
 }
-
-// TODO: Delete later when implementing model config file
-func (s *Service) AddModel(key string, model llm.Model) {
-	// TODO: add some kind of error handling if model already exists
-	s.mr.AddModel(key, model)
-}

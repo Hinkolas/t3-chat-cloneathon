@@ -8,16 +8,38 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (s *Service) ListModels(w http.ResponseWriter, r *http.Request) {
+type Chat struct {
+	ID     string `json:"id"`
+	UserID string `json:"user_id"`
 
-	models := s.mr.ListModels()
+	Title         string `json:"title"`
+	Model         string `json:"model"`
+	IsPinned      bool   `json:"is_pinned"`
+	Status        string `json:"status"` // e.g. "streaming", "done", "error"
+	CreatedAt     int64  `json:"created_at"`
+	UpdatedAt     int64  `json:"updated_at"`
+	LastMessageAt int64  `json:"last_message_at"`
+	SharedAt      int64  `json:"shared_at"`
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(models); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	Messages []Message `json:"messages"`
+}
 
+type Message struct {
+	ID       string `json:"id"`
+	ChatID   string `json:"chat_id,omitempty"`
+	UserID   string `json:"user_id,omitempty"`
+	StreamID string `json:"stream_id"`
+
+	Role      string `json:"role"`
+	Model     string `json:"model"`
+	Content   string `json:"content"`
+	Reasoning string `json:"reasoning,omitempty"`
+
+	Status    string `json:"status"` // e.g. "streaming", "done", "error"
+	CreatedAt int64  `json:"created_at"`
+	UpdatedAt int64  `json:"updated_at"`
+
+	Attachments []Attachment `json:"attachments,omitempty"`
 }
 
 type ChatListItem struct {
@@ -28,6 +50,13 @@ type ChatListItem struct {
 	LastMessageAt int64  `json:"last_message_at"`
 	CreatedAt     int64  `json:"created_at"`
 	SharedAt      int64  `json:"shared_at"`
+}
+
+type PatchChatRequest struct {
+	Title    *string `json:"title,omitempty"`
+	IsPinned *bool   `json:"is_pinned,omitempty"`
+	Model    *string `json:"model,omitempty"`
+	SharedAt *int64  `json:"shared_at,omitempty"`
 }
 
 func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
@@ -63,40 +92,6 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-}
-
-type Chat struct {
-	ID     string `json:"id"`
-	UserID string `json:"user_id"`
-
-	Title         string `json:"title"`
-	Model         string `json:"model"`
-	IsPinned      bool   `json:"is_pinned"`
-	Status        string `json:"status"` // e.g. "streaming", "done", "error"
-	CreatedAt     int64  `json:"created_at"`
-	UpdatedAt     int64  `json:"updated_at"`
-	LastMessageAt int64  `json:"last_message_at"`
-	SharedAt      int64  `json:"shared_at"`
-
-	Messages []Message `json:"messages"`
-}
-
-type Message struct {
-	ID       string `json:"id"`
-	ChatID   string `json:"chat_id,omitempty"`
-	UserID   string `json:"user_id,omitempty"`
-	StreamID string `json:"stream_id"`
-
-	Role      string `json:"role"`
-	Model     string `json:"model"`
-	Content   string `json:"content"`
-	Reasoning string `json:"reasoning,omitempty"`
-
-	Status    string `json:"status"` // e.g. "streaming", "done", "error"
-	CreatedAt int64  `json:"created_at"`
-	UpdatedAt int64  `json:"updated_at"`
-
-	Attachments []Attachment `json:"attachments,omitempty"`
 }
 
 func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
@@ -251,13 +246,6 @@ func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 
-}
-
-type PatchChatRequest struct {
-	Title    *string `json:"title,omitempty"`
-	IsPinned *bool   `json:"is_pinned,omitempty"`
-	Model    *string `json:"model,omitempty"`
-	SharedAt *int64  `json:"shared_at,omitempty"`
 }
 
 func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
