@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import type { ModelsResponse, ChatResponse } from '$lib/types';
+import type { ProfileResponse } from '$lib/types';
 import { error } from '@sveltejs/kit';
 
 export const load = (async ({ params, url, fetch }) => {
@@ -7,13 +7,13 @@ export const load = (async ({ params, url, fetch }) => {
 
     try {
         // Fetch models
-        const modelResponse = await fetch(`${apiUrl}/v1/models/`);
-        if (!modelResponse.ok) {
+        const profileResponse = await fetch(`${apiUrl}/v1/profile/`);
+        if (!profileResponse.ok) {
             throw error(500, 'Failed to fetch models');
         }
-        const models: ModelsResponse = await modelResponse.json();
+        const profile: ProfileResponse = await profileResponse.json();
 
-        return { models };
+        return { profile };
     } catch (err) {
         console.error('Load function error:', err);
         throw error(500, 'Failed to load data');
