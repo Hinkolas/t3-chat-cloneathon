@@ -125,7 +125,7 @@
 
 	.description {
 		font-size: 14px;
-		color:	var(--text);
+		color: var(--text);
 		margin: 0;
 	}
 

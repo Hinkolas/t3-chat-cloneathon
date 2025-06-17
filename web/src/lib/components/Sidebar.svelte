@@ -83,7 +83,7 @@
 
 	async function deleteChat(id: string) {
 		try {
-			await ChatApiService.deleteChat(id,SESSION_TOKEN);
+			await ChatApiService.deleteChat(id, SESSION_TOKEN);
 			const index = chats.findIndex((chat: ChatHistoryData) => chat.id === id);
 			if (index > -1) {
 				chats.splice(index, 1);
@@ -448,7 +448,7 @@
 	.account-button:hover {
 		background-color: var(--primary-background-hover-light);
 	}
-	
+
 	.account-button img {
 		width: 32px;
 		height: 32px;

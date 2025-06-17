@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import type { ModelsResponse, ChatResponse } from '$lib/types';
 import { env } from '$env/dynamic/private';
 
-export const load = (async ({cookies}) => {
+export const load = (async ({ cookies }) => {
 	const apiUrl = env.PRIVATE_API_URL + '/v1/models/';
 	const sessionToken = cookies.get('session_token');
 
@@ -10,7 +10,7 @@ export const load = (async ({cookies}) => {
 		// Fetch models
 		const modelResponse = await fetch(apiUrl, {
 			headers: {
-				'Authorization': `Bearer ${sessionToken}`,
+				Authorization: `Bearer ${sessionToken}`
 			}
 		});
 
@@ -19,9 +19,9 @@ export const load = (async ({cookies}) => {
 		}
 		const models: ModelsResponse = await modelResponse.json();
 
-		return { 
+		return {
 			SESSION_TOKEN: sessionToken,
-			models 
+			models
 		};
 	} catch (error) {
 		console.error(error);

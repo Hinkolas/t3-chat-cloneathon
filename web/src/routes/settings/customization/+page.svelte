@@ -5,11 +5,11 @@
 	interface Props {
 		data: {
 			SESSION_TOKEN: string;
-			profile: ProfileResponse
+			profile: ProfileResponse;
 		};
 	}
 
-	let { data }:Props = $props();
+	let { data }: Props = $props();
 
 	let profile = $state(data.profile);
 	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
@@ -19,7 +19,7 @@
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${SESSION_TOKEN}`
+				Authorization: `Bearer ${SESSION_TOKEN}`
 			},
 			body: JSON.stringify(profile)
 		});

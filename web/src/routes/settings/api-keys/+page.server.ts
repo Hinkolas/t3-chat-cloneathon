@@ -10,7 +10,7 @@ export const load = (async ({ cookies, params, url, fetch }) => {
 		// Fetch models
 		const profileResponse = await fetch(`${env.PRIVATE_API_URL}/v1/profile/`, {
 			headers: {
-				'Authorization': `Bearer ${sessionToken}`,
+				Authorization: `Bearer ${sessionToken}`
 			}
 		});
 		if (!profileResponse.ok) {
@@ -18,9 +18,9 @@ export const load = (async ({ cookies, params, url, fetch }) => {
 		}
 		const profile: ProfileResponse = await profileResponse.json();
 
-		return { 
+		return {
 			SESSION_TOKEN: sessionToken,
-			profile 
+			profile
 		};
 	} catch (err) {
 		console.error('Load function error:', err);

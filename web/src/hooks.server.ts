@@ -2,7 +2,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 interface SessionResponse {
-    session?: Session;
+	session?: Session;
 }
 
 interface Session {
@@ -16,46 +16,44 @@ interface Session {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-    // get UserID from cookie session (null if session invalid)
-    const SESSION_ID: string | undefined = event.cookies.get("session_token");
-    let data: SessionResponse | null = null;
+	// get UserID from cookie session (null if session invalid)
+	const SESSION_ID: string | undefined = event.cookies.get('session_token');
+	let data: SessionResponse | null = null;
 
-    // fetch json data from api (including auth headers)
-    try {
-        const res = await fetch(`${env.PRIVATE_API_URL}/v1/auth/session/`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SESSION_ID}`,
-            }
-        });
+	// fetch json data from api (including auth headers)
+	try {
+		const res = await fetch(`${env.PRIVATE_API_URL}/v1/auth/session/`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${SESSION_ID}`
+			}
+		});
 
-        if (!res.ok) {
-            // if not ok, return null
-            // console.error("Session fetch failed:", res.status, res.statusText);
-            throw Error(`Session fetch failed: ${res.status} ${res.statusText}`);
-        }
-        
-        data = await res.json() as SessionResponse;
-        
-    } catch (error) {
-        console.error(error);
-        // if not, redirect to login
-        // throw redirect(302, "/login");
+		if (!res.ok) {
+			// if not ok, return null
+			// console.error("Session fetch failed:", res.status, res.statusText);
+			throw Error(`Session fetch failed: ${res.status} ${res.statusText}`);
+		}
 
-    }
+		data = (await res.json()) as SessionResponse;
+	} catch (error) {
+		console.error(error);
+		// if not, redirect to login
+		// throw redirect(302, "/login");
+	}
 
-    if (event.route.id !== "/login" && !data) {
-        // if not, redirect to login
-        throw redirect(302, "/login");
-    }
+	if (event.route.id !== '/login' && !data) {
+		// if not, redirect to login
+		throw redirect(302, '/login');
+	}
 
-    if (event.route.id === "/login" && data) {
-        // check if logged in
-        // if not, redirect to login
-        throw redirect(302, "/");
-    }
+	if (event.route.id === '/login' && data) {
+		// check if logged in
+		// if not, redirect to login
+		throw redirect(302, '/');
+	}
 
-    const response = await resolve(event);
-    return response;
+	const response = await resolve(event);
+	return response;
 };

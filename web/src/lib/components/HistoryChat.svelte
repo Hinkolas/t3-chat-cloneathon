@@ -72,7 +72,7 @@
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${SESSION_TOKEN}`
+					Authorization: `Bearer ${SESSION_TOKEN}`
 				},
 				body: JSON.stringify({ shared_at: now.getTime() })
 			});

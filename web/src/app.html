@@ -1,18 +1,16 @@
 <!doctype html>
 <html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+		<meta name="theme-color" content="#211c25" />
+		%sveltekit.head%
+	</head>
 
-<head>
-	<meta charset="utf-8" />
-	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-	<meta name="theme-color" content="#211c25">
-	%sveltekit.head%
-</head>
-
-<body data-sveltekit-preload-data="hover">
-	<div style="display: contents">%sveltekit.body%</div>
-</body>
-
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
 </html>
 
 <style>
@@ -51,22 +49,22 @@
 
 		/* Color Variables */
 		--primary: 332 100% 32%;
-		--primary-background-inactive: #380F25;
-		--primary-background: #8B0647;
+		--primary-background-inactive: #380f25;
+		--primary-background: #8b0647;
 		--primary-background-light: #53062b;
-		--primary-border: #450D2A;
+		--primary-border: #450d2a;
 		--primary-background-hover: #870442;
-		--primary-background-hover-light: #450D2A;
-		--primary-disabled: #441D36;
+		--primary-background-hover-light: #450d2a;
+		--primary-disabled: #441d36;
 
 		--white: #ffffff;
 		--black: #000000;
 		--placeholder: #888888;
 
-		--text: #D3C7E1; /* text color */
-		--text-light: #c4bdc8; 
+		--text: #d3c7e1; /* text color */
+		--text-light: #c4bdc8;
 		--border: #333333;
-		
+
 		--button-background-primary: #4d1f3a;
 		--button-border-primary: #742b4d;
 		--button-background-primary-disabled: #3b2335;
@@ -77,10 +75,10 @@
 		--secondary: #bb5c8e;
 		--sidebar-background: #1d131b;
 		--sidebar-chat-hover: #261922;
-		--sidebar-right-border: #2B2228;
+		--sidebar-right-border: #2b2228;
 		--sidebar-search-icon: #888888;
 
-		--history-day: #B95B8D;
+		--history-day: #b95b8d;
 		--history-chat-hover: #1d131b;
 
 		--text-shadow: 0 0 2px var(--primary-background);
@@ -92,36 +90,35 @@
 
 		/* Additional UI Colors */
 		--popup-background: #21141e;
-		--popup-input-background: #30242D;
+		--popup-input-background: #30242d;
 
 		--context-menu-background: #211c25;
-		--context-menu-border: #2B2228;
+		--context-menu-border: #2b2228;
 
 		--model-hover: #2c2931;
-		--model-selection-box-background: #100B0E;
+		--model-selection-box-background: #100b0e;
 
 		--settings-background: #140e13;
 
-		--error-page-background: #29222C;
+		--error-page-background: #29222c;
 		--error-page-border: #333333;
 
-		--sidebar-toggle-button: #2C222A;
-		--sidebar-toggle-button-border: #2C222A;
-		--sidebar-toggle-button-hover: #2C222A;
+		--sidebar-toggle-button: #2c222a;
+		--sidebar-toggle-button-border: #2c222a;
+		--sidebar-toggle-button-hover: #2c222a;
 
-		--button-gray-background: #29222C;
+		--button-gray-background: #29222c;
 		--button-gray-border: #333333;
 		--button-gray-hover: #302932;
 
-		--input-border: #29222C;
-		--input-background-pirmary: #2C2431;
-		--input-background-secondary: #25212B;
+		--input-border: #29222c;
+		--input-background-pirmary: #2c2431;
+		--input-background-secondary: #25212b;
 
 		--button-background-danger: #341113;
 		--button-border-danger: #4a1215;
 		--button-hover-danger: #991b1b;
 	}
-
 
 	button {
 		user-select: none !important;

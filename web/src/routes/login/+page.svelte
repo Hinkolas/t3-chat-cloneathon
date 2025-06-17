@@ -1,12 +1,10 @@
 <script>
-
-    let { form } = $props();
+	let { form } = $props();
 
 	let username = $state('');
 	let password = $state('');
 
 	let isDisabled = $derived(!username || !password); // Fixed logic
-
 </script>
 
 <div class="container">

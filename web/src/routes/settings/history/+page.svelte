@@ -6,11 +6,11 @@
 	interface Props {
 		data: {
 			SESSION_TOKEN: string;
-			chats: ChatHistoryResponse
+			chats: ChatHistoryResponse;
 		};
 	}
 
-	let { data }:Props = $props();
+	let { data }: Props = $props();
 
 	let chats = $state(data.chats || []);
 	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
@@ -46,7 +46,9 @@
 
 		try {
 			// Delete all selected chats
-			const deletePromises = Array.from(selectedChats).map((id) => ChatApiService.deleteChat(id,SESSION_TOKEN));
+			const deletePromises = Array.from(selectedChats).map((id) =>
+				ChatApiService.deleteChat(id, SESSION_TOKEN)
+			);
 
 			await Promise.all(deletePromises);
 

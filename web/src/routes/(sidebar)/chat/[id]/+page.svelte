@@ -169,7 +169,7 @@
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/streams/${streamId}/`, {
 				method: 'DELETE',
 				headers: {
-					'Authorization': `Bearer ${SESSION_TOKEN}`,
+					Authorization: `Bearer ${SESSION_TOKEN}`
 				}
 			});
 
@@ -276,7 +276,7 @@
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/`, {
 				method: 'POST',
 				headers: {
-					'Authorization': `Bearer ${SESSION_TOKEN}`
+					Authorization: `Bearer ${SESSION_TOKEN}`
 				},
 				body: formData
 			});
@@ -394,7 +394,7 @@
 			const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${uploadedFile.id}/`, {
 				method: 'DELETE',
 				headers: {
-					'Authorization': `Bearer ${SESSION_TOKEN}`
+					Authorization: `Bearer ${SESSION_TOKEN}`
 				}
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
@@ -564,7 +564,7 @@
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${SESSION_TOKEN}`
+					Authorization: `Bearer ${SESSION_TOKEN}`
 				},
 				body: JSON.stringify({
 					model: selectedModelKey,

@@ -6,7 +6,7 @@
 	interface Props {
 		data: {
 			SESSION_TOKEN: string;
-			profile: ProfileResponse
+			profile: ProfileResponse;
 		};
 	}
 
@@ -71,7 +71,7 @@
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${SESSION_TOKEN}`
+				Authorization: `Bearer ${SESSION_TOKEN}`
 			},
 			body: JSON.stringify({ [profileKey]: keyValue })
 		});
@@ -109,7 +109,7 @@
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${SESSION_TOKEN}`
+				Authorization: `Bearer ${SESSION_TOKEN}`
 			},
 			body: JSON.stringify({ [profileKey]: '' })
 		});

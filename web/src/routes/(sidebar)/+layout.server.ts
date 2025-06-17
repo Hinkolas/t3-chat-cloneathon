@@ -4,14 +4,13 @@ import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 export const load: LayoutServerLoad = async ({ cookies, params, fetch }) => {
-
 	const sessionToken = cookies.get('session_token');
 
 	try {
 		// Fetch models
 		const modelResponse = await fetch(`${env.PRIVATE_API_URL}/v1/models/`, {
 			headers: {
-				'Authorization': `Bearer ${sessionToken}`,
+				Authorization: `Bearer ${sessionToken}`
 			}
 		});
 		if (!modelResponse.ok) {
@@ -22,7 +21,7 @@ export const load: LayoutServerLoad = async ({ cookies, params, fetch }) => {
 		// Fetch chat history
 		const chatHistoryResponse = await fetch(`${env.PRIVATE_API_URL}/v1/chats/`, {
 			headers: {
-				'Authorization': `Bearer ${sessionToken}`,
+				Authorization: `Bearer ${sessionToken}`
 			}
 		});
 		if (!chatHistoryResponse.ok) {

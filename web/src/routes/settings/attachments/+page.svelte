@@ -56,7 +56,7 @@
 				const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${id}/`, {
 					method: 'DELETE',
 					headers: {
-						'Authorization': `Bearer ${SESSION_TOKEN}`,
+						Authorization: `Bearer ${SESSION_TOKEN}`
 					}
 				});
 				if (!delRes.ok) throw new Error(`Failed to delete attachment ${id}`);
@@ -91,7 +91,7 @@
 			const delRes = await fetch(`${env.PUBLIC_API_URL}/v1/attachments/${id}/`, {
 				method: 'DELETE',
 				headers: {
-					'Authorization': `Bearer ${SESSION_TOKEN}`,
+					Authorization: `Bearer ${SESSION_TOKEN}`
 				}
 			});
 			if (!delRes.ok) throw new Error('Failed to delete attachment');
