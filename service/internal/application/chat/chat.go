@@ -260,7 +260,7 @@ func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Title == nil && req.IsPinned == nil {
+	if req.Title == nil && req.IsPinned == nil && req.SharedAt == nil && req.Model == nil {
 		http.Error(w, "No fields to update", http.StatusBadRequest)
 		return
 	}
