@@ -9,12 +9,14 @@
 
 	let { data }: Props = $props();
 
-	import { FileText } from '@lucide/svelte';
+	import { ChevronDown, FileText } from '@lucide/svelte';
 	import MarkdownIt from 'markdown-it';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
 	import 'highlight.js/styles/github-dark.css';
+	import { fade } from 'svelte/transition';
 
-	let messages: MessageData[] = $state(data.chat.messages);
+	let messages: MessageData[] = $state(data.chat.messages || []);
+	let reasoningStates: Record<string, boolean> = $state({});
 
 	$effect(() => {
 		messages = data.chat.messages || [];
@@ -79,21 +81,6 @@
 		return md.render(content);
 	}
 
-	interface UploadedFileWithId {
-		file: File;
-		id: string;
-	}
-
-	let fileInput: HTMLInputElement;
-	let uploadedFiles: UploadedFileWithId[] = $state([]);
-	let uploadingFile: File | null = $state(null);
-	let uploadError: string | null = $state(null);
-	let isDragOver = $state(false);
-
-	function cancelStreaming() {
-		// TODO: implement cancel logic
-	}
-
 	function handleCopyClick(event: Event) {
 		const target = event.target as HTMLElement;
 		const button = target.closest('.copy-code-btn') as HTMLButtonElement;
@@ -147,6 +134,32 @@
 							onclick={handleCopyClick}
 							onkeydown={() => {}}
 						>
+							{#if message.reasoning}
+								<div class="reasoning-box">
+									<button
+										onclick={() => {
+											const messageKey = message.id || messages.indexOf(message).toString();
+											reasoningStates[messageKey] = !reasoningStates[messageKey];
+											reasoningStates = { ...reasoningStates };
+										}}
+										class="reasoning-button"
+										><div
+											class="chevron-icon"
+											class:rotated={!reasoningStates[
+												message.id || messages.indexOf(message).toString()
+											]}
+										>
+											<ChevronDown size="14" />
+										</div>
+										Reasoning</button
+									>
+									{#if reasoningStates[message.id || messages.indexOf(message).toString()]}
+										<div transition:fade={{ duration: 100 }} class="reasoning-text">
+											{@html renderMarkdown(message.reasoning)}
+										</div>
+									{/if}
+								</div>
+							{/if}
 							{#if message.status === 'done'}
 								{@html renderMarkdown(message.content)}
 								{#if message.attachments && message.attachments.length > 0}
@@ -295,6 +308,42 @@
 
 	.attachment-link:hover:not(:has(img)) {
 		background-color: hsl(var(--primary) / 0.6);
+	}
+
+	.reasoning-button {
+		all: unset;
+		font-size: 14px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 6px 10px;
+		padding-right: 12px;
+		width: max-content;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: background-color 0.1s ease;
+	}
+
+	.reasoning-button:hover {
+		background-color: hsl(var(--primary) / 0.2);
+	}
+
+	.reasoning-text {
+		padding: 16px;
+		border-radius: 8px;
+		color: #c7c3cf;
+		background-color: #1a1720;
+	}
+
+	.chevron-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: transform 0.2s ease;
+	}
+
+	.chevron-icon.rotated {
+		transform: rotate(-90deg);
 	}
 
 	/* Markdown styling */
