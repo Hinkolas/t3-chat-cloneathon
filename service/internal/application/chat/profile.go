@@ -82,7 +82,14 @@ type PatchProfileRequest struct {
 
 func (s *Service) UpsertUserProfile(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // from your auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
+
 	var updates PatchProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -146,7 +153,13 @@ func (s *Service) UpsertUserProfile(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	profile, err := s.getUserProfile(userID)
 	if err != nil {

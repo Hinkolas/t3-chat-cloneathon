@@ -23,7 +23,13 @@ type Attachment struct {
 
 func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	attachments := make([]Attachment, 0)
 
@@ -58,7 +64,13 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
@@ -82,7 +94,13 @@ func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	// Parse multipart form
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max
@@ -145,7 +163,13 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 

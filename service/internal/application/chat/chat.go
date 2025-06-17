@@ -61,7 +61,13 @@ type PatchChatRequest struct {
 
 func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	chats := make([]ChatListItem, 0)
 
@@ -96,7 +102,13 @@ func (s *Service) ListChats(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
@@ -222,7 +234,13 @@ func (s *Service) GetChat(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
@@ -250,7 +268,13 @@ func (s *Service) DeleteChat(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) EditChat(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
+	// Get userID from auth middleware, ok if authenticated
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		s.log.Debug("User is not authenticated")
+		http.Error(w, "not_authenticated", http.StatusUnauthorized)
+		return
+	}
 
 	id := mux.Vars(r)["id"]
 
