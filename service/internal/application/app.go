@@ -120,9 +120,10 @@ func (app *App) Start() error {
 	// Setup CORS middleware
 	// TODO: use proper cors settings in production
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders: []string{"*"},
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
 	})
 
 	handler := c.Handler(app.Router)
