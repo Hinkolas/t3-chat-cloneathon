@@ -3,7 +3,7 @@
 version: '3'
 
 # load environment variables from .env
-dotenv: ['.env']
+dotenv: ['.env.dev']
 
 tasks:
   # Run Go service
