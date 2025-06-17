@@ -64,14 +64,14 @@ VALUES
         'user-123',
         143,
         18,
-        '',
-        '',
-        '',
-        '',
         'Ertu',
         'Software Developer',
         'friendly and helpful',
-        'working on personal projects and learning new technologies'
+        'working on personal projects and learning new technologies',
+        '',
+        '',
+        '',
+        ''
     );
 
 CREATE TABLE
