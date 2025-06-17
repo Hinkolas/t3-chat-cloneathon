@@ -1463,6 +1463,7 @@
 		border-radius: 8px;
 		font-size: 13px;
 		font-weight: 600;
+		letter-spacing: 0.4px;
 	}
 
 	#SendButton {
