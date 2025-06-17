@@ -3,6 +3,7 @@ package chat
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"text/template"
@@ -79,68 +80,68 @@ type PatchProfileRequest struct {
 	CustomContext        *string `json:"custom_context,omitempty"`
 }
 
-func (s *Service) PatchUserProfile(w http.ResponseWriter, r *http.Request) {
+func (s *Service) UpsertUserProfile(w http.ResponseWriter, r *http.Request) {
 
-	userID := "user-123" // TODO: Replace with context from auth middleware
-
+	userID := "user-123" // from your auth middleware
 	var updates PatchProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	var setParts []string
-	var args []any
+	// we always have the PK:
+	cols := []string{"user_id"}
+	placeholder := []string{"?"}
+	values := []any{userID}
 
-	if updates.AnthropicAPIKey != nil {
-		setParts = append(setParts, "anthropic_api_key = ?")
-		args = append(args, *updates.AnthropicAPIKey)
-	}
-	if updates.OpenAIAPIKey != nil {
-		setParts = append(setParts, "openai_api_key = ?")
-		args = append(args, *updates.OpenAIAPIKey)
-	}
-	if updates.GeminiAPIKey != nil {
-		setParts = append(setParts, "gemini_api_key = ?")
-		args = append(args, *updates.GeminiAPIKey)
-	}
-	if updates.OllamaBaseURL != nil {
-		setParts = append(setParts, "ollama_base_url = ?")
-		args = append(args, *updates.OllamaBaseURL)
-	}
-	if updates.CustomUserName != nil {
-		setParts = append(setParts, "custom_user_name = ?")
-		args = append(args, *updates.CustomUserName)
-	}
-	if updates.CustomUserProfession != nil {
-		setParts = append(setParts, "custom_user_profession = ?")
-		args = append(args, *updates.CustomUserProfession)
-	}
-	if updates.CustomAssistantTrait != nil {
-		setParts = append(setParts, "custom_assistant_trait = ?")
-		args = append(args, *updates.CustomAssistantTrait)
-	}
-	if updates.CustomContext != nil {
-		setParts = append(setParts, "custom_context = ?")
-		args = append(args, *updates.CustomContext)
+	// for the ON CONFLICT ... DO UPDATE clause:
+	var updateSets []string
+
+	// helper to append a col if the field is non‐nil
+	appendField := func(col string, v *string) {
+		if v != nil {
+			cols = append(cols, col)
+			placeholder = append(placeholder, "?")
+			values = append(values, *v)
+			// EXCLUDED.col references the incoming value
+			updateSets = append(updateSets, col+" = EXCLUDED."+col)
+		}
 	}
 
-	if len(setParts) == 0 {
-		http.Error(w, "No fields to update", http.StatusBadRequest)
+	appendField("anthropic_api_key", updates.AnthropicAPIKey)
+	appendField("openai_api_key", updates.OpenAIAPIKey)
+	appendField("gemini_api_key", updates.GeminiAPIKey)
+	appendField("ollama_base_url", updates.OllamaBaseURL)
+	appendField("custom_user_name", updates.CustomUserName)
+	appendField("custom_user_profession", updates.CustomUserProfession)
+	appendField("custom_assistant_trait", updates.CustomAssistantTrait)
+	appendField("custom_context", updates.CustomContext)
+
+	if len(updateSets) == 0 {
+		http.Error(w, "No fields to upsert", http.StatusBadRequest)
 		return
 	}
 
-	query := "UPDATE user_profile SET " + strings.Join(setParts, ", ") + " WHERE user_id = ?"
-	args = append(args, userID)
+	// build the final upsert SQL
+	// INSERT INTO user_profile (col1, col2, …)
+	// VALUES (?, ?, …)
+	// ON CONFLICT (user_id) DO UPDATE SET col2 = EXCLUDED.col2, …
+	query := fmt.Sprintf(
+		"INSERT INTO user_profile (%s) VALUES (%s) ON CONFLICT(user_id) DO UPDATE SET %s",
+		strings.Join(cols, ", "),
+		strings.Join(placeholder, ", "),
+		strings.Join(updateSets, ", "),
+	)
 
-	_, err := s.db.Exec(query, args...)
-	if err != nil {
-		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+	if _, err := s.db.Exec(query, values...); err != nil {
+		http.Error(w, "Failed to upsert profile: "+err.Error(),
+			http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+
 }
 
 func (s *Service) GetUserProfile(w http.ResponseWriter, r *http.Request) {
@@ -149,10 +150,12 @@ func (s *Service) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	profile, err := s.getUserProfile(userID)
 	if err != nil {
-		http.Error(w, "Profile not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(UserProfile{UserID: userID})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(profile)
+
 }
