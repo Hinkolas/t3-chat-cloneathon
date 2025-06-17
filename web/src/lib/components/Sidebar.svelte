@@ -5,7 +5,7 @@
 	import { Pin, LogOut } from '@lucide/svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import HistoryChat from '$lib/components/HistoryChat.svelte';
-	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
+	import { showConfirmationPopup, showRenamePopup, popup, closeSidebar } from '$lib/store';
 	import type { ChatHistoryResponse, ChatHistoryData } from '$lib/types';
 	import { toggleSidebar, sidebarState } from '$lib/store';
 	import { get } from 'svelte/store';
@@ -19,6 +19,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
+	let innerWidth: number = $state(0);
 	let sidebarCollapsed: boolean = $derived($sidebarState.collapsed);
 	let chatSearchTerm: string = $state('');
 	let activeContextMenuId = $state<string | null>(null);
@@ -159,8 +160,6 @@
 		return sections.filter((section) => section.chats.length > 0);
 	});
 
-	let innerWidth = $state(0);
-
 	onMount(() => {
 		if (innerWidth <= 1024) {
 			toggleSidebar();
@@ -189,7 +188,14 @@
 	<div class="head">
 		<div class="title">Chat</div>
 		<div class="newChatButton">
-			<a href="/">New Chat</a>
+			<a
+				href="/"
+				onclick={() => {
+					if (innerWidth <= 1024) {
+						closeSidebar();
+					}
+				}}>New Chat</a
+			>
 		</div>
 		<div class="search-container">
 			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
