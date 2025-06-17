@@ -24,6 +24,7 @@
 
 	const iconSize = 16;
 
+	let scrollContainer: HTMLElement;
 	let textarea: HTMLElement;
 	let message = $state('');
 	let modelSelectionOpen = $state(false);
@@ -54,6 +55,13 @@
 		modelSearchTerm = '';
 		modelSelectionOpen = false;
 		selectedModelKey = data.chat.model || Object.keys(data.models)[0];
+
+		if (scrollContainer) {
+			// setTimeout to ensure DOM has updated
+			setTimeout(() => {
+				scrollContainer.scrollTop = scrollContainer.scrollHeight;
+			}, 0);
+		}
 	});
 
 	$effect(() => {
@@ -685,6 +693,10 @@
 	onMount(() => {
 		autoResize();
 
+		if (scrollContainer) {
+			scrollContainer.scrollTop = scrollContainer.scrollHeight;
+		}
+
 		// Add drag and drop event listeners to the entire window
 		window.addEventListener('dragenter', preventDefaults);
 		window.addEventListener('dragover', handleDragOver);
@@ -721,7 +733,7 @@
 		</div>
 	{/if}
 
-	<div class="chat-wrapper">
+	<div class="chat-wrapper" bind:this={scrollContainer}>
 		<div class="chat">
 			{#if !(messages.length == 0)}
 				{#each messages as message}
