@@ -11,7 +11,7 @@
 	let { data }: Props = $props();
 
 	import { ArrowUp, Brain, ChevronDown, FileText, Globe, Paperclip, X } from '@lucide/svelte';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 
@@ -511,8 +511,12 @@
 		};
 	}
 
-	async function sendMessage(message: string) {
-		const tempMessage = message;
+	async function sendMessage(msg: string) {
+		const tempMessage = msg;
+		message = '';
+
+		await tick();
+		autoResize();
 
 		const userChat: MessageData = {
 			id: '', //TODO: add id
@@ -570,7 +574,6 @@
 				updated_at: 0
 			};
 
-			message = '';
 			messages.push(assistantChat);
 			clearAllFiles(); // clear up
 		} catch (error) {
@@ -850,15 +853,15 @@
 			placeholder="Type your message here..."
 			name="message"
 			id="Message"
-			onkeydown={(e) => {
+			onkeydown={async (e) => {
 				if (e.key === 'Enter' && !e.shiftKey) {
 					e.preventDefault();
 					if (message.length == 0) return;
-					sendMessage(message);
-					autoResize();
+					await sendMessage(message);
 				}
 			}}
 		></textarea>
+
 		<div class="buttons">
 			<div class="button-group">
 				<div class="selection-container" use:clickOutside onoutsideclick={closeModelSelection}>
@@ -945,9 +948,8 @@
 				{:else}
 					<button
 						class={message.length == 0 ? '' : 'active'}
-						onclick={() => {
-							sendMessage(message);
-							autoResize();
+						onclick={async () => {
+							await sendMessage(message);
 						}}
 						disabled={message.length == 0}
 						id="SendButton"
