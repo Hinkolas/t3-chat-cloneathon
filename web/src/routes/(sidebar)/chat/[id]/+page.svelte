@@ -1365,7 +1365,7 @@
 
 	textarea {
 		all: unset;
-		font-size: 0.875rem;
+		font-size: 15px;
 		min-height: 1.5rem;
 		max-height: 200px;
 		overflow-y: auto;
