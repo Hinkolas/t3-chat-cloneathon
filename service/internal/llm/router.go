@@ -46,6 +46,11 @@ func (mr *ModelRouter) StreamCompletion(req chat.Request, opt chat.Options) (*st
 	// Replace router with provider model name.
 	req.Model = model.Name
 
+	// Set reasoning effort to 0 if no reasoning is supported by model
+	if !model.Features.HasReasoning {
+		req.ReasoningEffort = 0
+	}
+
 	// Route the request to the corrosponding model provider.
 	switch model.Provider {
 	case Gemini:
