@@ -42,6 +42,7 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 		config.Temperature = &temp
 	}
 
+	// Activate thinking if reasoning effort is greater than 0
 	if req.ReasoningEffort > 0 {
 		config.ThinkingConfig = &genai.ThinkingConfig{
 			IncludeThoughts: true,
@@ -56,20 +57,43 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 		}
 	}
 
-	messages := make([]*genai.Content, len(req.Messages)-1)
 	// Convert universal format to gemini message format
-	for i, message := range req.Messages[:len(req.Messages)-1] {
-		messages[i] = &genai.Content{
+	messages := make([]*genai.Content, 0)
+	for _, message := range req.Messages[:len(req.Messages)-1] {
+		if message.Role == "assistant" {
+			message.Role = "model"
+		}
+		msg := &genai.Content{
+			Role: message.Role,
 			Parts: []*genai.Part{
 				{Text: message.Content},
 			},
 		}
-		if message.Role == "assistant" {
-			messages[i].Role = genai.RoleModel
-		} else if message.Role == "user" {
-			messages[i].Role = genai.RoleUser
+		for _, attachment := range message.Attachments {
+			msg.Parts = append(msg.Parts, &genai.Part{
+				InlineData: &genai.Blob{
+					Data:     attachment.Data,
+					MIMEType: attachment.MimeType,
+				},
+			})
 		}
+		messages = append(messages, msg)
 	}
+
+	parts := []genai.Part{
+		{Text: req.Messages[len(req.Messages)-1].Content},
+	}
+
+	for _, attachment := range req.Messages[len(req.Messages)-1].Attachments {
+		parts = append(parts, genai.Part{
+			InlineData: &genai.Blob{
+				Data:     attachment.Data,
+				MIMEType: attachment.MimeType,
+			},
+		})
+	}
+
+	// json.NewEncoder(os.Stdout).Encode(messages)
 
 	chat, err := client.Chats.Create(s.Context(), req.Model, &config, messages)
 	if err != nil {
@@ -78,7 +102,7 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 
 	go func() {
 
-		for result, err := range chat.SendMessageStream(s.Context(), genai.Part{Text: req.Messages[len(req.Messages)-1].Content}) {
+		for result, err := range chat.SendMessageStream(s.Context(), parts...) {
 
 			if err != nil {
 				s.Fail(fmt.Errorf("gemini: %w", err))
