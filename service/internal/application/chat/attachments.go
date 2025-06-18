@@ -112,14 +112,14 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 	// Create attachment record
 	now := time.Now()
 	attachment := Attachment{
-		// ID:        fmt.Sprintf("att_%d", now.UnixNano()),
 		ID:        uuid.New(),
 		UserId:    userID,
 		Name:      header.Filename,
 		Type:      header.Header.Get("Content-Type"),
-		Src:       fmt.Sprintf("http://127.0.0.1:3141/v1/attachments/att_%d/", now.UnixNano()), // TODO: Replace with proper location
 		CreatedAt: now.UnixMilli(),
 	}
+
+	attachment.Src = fmt.Sprintf("%s/v1/attachments/%s/", os.Getenv("PUBLIC_API_URL"), attachment.ID) // TODO: Replace with proper location
 
 	// Save to database
 	_, err = s.db.Exec("INSERT INTO attachments (id, user_id, message_id, name, type, src, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
