@@ -1,10 +1,11 @@
 <script lang="ts">
-	import type { ModelsResponse, ChatHistoryResponse } from '$lib//types';
+	import type { ModelsResponse, ChatHistoryResponse, ProfileResponse } from '$lib//types';
 	interface Props {
 		data: {
 			SESSION_TOKEN: string;
 			models: ModelsResponse;
 			chats: ChatHistoryResponse;
+			profile: ProfileResponse;
 		};
 	}
 	let { data }: Props = $props();
@@ -19,6 +20,7 @@
 
 	let chats = $state(data.chats || {});
 	let models = $state(data.models || {});
+	let profile = $state(data.profile || {});
 	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
 
 	$effect(() => {
@@ -55,7 +57,7 @@
 		<button onclick={toggleSidebar} class="sidebar-button">
 			<PanelLeft size="16" />
 		</button>
-		<Sidebar {chats} {SESSION_TOKEN} />
+		<Sidebar {chats} {SESSION_TOKEN} {profile} />
 		<div class="content">
 			<slot />
 		</div>
@@ -68,6 +70,7 @@
 		width: 100%;
 		height: 100dvh;
 		display: flex;
+		overflow: hidden;
 	}
 
 	.sidebar-button {

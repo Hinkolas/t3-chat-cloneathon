@@ -1,8 +1,8 @@
 <script lang="ts">
-	let { chats = $bindable(), SESSION_TOKEN } = $props();
+	let { chats = $bindable(), SESSION_TOKEN, profile } = $props();
 
 	import { fade } from 'svelte/transition';
-	import { Pin, LogOut } from '@lucide/svelte';
+	import { Pin, LogOut, Gem } from '@lucide/svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import HistoryChat from '$lib/components/HistoryChat.svelte';
 	import { showConfirmationPopup, showRenamePopup, popup, closeSidebar } from '$lib/store';
@@ -24,7 +24,11 @@
 	let chatSearchTerm: string = $state('');
 	let activeContextMenuId = $state<string | null>(null);
 	let url = $derived(page.url.pathname.split('/').pop());
-	const userLoggedIn: boolean = true; // TODO: change this to dynamic with Cookie's
+
+	let userLoggedIn: boolean = $state(false);
+	if (SESSION_TOKEN && SESSION_TOKEN != ''){
+		userLoggedIn = true;
+	}
 
 	// Filter and group chats
 	let filteredAndGroupedChats = $derived.by(() => {
@@ -226,15 +230,14 @@
 	<div class="foot">
 		{#if userLoggedIn}
 			<a href="/settings" class="account-button">
-				<img src="https://placehold.co/100" alt="Profile" />
+				<img src="/assets/profile-icon.png" alt="Profile" />
 				<div class="info">
-					<span class="username">Ertu K.</span>
-					<span class="subscription">Free</span>
+					<span class="username">{profile.username}</span>
+					<span class="subscription">Premium Plan <Gem size=14/></span>
 				</div>
 			</a>
 		{:else}
-			<!-- TODO: change href link to login -->
-			<a href="#" class="login-button">
+			<a href="/auth/login" class="login-button">
 				<LogOut size="16" />
 				Login
 			</a>
@@ -387,9 +390,13 @@
 	}
 
 	.chats-container::-webkit-scrollbar {
-		width: 0px !important;
-		height: 0px !important;
-		display: none !important;
+		background-color: transparent;
+		width: 6px ;
+	}
+
+	.chats-container::-webkit-scrollbar-thumb {
+		background-color: var(--text-disabled);
+		border-radius: 10px;
 	}
 
 	.day-title {
@@ -446,8 +453,8 @@
 	}
 
 	.account-button img {
-		width: 32px;
-		height: 32px;
+		width: 42px;
+		height: 42px;
 		object-fit: cover;
 		border-radius: 9999px;
 	}
@@ -461,11 +468,14 @@
 	}
 
 	.account-button .username {
-		font-size: 14px;
+		font-size: 16px;
 		font-weight: 700;
 	}
 
 	.account-button .subscription {
-		font-size: 12px;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 14px;
 	}
 </style>

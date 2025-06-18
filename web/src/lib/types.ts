@@ -88,6 +88,8 @@ export type ProfileResponse = ProfileData;
 
 export interface ProfileData {
 	user_id: string;
+	username: string;
+	email: string;
 	limit_standard: number;
 	limit_premium: number;
 	usage_standard: number;

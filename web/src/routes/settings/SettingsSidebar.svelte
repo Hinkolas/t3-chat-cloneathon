@@ -7,11 +7,11 @@
 <div class="container">
 	<div class="account">
 		<div class="img-wrapper">
-			<img src="https://placehold.co/120" alt="Profile" />
+			<img src="/assets/profile-icon.png" alt="Profile" />
 		</div>
 		<div class="infos">
-			<div class="username">{profile.custom_user_name}</div>
-			<div class="email">ertugul.kilic@icloud.com</div>
+			<div class="username">{profile.username}</div>
+			<div class="email">{profile.email}</div>
 			<div class="subscription">Premium Plan<Gem size=14/></div>
 		</div>
 	</div>
