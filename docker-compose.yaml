@@ -48,27 +48,27 @@ services:
     ports: 
      - "3000:3000"
 
-  # # The Caddy reverse proxy
-  # caddy:
-  #   image: caddy:2-alpine
-  #   container_name: t3-caddy
-  #   restart: unless-stopped
-  #   ports:
-  #     # Publish HTTP and HTTPS ports to the host machine
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     # Mount the Caddyfile for configuration
-  #     - ./Caddyfile:/etc/caddy/Caddyfile
-  #     # Named volumes for Caddy's data (SSL certs) and config
-  #     - caddy_data:/data
-  #     - caddy_config:/config
-  #   networks:
-  #     - t3_network
-  #   # Ensures Caddy starts after the services it proxies to
-  #   depends_on:
-  #     - service
-  #     - web
+  # The Caddy reverse proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: t3-caddy
+    restart: unless-stopped
+    ports:
+      # Publish HTTP and HTTPS ports to the host machine
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Mount the Caddyfile for configuration
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      # Named volumes for Caddy's data (SSL certs) and config
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - t3_network
+    # Ensures Caddy starts after the services it proxies to
+    depends_on:
+      - service
+      - web
 
 # Define the shared network for inter-container communication
 networks:
