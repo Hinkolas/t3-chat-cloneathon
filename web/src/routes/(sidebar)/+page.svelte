@@ -85,7 +85,7 @@
 
 	let activeTab: string = $state('create');
 	let currentSuggestions: string[] = $derived(buttonData[activeTab]?.suggestions || []);
-	let selectedModelKey: string = $state(Object.keys(data.models)[0] || 'Empty');
+	let selectedModelKey: string = $state(Object.keys(data.models).at(-1) || 'Empty');
 	let showPlaceholder: boolean = $state(true);
 
 	let reasoningOn: boolean = $state(false);
@@ -637,7 +637,7 @@
 							placeholder="Search Models..."
 						/>
 						<div class="model-container">
-							{#each Object.entries(filteredModels) as [modelId, model]}
+							{#each Object.entries(filteredModels).reverse() as [modelId, model]}
 								<ModelRow
 									{model}
 									{changeModel}
