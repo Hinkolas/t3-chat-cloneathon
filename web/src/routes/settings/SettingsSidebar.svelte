@@ -136,12 +136,6 @@
 		font-weight: 700;
 	}
 
-	.card .head .content {
-		font-size: 12px;
-		font-weight: 500;
-		color: var(--text);
-	}
-
 	.card .standart {
 		display: flex;
 		flex-direction: column;
