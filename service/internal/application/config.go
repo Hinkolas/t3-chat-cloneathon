@@ -39,6 +39,7 @@ func LoadConfig(cfgFile string) (*Config, error) {
 type Config struct {
 	Server  ServerConfig         `mapstructure:"server" yaml:"server"`
 	Logging LoggingConfig        `mapstructure:"logging" yaml:"logging"`
+	Users   []UserConfig         `mapstructure:"users" yaml:"users"`
 	Models  map[string]llm.Model `mapstructure:"models" yaml:"models"`
 }
 
@@ -53,4 +54,10 @@ type LoggingConfig struct {
 	LogLevel    string `mapstructure:"log_level" yaml:"log_level"`         // Set the logging level ("debug", "info", "warn", "error") (default "info")
 	LogFormat   string `mapstructure:"log_format" yaml:"log_format"`       // Format of the structured logger (text, json) (default: json)
 	LogVerbose  bool   // Output log messages to stdout in addition to the log file
+}
+
+type UserConfig struct {
+	Username string `mapstructure:"username" yaml:"username"`
+	Email    string `mapstructure:"email" yaml:"email"`
+	Password string `mapstructure:"password" yaml:"password"`
 }
