@@ -16,6 +16,9 @@ var systemTemplate string
 
 type UserProfile struct {
 	UserID uuid.UUID `json:"user_id,omitzero"`
+	// User
+	Username string `json:"username"` // Username of the user
+	Email    string `json:"email"`    // Email of the user
 	// Usage
 	LimitStandard int32 `json:"limit_standard"`
 	LimitPremium  int32 `json:"limit_premium"`
@@ -71,8 +74,14 @@ func (p *UserProfile) Options() map[string]string {
 
 func (s *Service) getUserProfile(userID uuid.UUID) (*UserProfile, error) {
 	profile := &UserProfile{}
-	err := s.db.QueryRow("SELECT user_id, limit_standard, limit_premium, usage_standard, usage_premium, anthropic_api_key, openai_api_key, gemini_api_key, ollama_base_url, custom_user_name, custom_user_profession, custom_assistant_trait, custom_context FROM user_profile WHERE user_id = ?", userID).Scan(
-		&profile.UserID, &profile.LimitStandard, &profile.LimitPremium, &profile.UsageStandard, &profile.UsagePremium, &profile.AnthropicAPIKey, &profile.OpenAIAPIKey, &profile.GeminiAPIKey, &profile.OllamaBaseURL, &profile.CustomUserName, &profile.CustomUserProfession, &profile.CustomAssistantTrait, &profile.CustomContext)
+	err := s.db.QueryRow(`
+		SELECT up.user_id, u.username, u.email, up.limit_standard, up.limit_premium, up.usage_standard, up.usage_premium,
+		       up.anthropic_api_key, up.openai_api_key, up.gemini_api_key, up.ollama_base_url,
+		       up.custom_user_name, up.custom_user_profession, up.custom_assistant_trait, up.custom_context
+		FROM user_profile up
+		JOIN users u ON up.user_id = u.id
+		WHERE up.user_id = ?`, userID).Scan(
+		&profile.UserID, &profile.Username, &profile.Email, &profile.LimitStandard, &profile.LimitPremium, &profile.UsageStandard, &profile.UsagePremium, &profile.AnthropicAPIKey, &profile.OpenAIAPIKey, &profile.GeminiAPIKey, &profile.OllamaBaseURL, &profile.CustomUserName, &profile.CustomUserProfession, &profile.CustomAssistantTrait, &profile.CustomContext)
 	return profile, err
 }
 
