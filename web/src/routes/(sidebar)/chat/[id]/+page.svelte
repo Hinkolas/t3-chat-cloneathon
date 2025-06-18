@@ -46,7 +46,7 @@
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models || {});
 	let messages: MessageData[] = $state(data.chat.messages || []);
-	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models)[0] || 'Empty');
+	let selectedModelKey: string = $state(data.chat.model || Object.keys(data.models).at(-1) || 'Empty');
 
 	let reasoningStates: Record<string, boolean> = $state({});
 	let reasoningEnabled = $state(false);
@@ -957,7 +957,7 @@
 							placeholder="Search Models..."
 						/>
 						<div class="model-container">
-							{#each Object.entries(filteredModels) as [modelId, model]}
+							{#each Object.entries(filteredModels).reverse() as [modelId, model]}
 								<ModelRow
 									{model}
 									{changeModel}

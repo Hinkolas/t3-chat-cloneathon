@@ -186,7 +186,7 @@
 {/if}
 <div class="sidebar {sidebarCollapsed ? 'collapsed' : ''}">
 	<div class="head">
-		<div class="title">Chat</div>
+		<div class="title">Kamino Chat</div>
 		<div class="newChatButton">
 			<a
 				href="/"
