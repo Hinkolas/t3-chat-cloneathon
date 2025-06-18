@@ -1,3 +1,12 @@
+# Users that should be initialized on startup
+users:
+  - username: "user1"
+    email: "user1@example.com"
+    password: "12345678"
+  - username: "user2"
+    email: "user1@example.com"
+    password: "password"
+
 # Models that shoud be initialized on startup
 models:
   # Anthropic models

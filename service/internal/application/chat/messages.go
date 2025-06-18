@@ -475,17 +475,25 @@ func (s *Service) SendMessage(w http.ResponseWriter, r *http.Request) {
 		s.log.Warn("failed to get user profile", "error", err)
 	}
 
-	if model.Flags.IsPremium {
-		if profile.UsagePremium >= profile.LimitPremium {
-			s.log.Debug("premium message limit reached", "user_id", userID)
-			http.Error(w, "premium_message_limit_reached", http.StatusForbidden)
+	if (model.Provider == "anthropic" && profile.AnthropicAPIKey == "") ||
+		(model.Provider == "gemini" && profile.GeminiAPIKey == "") ||
+		(model.Provider == "ollama" && profile.OllamaBaseURL == "") {
+		if model.Flags.IsKeyRequired {
+			s.log.Debug("model requires bring your own key", "user_id", userID)
+			http.Error(w, "model_requires_key", http.StatusForbidden)
 			return
-		}
-	} else {
-		if profile.UsageStandard >= profile.LimitStandard {
-			s.log.Debug("standard message limit reached", "user_id", userID)
-			http.Error(w, "standard_message_limit_reached", http.StatusForbidden)
-			return
+		} else if model.Flags.IsPremium {
+			if profile.UsagePremium >= profile.LimitPremium {
+				s.log.Debug("premium message limit reached", "user_id", userID)
+				http.Error(w, "premium_message_limit_reached", http.StatusForbidden)
+				return
+			}
+		} else {
+			if profile.UsageStandard >= profile.LimitStandard {
+				s.log.Debug("standard message limit reached", "user_id", userID)
+				http.Error(w, "standard_message_limit_reached", http.StatusForbidden)
+				return
+			}
 		}
 	}
 
