@@ -219,7 +219,7 @@
 									<Key size="18" />
 								{/if}
 								{#if flag === 'is_new'}
-									<Sparkles size="18" color="#F3DF9F"/>
+									<Sparkles size="18" color="#F3DF9F" />
 								{/if}
 								{#if flag === 'is_experimental'}
 									<FlaskConical size="18" />
@@ -343,7 +343,7 @@
 
 	.models::-webkit-scrollbar {
 		background-color: transparent;
-		width: 6px ;
+		width: 6px;
 	}
 
 	.models::-webkit-scrollbar-thumb {

@@ -310,7 +310,7 @@
 
 	.attachments::-webkit-scrollbar {
 		background-color: transparent;
-		width: 6px ;
+		width: 6px;
 	}
 
 	.attachments::-webkit-scrollbar-thumb {

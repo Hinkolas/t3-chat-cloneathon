@@ -1,5 +1,5 @@
 <script>
-	import { Gem } from "@lucide/svelte";
+	import { Gem } from '@lucide/svelte';
 
 	let { profile } = $props();
 </script>
@@ -12,7 +12,7 @@
 		<div class="infos">
 			<div class="username">{profile.username}</div>
 			<div class="email">{profile.email}</div>
-			<div class="subscription">Premium Plan<Gem size=14/></div>
+			<div class="subscription">Premium Plan<Gem size="14" /></div>
 		</div>
 	</div>
 	<div class="card">
@@ -26,7 +26,10 @@
 			</div>
 			<div class="body">
 				<!-- loader width percentage -->
-				<div class="slider" style="width: {(profile.usage_standard/profile.limit_standard) * 100}%"></div>
+				<div
+					class="slider"
+					style="width: {(profile.usage_standard / profile.limit_standard) * 100}%"
+				></div>
 			</div>
 			<div class="tail">
 				<div class="info">{profile.limit_standard - profile.usage_standard} messages remaining</div>
@@ -34,12 +37,15 @@
 		</div>
 		<div class="standart">
 			<div class="head">
-				<div class="title">Premium <Gem size=14 /></div>
+				<div class="title">Premium <Gem size="14" /></div>
 				<div class="value">{profile.usage_premium}/{profile.limit_premium}</div>
 			</div>
 			<div class="body">
 				<!-- loader width percentage -->
-				<div class="slider" style="width: {(profile.usage_premium/profile.limit_premium) * 100}%"></div>
+				<div
+					class="slider"
+					style="width: {(profile.usage_premium / profile.limit_premium) * 100}%"
+				></div>
 			</div>
 			<div class="tail">
 				<div class="info">{profile.limit_premium - profile.usage_premium} messages remaining</div>

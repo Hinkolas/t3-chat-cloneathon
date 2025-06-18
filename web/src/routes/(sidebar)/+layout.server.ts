@@ -1,5 +1,10 @@
 import type { LayoutServerLoad } from './$types';
-import type { ModelsResponse, ChatHistoryResponse, ChatResponse, ProfileResponse } from '$lib/types';
+import type {
+	ModelsResponse,
+	ChatHistoryResponse,
+	ChatResponse,
+	ProfileResponse
+} from '$lib/types';
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 

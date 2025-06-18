@@ -26,7 +26,7 @@
 	let url = $derived(page.url.pathname.split('/').pop());
 
 	let userLoggedIn: boolean = $state(false);
-	if (SESSION_TOKEN && SESSION_TOKEN != ''){
+	if (SESSION_TOKEN && SESSION_TOKEN != '') {
 		userLoggedIn = true;
 	}
 
@@ -233,7 +233,7 @@
 				<img src="/assets/profile-icon.png" alt="Profile" />
 				<div class="info">
 					<span class="username">{profile.username}</span>
-					<span class="subscription">Premium Plan <Gem size=14/></span>
+					<span class="subscription">Premium Plan <Gem size="14" /></span>
 				</div>
 			</a>
 		{:else}
@@ -391,7 +391,7 @@
 
 	.chats-container::-webkit-scrollbar {
 		background-color: transparent;
-		width: 6px ;
+		width: 6px;
 	}
 
 	.chats-container::-webkit-scrollbar-thumb {

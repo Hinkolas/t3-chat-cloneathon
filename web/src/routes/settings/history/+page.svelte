@@ -283,7 +283,7 @@
 
 	.histories::-webkit-scrollbar {
 		background-color: transparent;
-		width: 6px ;
+		width: 6px;
 	}
 
 	.histories::-webkit-scrollbar-thumb {

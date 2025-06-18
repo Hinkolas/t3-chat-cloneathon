@@ -365,7 +365,7 @@
 
 	.api-keys::-webkit-scrollbar {
 		background-color: transparent;
-		width: 6px ;
+		width: 6px;
 	}
 
 	.api-keys::-webkit-scrollbar-thumb {
