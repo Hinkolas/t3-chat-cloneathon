@@ -1,6 +1,7 @@
 package anthropic
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
@@ -38,7 +39,7 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 	request := anthropic.MessageNewParams{
 		Model:     anthropic.Model(req.Model),
 		MaxTokens: int64(req.MaxCompletionTokens),
-		Messages:  make([]anthropic.MessageParam, len(req.Messages)),
+		Messages:  make([]anthropic.MessageParam, 0),
 	}
 
 	// Add temperature to the ollama request options
@@ -63,13 +64,24 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 		}
 	}
 
-	// Convert universal format to ollama message format
-	for i, message := range req.Messages {
-		request.Messages[i] = anthropic.MessageParam{}
+	for _, message := range req.Messages {
+		blocks := []anthropic.ContentBlockParamUnion{
+			anthropic.NewTextBlock(message.Content),
+		}
+		for _, attachment := range message.Attachments {
+			if attachment.MimeType == "image/png" || attachment.MimeType == "image/jpeg" {
+				blocks = append(blocks, anthropic.NewImageBlockBase64(attachment.MimeType, base64.StdEncoding.EncodeToString(attachment.Data)))
+			} else if attachment.MimeType == "application/pdf" {
+				blocks = append(blocks, anthropic.NewDocumentBlock(anthropic.Base64PDFSourceParam{
+					Data:      base64.StdEncoding.EncodeToString(attachment.Data),
+					MediaType: "application/pdf",
+				}))
+			}
+		}
 		if message.Role == "user" {
-			request.Messages[i] = anthropic.NewUserMessage(anthropic.NewTextBlock(message.Content))
+			request.Messages = append(request.Messages, anthropic.NewUserMessage(blocks...))
 		} else if message.Role == "assistant" {
-			request.Messages[i] = anthropic.NewAssistantMessage(anthropic.NewTextBlock(message.Content))
+			request.Messages = append(request.Messages, anthropic.NewAssistantMessage(blocks...))
 		}
 	}
 
