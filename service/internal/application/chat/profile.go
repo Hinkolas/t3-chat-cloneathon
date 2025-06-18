@@ -16,6 +16,11 @@ var systemTemplate string
 
 type UserProfile struct {
 	UserID uuid.UUID `json:"user_id,omitzero"`
+	// Usage
+	LimitStandard int32 `json:"limit_standard"`
+	LimitPremium  int32 `json:"limit_premium"`
+	UsageStandard int32 `json:"usage_standard"`
+	UsagePremium  int32 `json:"usage_premium"`
 	// Provider Options
 	AnthropicAPIKey string `json:"anthropic_api_key"`
 	OpenAIAPIKey    string `json:"openai_api_key"`
@@ -32,15 +37,15 @@ func (p *UserProfile) SystemPrompt() string {
 
 	tmpl, err := template.New("system").Parse(systemTemplate)
 	if err != nil {
-		panic(err)
-		// return systemTemplate // fallback to original template on parse error
+		fmt.Println("failed to parse system template:", err)
+		return systemTemplate // fallback to original template on parse error
 	}
 
 	var buf strings.Builder
 	err = tmpl.Execute(&buf, p)
 	if err != nil {
-		panic(err)
-		// return systemTemplate // fallback to original template on execution error
+		fmt.Println("failed to execute system template:", err)
+		return systemTemplate // fallback to original template on execution error
 	}
 
 	return buf.String()
@@ -66,8 +71,8 @@ func (p *UserProfile) Options() map[string]string {
 
 func (s *Service) getUserProfile(userID uuid.UUID) (*UserProfile, error) {
 	profile := &UserProfile{}
-	err := s.db.QueryRow("SELECT user_id, anthropic_api_key, openai_api_key, gemini_api_key, ollama_base_url, custom_user_name, custom_user_profession, custom_assistant_trait, custom_context FROM user_profile WHERE user_id = ?", userID).Scan(
-		&profile.UserID, &profile.AnthropicAPIKey, &profile.OpenAIAPIKey, &profile.GeminiAPIKey, &profile.OllamaBaseURL, &profile.CustomUserName, &profile.CustomUserProfession, &profile.CustomAssistantTrait, &profile.CustomContext)
+	err := s.db.QueryRow("SELECT user_id, limit_standard, limit_premium, usage_standard, usage_premium, anthropic_api_key, openai_api_key, gemini_api_key, ollama_base_url, custom_user_name, custom_user_profession, custom_assistant_trait, custom_context FROM user_profile WHERE user_id = ?", userID).Scan(
+		&profile.UserID, &profile.LimitStandard, &profile.LimitPremium, &profile.UsageStandard, &profile.UsagePremium, &profile.AnthropicAPIKey, &profile.OpenAIAPIKey, &profile.GeminiAPIKey, &profile.OllamaBaseURL, &profile.CustomUserName, &profile.CustomUserProfession, &profile.CustomAssistantTrait, &profile.CustomContext)
 	return profile, err
 }
 

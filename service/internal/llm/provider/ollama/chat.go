@@ -56,8 +56,8 @@ func StreamCompletion(req chat.Request, opt chat.Options) (*stream.Stream, error
 
 	// Convert universal format to ollama message format
 	for _, message := range req.Messages {
-		images := make([]api.ImageData, 0)               // TODO
-		for _, attachment := range message.Attachments { // TODO
+		images := make([]api.ImageData, 0)
+		for _, attachment := range message.Attachments {
 			images = append(images, attachment.Data)
 		}
 		request.Messages = append(request.Messages, api.Message{
