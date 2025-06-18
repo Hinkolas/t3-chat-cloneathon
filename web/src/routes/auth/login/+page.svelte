@@ -13,7 +13,7 @@
 </script>
 
 <div class="container">
-	<form method="POST" action="/login">
+	<form method="POST" action="/auth/login">
 		<h1>Kamino Chat</h1>
 		<h2>Sign in to your account</h2>
 

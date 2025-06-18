@@ -40,15 +40,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 	} catch (error) {
 		console.error(error);
 		// if not, redirect to login
-		// throw redirect(302, "/login");
+		// throw redirect(302, "/auth/login");
 	}
 
-	if (event.route.id !== '/login' && !data) {
+	if (event.route.id !== '/auth/login' && !data) {
 		// if not, redirect to login
-		throw redirect(302, '/login');
+		throw redirect(302, '/auth/login');
 	}
 
-	if (event.route.id === '/login' && data) {
+	if (event.route.id === '/auth/login' && data) {
 		// check if logged in
 		// if not, redirect to login
 		throw redirect(302, '/');
