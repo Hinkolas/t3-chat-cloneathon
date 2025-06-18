@@ -12,6 +12,7 @@
 		openPopup,
 		renameChat,
 		activeContextMenuId,
+		SESSION_TOKEN,
 		onContextMenuOpen
 	} = $props();
 
@@ -70,7 +71,8 @@
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${chat.id}/`, {
 				method: 'PATCH',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${SESSION_TOKEN}`
 				},
 				body: JSON.stringify({ shared_at: now.getTime() })
 			});
@@ -189,7 +191,7 @@
 	}
 
 	.chat span {
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		font-size: 14px;
 		font-weight: 500;
 		white-space: nowrap;
@@ -205,7 +207,7 @@
 		width: 16px;
 		height: 16px;
 		border: 2px solid #9d989c;
-		border-top: 2px solid hsl(var(--primary) / 0.5);
+		border-top: 2px solid var(--primary-background-light);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
@@ -224,11 +226,11 @@
 	}
 
 	.chat:hover {
-		background-color: var(--sidebar-chat-hover);
+		background-color: var(--history-chat-hover);
 	}
 
 	.chat.active {
-		background-color: var(--sidebar-chat-hover);
+		background-color: var(--history-chat-hover);
 	}
 
 	.buttons {
@@ -245,7 +247,7 @@
 		margin-left: auto;
 		gap: 4px;
 		transition: right 0.15s ease;
-		background-color: var(--sidebar-chat-hover);
+		background-color: var(--history-chat-hover);
 	}
 
 	.buttons::before {
@@ -255,7 +257,7 @@
 		top: 0;
 		height: 100%;
 		width: 12px;
-		background: linear-gradient(to right, transparent, #261922);
+		background: linear-gradient(to right, transparent, var(--history-chat-hover));
 	}
 
 	.buttons button {
@@ -268,7 +270,7 @@
 		border-radius: 4px;
 		padding: 4px;
 		cursor: pointer;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		transition: background-color 0.15s ease-out;
 	}
 
@@ -284,8 +286,8 @@
 	.context-menu {
 		position: fixed;
 		z-index: 1000;
-		background-color: var(--chat-background);
-		border: 1px solid hsl(var(--border));
+		background-color: var(--context-menu-background);
+		border: 1px solid var(--context-menu-border);
 		border-radius: 8px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 		padding: 4px;
@@ -304,11 +306,11 @@
 		text-align: left;
 		cursor: pointer;
 		font-size: 14px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		transition: background-color 0.15s ease;
 	}
 
 	.context-menu-item:hover {
-		background-color: hsl(var(--primary) / 0.2);
+		background-color: var(--primary-background-hover-light);
 	}
 </style>

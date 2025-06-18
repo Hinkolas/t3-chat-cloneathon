@@ -1,15 +1,25 @@
-<script>
+<script lang="ts">
 	import { env } from '$env/dynamic/public';
+	import type { ProfileResponse } from '$lib/types.js';
 
-	let { data } = $props();
+	interface Props {
+		data: {
+			SESSION_TOKEN: string;
+			profile: ProfileResponse;
+		};
+	}
+
+	let { data }: Props = $props();
 
 	let profile = $state(data.profile);
+	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
 
 	async function savePreferences() {
 		const res = await fetch(`${env.PUBLIC_API_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${SESSION_TOKEN}`
 			},
 			body: JSON.stringify(profile)
 		});

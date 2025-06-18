@@ -1,11 +1,11 @@
 <script lang="ts">
-	let { chats = $bindable() } = $props();
+	let { chats = $bindable(), SESSION_TOKEN } = $props();
 
 	import { fade } from 'svelte/transition';
 	import { Pin, LogOut } from '@lucide/svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import HistoryChat from '$lib/components/HistoryChat.svelte';
-	import { showConfirmationPopup, showRenamePopup, popup } from '$lib/store';
+	import { showConfirmationPopup, showRenamePopup, popup, closeSidebar } from '$lib/store';
 	import type { ChatHistoryResponse, ChatHistoryData } from '$lib/types';
 	import { toggleSidebar, sidebarState } from '$lib/store';
 	import { get } from 'svelte/store';
@@ -19,6 +19,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
+	let innerWidth: number = $state(0);
 	let sidebarCollapsed: boolean = $derived($sidebarState.collapsed);
 	let chatSearchTerm: string = $state('');
 	let activeContextMenuId = $state<string | null>(null);
@@ -68,7 +69,7 @@
 						chat.title = newTitle;
 
 						try {
-							await ChatApiService.updateChatTitle(chat.id, newTitle);
+							await ChatApiService.updateChatTitle(chat.id, newTitle, SESSION_TOKEN);
 							chats = [...chats];
 						} catch (error) {
 							chat.title = oldTitle;
@@ -82,7 +83,7 @@
 
 	async function deleteChat(id: string) {
 		try {
-			await ChatApiService.deleteChat(id);
+			await ChatApiService.deleteChat(id, SESSION_TOKEN);
 			const index = chats.findIndex((chat: ChatHistoryData) => chat.id === id);
 			if (index > -1) {
 				chats.splice(index, 1);
@@ -97,7 +98,7 @@
 
 	async function patchChat(chat: ChatHistoryData, pin: boolean) {
 		try {
-			await ChatApiService.updateChatPinStatus(chat.id, pin);
+			await ChatApiService.updateChatPinStatus(chat.id, pin, SESSION_TOKEN);
 			chat.is_pinned = pin;
 		} catch (error) {
 			showConfirmationPopup({
@@ -159,8 +160,6 @@
 		return sections.filter((section) => section.chats.length > 0);
 	});
 
-	let innerWidth = $state(0);
-
 	onMount(() => {
 		if (innerWidth <= 1024) {
 			toggleSidebar();
@@ -189,7 +188,14 @@
 	<div class="head">
 		<div class="title">Chat</div>
 		<div class="newChatButton">
-			<a href="/">New Chat</a>
+			<a
+				href="/"
+				onclick={() => {
+					if (innerWidth <= 1024) {
+						closeSidebar();
+					}
+				}}>New Chat</a
+			>
 		</div>
 		<div class="search-container">
 			<SearchInput bind:value={chatSearchTerm} placeholder="Search your threads..." />
@@ -212,6 +218,7 @@
 								{openPopup}
 								{renameChat}
 								{activeContextMenuId}
+								{SESSION_TOKEN}
 								onContextMenuOpen={handleContextMenuOpen}
 							/>
 						{/each}
@@ -247,7 +254,7 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: #00000088;
+		background-color: var(--background-overlay);
 	}
 
 	/* Hide overlay on desktop (when sidebar is not absolute) */
@@ -279,7 +286,7 @@
 			left: 0;
 			top: 0;
 			height: 100%;
-			border-right: 1px solid #88888822;
+			border-right: 1px solid var(--sidebar-right-border);
 			background-color: var(--sidebar-background);
 		}
 	}
@@ -300,10 +307,10 @@
 	}
 
 	.title {
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		font-size: 18px;
 		font-weight: 700;
-		text-shadow: 0 0 4px hsl(var(--primary) / 0.3);
+		text-shadow: var(--text-shadow);
 	}
 
 	.newChatButton {
@@ -319,20 +326,20 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background-color: hsl(var(--primary) / 0.2);
-		box-shadow: 0px 0px 2px hsl(var(--primary));
+		background-color: var(--primary-background-inactive);
+		box-shadow: var(--box-shadow);
 		border-radius: 8px;
 		cursor: pointer;
 		font-size: 14px;
 		font-weight: 600;
 		line-height: 20px;
-		color: hsl(var(--secondary-foreground));
-		text-shadow: 0 0 4px hsl(var(--primary) / 0.5);
+		color: var(--text);
+		text-shadow: var(--text-shadow);
 		transition: background-color 0.15s ease;
 	}
 
 	.newChatButton:hover a {
-		background-color: hsl(var(--primary) / 0.8);
+		background-color: var(--primary-background-hover);
 	}
 
 	.search-container {
@@ -366,7 +373,7 @@
 		left: 0;
 		right: 0;
 		height: 20px;
-		background: linear-gradient(to top, transparent, #1d131b);
+		background: linear-gradient(to top, transparent, var(--sidebar-background));
 		pointer-events: none;
 		z-index: 1;
 	}
@@ -378,12 +385,11 @@
 		left: 0;
 		right: 0;
 		height: 20px;
-		background: linear-gradient(to bottom, transparent, #1d131b);
+		background: linear-gradient(to bottom, transparent, var(--sidebar-background));
 		pointer-events: none;
 		z-index: 1;
 	}
 
-	/* Hide scrollbar */
 	.chats-container::-webkit-scrollbar {
 		width: 0px !important;
 		height: 0px !important;
@@ -394,7 +400,7 @@
 		font-size: 12px;
 		font-weight: 600;
 		color: var(--secondary);
-		text-shadow: 0 0 4px hsl(var(--primary) / 0.2);
+		text-shadow: var(--text-shadow);
 		display: flex;
 		align-items: center;
 		gap: 4px;
@@ -412,13 +418,14 @@
 		padding-inline: 12px;
 	}
 
-	.login-button {
+	.login-button,
+	.account-button {
 		all: unset;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		font-size: 14px;
 		font-weight: 500;
 		white-space: nowrap;
-		text-shadow: 0px 0px 4px hsl(var(--primary) / 0.8);
+		text-shadow: var(--text-shadow-light);
 
 		display: flex;
 		justify-content: center;
@@ -432,32 +439,14 @@
 		transition: background-color 0.15s ease-out;
 	}
 
-	.login-button:hover {
-		background-color: hsl(var(--primary) / 0.3);
-	}
-
 	.account-button {
-		all: unset;
-		color: hsl(var(--secondary-foreground));
-		font-size: 14px;
-		font-weight: 500;
-		white-space: nowrap;
-		text-shadow: 0px 0px 4px hsl(var(--primary) / 0.8);
-
-		display: flex;
 		justify-content: flex-start;
-		align-items: center;
-		gap: 12px;
-		width: 100%;
 		padding: 8px;
-		cursor: pointer;
-		border-radius: 8px;
-		background-color: transparent;
-		transition: background-color 0.15s ease-out;
 	}
 
+	.login-button:hover,
 	.account-button:hover {
-		background-color: hsl(var(--primary) / 0.3);
+		background-color: var(--primary-background-hover-light);
 	}
 
 	.account-button img {

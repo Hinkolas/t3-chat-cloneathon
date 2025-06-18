@@ -21,7 +21,7 @@
 		justify-self: flex-start;
 		align-items: center;
 		gap: 8px;
-		color: #888888;
+		color: var(--sidebar-search-icon);
 		padding-inline: 14px;
 	}
 
@@ -30,7 +30,7 @@
 		background: none;
 		padding-block: 8px;
 		font-size: 14px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		width: 100%;
 	}
 </style>

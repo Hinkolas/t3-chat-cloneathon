@@ -38,7 +38,7 @@
 		transition: background-color 0.15s ease-out;
 	}
 	.model:hover {
-		background-color: var(--button-hover);
+		background-color: var(--model-hover);
 	}
 	.details {
 		display: flex;
@@ -55,13 +55,13 @@
 		align-items: center;
 		width: 18px;
 		height: 18px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.model .title {
 		font-size: 14px;
 		white-space: nowrap;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.feature-container {

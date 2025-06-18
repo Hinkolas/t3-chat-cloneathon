@@ -1,11 +1,19 @@
 <script lang="ts">
 	import { Key, Trash, Check } from '@lucide/svelte';
-	import type { ProfileData } from '$lib/types';
+	import type { ProfileResponse } from '$lib/types';
 	import { env } from '$env/dynamic/public';
+
+	interface Props {
+		data: {
+			SESSION_TOKEN: string;
+			profile: ProfileResponse;
+		};
+	}
 
 	let { data } = $props();
 
 	let profile = $state(data.profile || {});
+	let SESSION_TOKEN = $state(data.SESSION_TOKEN || '');
 
 	// svelte-ignore state_referenced_locally
 	let originalValues = $state({
@@ -62,7 +70,8 @@
 		const res = await fetch(`${env.PUBLIC_API_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${SESSION_TOKEN}`
 			},
 			body: JSON.stringify({ [profileKey]: keyValue })
 		});
@@ -99,7 +108,8 @@
 		const res = await fetch(`${env.PUBLIC_API_URL}/v1/profile/`, {
 			method: 'PATCH',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${SESSION_TOKEN}`
 			},
 			body: JSON.stringify({ [profileKey]: '' })
 		});

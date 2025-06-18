@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	import { popup, hidePopup, type PopupData } from '$lib/store';
+	import { popup, hidePopup } from '$lib/store';
 
 	function cancelPopup() {
 		if ($popup.secondaryButtonFunction) {
@@ -97,7 +97,7 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: #00000099;
+		background-color: var(--background-overlay);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -110,7 +110,7 @@
 		max-width: 512px;
 		min-width: 320px;
 		padding: 24px;
-		border: 1px solid #88888833;
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		background-color: var(--popup-background);
 		margin: 20px;
@@ -118,14 +118,14 @@
 
 	.title {
 		font-size: 18px;
-		color: #ffffff;
+		color: var(--white);
 		font-weight: 600;
 		margin: 0;
 	}
 
 	.description {
 		font-size: 14px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		margin: 0;
 	}
 
@@ -137,7 +137,7 @@
 
 	.input-label {
 		font-size: 14px;
-		color: #ffffff;
+		color: var(--white);
 		font-weight: 500;
 	}
 
@@ -145,21 +145,21 @@
 		all: unset;
 		box-sizing: border-box;
 		padding: 12px 16px;
-		border: 1px solid #88888844;
+		border: 1px solid var(--border);
 		border-radius: 8px;
-		background-color: var(--input-background, #ffffff11);
-		color: #ffffff;
+		background-color: var(--popup-input-background);
+		color: var(--white);
 		font-size: 14px;
 		transition: border-color 0.15s ease-out;
 	}
 
 	.input-field:focus {
-		border-color: hsl(var(--primary));
+		border-color: var(--primary-background);
 		outline: none;
 	}
 
 	.input-field::placeholder {
-		color: #888888;
+		color: var(--placeholder);
 	}
 
 	.buttons {
@@ -172,7 +172,7 @@
 	button {
 		all: unset;
 		box-sizing: border-box;
-		color: #ffffff;
+		color: var(--white);
 		letter-spacing: 0.24px;
 		font-size: 14px;
 		font-weight: 600;
@@ -188,14 +188,14 @@
 	}
 
 	button.secondary:hover:not(:disabled) {
-		background-color: #88888822;
+		background-color: var(--border);
 	}
 
 	button.primary {
-		background-color: hsl(var(--primary) / 0.9);
+		background-color: var(--primary-background);
 	}
 
 	button.primary:hover:not(:disabled) {
-		background-color: hsl(var(--primary));
+		background-color: var(--primary-background);
 	}
 </style>

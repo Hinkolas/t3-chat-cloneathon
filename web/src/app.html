@@ -4,7 +4,7 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-		<meta name="theme-color" content="#211c25">
+		<meta name="theme-color" content="#211c25" />
 		%sveltekit.head%
 	</head>
 
@@ -30,6 +30,7 @@
 	}
 
 	:root {
+		/* Typography & Base Styles */
 		font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
 		font-size: 16px;
 		line-height: 24px;
@@ -38,6 +39,7 @@
 		color: #0f0f0f;
 		background-color: #f6f6f6;
 
+		/* Browser & Text Rendering */
 		font-synthesis: none;
 		text-rendering: optimizeLegibility;
 		-webkit-font-smoothing: antialiased;
@@ -45,8 +47,24 @@
 		-webkit-text-size-adjust: 100%;
 		letter-spacing: 0.24px;
 
+		/* Color Variables */
 		--primary: 332 100% 32%;
-		--border: 262.5 10% 15.7%;
+		--primary-background-inactive: #380f25;
+		--primary-background: #8b0647;
+		--primary-background-light: #53062b;
+		--primary-border: #450d2a;
+		--primary-background-hover: #870442;
+		--primary-background-hover-light: #450d2a;
+		--primary-disabled: #441d36;
+
+		--white: #ffffff;
+		--black: #000000;
+		--placeholder: #888888;
+
+		--text: #d3c7e1; /* text color */
+		--text-light: #c4bdc8;
+		--border: #333333;
+
 		--button-background-primary: #4d1f3a;
 		--button-border-primary: #742b4d;
 		--button-background-primary-disabled: #3b2335;
@@ -55,14 +73,47 @@
 		--chat-input-gradient: #29212e;
 		--chat-input-background: #2b2430;
 		--secondary: #bb5c8e;
-		--secondary-foreground: 270 30% 83%;
 		--sidebar-background: #1d131b;
-		--button-hover: #322d38;
 		--sidebar-chat-hover: #261922;
+		--sidebar-right-border: #2b2228;
+		--sidebar-search-icon: #888888;
 
+		--history-day: #b95b8d;
+		--history-chat-hover: #1d131b;
+
+		--text-shadow: 0 0 2px var(--primary-background);
+		--text-shadow-light: 0 0 2px var(--primary-background-light);
+		--box-shadow: 0 0 2px var(--primary-background);
+
+		--button-hover: #322d38;
+		--background-overlay: rgba(0, 0, 0, 0.8);
+
+		/* Additional UI Colors */
 		--popup-background: #21141e;
+		--popup-input-background: #30242d;
+
+		--context-menu-background: #211c25;
+		--context-menu-border: #2b2228;
+
+		--model-hover: #2c2931;
+		--model-selection-box-background: #100b0e;
 
 		--settings-background: #140e13;
+
+		--error-page-background: #29222c;
+		--error-page-border: #333333;
+
+		--sidebar-toggle-button: #2c222a;
+		--sidebar-toggle-button-border: #2c222a;
+		--sidebar-toggle-button-hover: #2c222a;
+
+		--button-gray-background: #29222c;
+		--button-gray-border: #333333;
+		--button-gray-hover: #302932;
+
+		--input-border: #29222c;
+		--input-background-pirmary: #2c2431;
+		--input-background-secondary: #25212b;
 
 		--button-background-danger: #341113;
 		--button-border-danger: #4a1215;
