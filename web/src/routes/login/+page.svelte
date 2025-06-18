@@ -108,11 +108,6 @@
 		background-color: var(--primary-border);
 	}
 
-	img {
-		height: 50px;
-		margin: 16px;
-	}
-
 	label {
 		margin-top: 20px;
 		font-size: 14px;

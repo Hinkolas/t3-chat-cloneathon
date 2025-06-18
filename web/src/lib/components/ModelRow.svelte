@@ -1,11 +1,13 @@
 <script lang="ts">
-	let { model, changeModel } = $props();
+	let { model, changeModel, disabled } = $props();
 
 	import FeatureTag from '$lib/components/FeatureTag.svelte';
 	import ModelIcon from '$lib/components/ModelIcon.svelte';
 </script>
 
 <button
+	class:disabled
+	{disabled}
 	onclick={() => {
 		changeModel(model);
 	}}
@@ -37,9 +39,15 @@
 		cursor: pointer;
 		transition: background-color 0.15s ease-out;
 	}
-	.model:hover {
+	.model:not(:disabled):hover {
 		background-color: var(--model-hover);
 	}
+
+	.model.disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
 	.details {
 		display: flex;
 		flex-direction: row;

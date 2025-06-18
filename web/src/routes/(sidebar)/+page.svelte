@@ -251,6 +251,7 @@
 			}
 		}
 	}
+
 	// Updated file select handler - handles multiple files
 	async function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -334,15 +335,6 @@
 		uploadError = null;
 	}
 
-	// Helper function to format file size
-	function formatFileSize(bytes: number): string {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-	}
-
 	// Helper function to get file type icon
 	function getFileIcon(file: File): string {
 		const type = file.type;
@@ -380,6 +372,11 @@
 	}
 
 	function changeModel(model: ModelData) {
+		// Check if model is compatible with uploaded files
+		if (!isModelCompatibleWithFiles(model, uploadedFiles)) {
+			return; // Don't switch to incompatible model
+		}
+
 		// Find the key by comparing model properties instead of object reference
 		const modelKey = Object.entries(data.models).find(
 			([key, modelData]) => modelData.name === model.name && modelData.title === model.title
@@ -452,6 +449,18 @@
 			console.error('Error sending a Message:', error);
 			showPlaceholder = true;
 		}
+	}
+
+	function isModelCompatibleWithFiles(model: ModelData, files: UploadedFileWithId[]): boolean {
+		if (files.length === 0) return true; 
+
+		for (const uploadedFile of files) {
+			const validation = validateFileType(uploadedFile.file, model);
+			if (!validation.isValid) {
+				return false; 
+			}
+		}
+		return true;
 	}
 
 	function getAcceptAttribute(): string {
@@ -629,7 +638,11 @@
 						/>
 						<div class="model-container">
 							{#each Object.entries(filteredModels) as [modelId, model]}
-								<ModelRow {model} {changeModel} />
+								<ModelRow
+									{model}
+									{changeModel}
+									disabled={!isModelCompatibleWithFiles(model, uploadedFiles)}
+								/>
 							{/each}
 						</div>
 					</div>

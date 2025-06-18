@@ -675,6 +675,18 @@
 		};
 	}
 
+	function isModelCompatibleWithFiles(model: ModelData, files: UploadedFileWithId[]): boolean {
+		if (files.length === 0) return true;
+
+		for (const uploadedFile of files) {
+			const validation = validateFileType(uploadedFile.file, model);
+			if (!validation.isValid) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	function getAcceptAttribute(): string {
 		const selectedModel = data.models[selectedModelKey];
 		if (!selectedModel) return '';
@@ -898,7 +910,11 @@
 						/>
 						<div class="model-container">
 							{#each Object.entries(filteredModels) as [modelId, model]}
-								<ModelRow {model} {changeModel} />
+								<ModelRow
+									{model}
+									{changeModel}
+									disabled={!isModelCompatibleWithFiles(model, uploadedFiles)}
+								/>
 							{/each}
 						</div>
 					</div>
