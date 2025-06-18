@@ -2,6 +2,7 @@
 	import { Eye, EyeOff } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { notificationState, showNotification, hideNotification } from '$lib/store';
+	import Notification from '$lib/components/Notification.svelte';
 
 	let username = $state('');
 	let password = $state('');
@@ -77,15 +78,7 @@
 			<h2>Sign in to your account</h2>
 
 			{#if $notificationState.show}
-				<div class="notification" class:error={$notificationState.is_error}>
-					<div class="notification-content">
-						<div class="notification-details">
-							<h3>{$notificationState.title}</h3>
-							<p>{$notificationState.description}</p>
-						</div>
-						<button type="button" class="close-btn" onclick={hideNotification}> × </button>
-					</div>
-				</div>
+				<Notification />
 			{/if}
 
 			<div class="form-group">
