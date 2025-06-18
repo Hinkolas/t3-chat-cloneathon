@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	import { popup, hidePopup } from '$lib/store';
+	import { popup, hidePopup, notificationState, showNotification, hideNotification } from '$lib/store';
 
 	function cancelPopup() {
 		if ($popup.secondaryButtonFunction) {
@@ -11,6 +11,14 @@
 
 	function handlePrimaryAction() {
 		$popup.primaryButtonFunction();
+		showNotification({
+			is_error: false,
+			title: $popup.primaryButtonName,
+			description: $popup.description || 'Action completed successfully.'
+		});
+		setTimeout(() => {
+			hideNotification();
+		}, 2000);
 		hidePopup();
 	}
 

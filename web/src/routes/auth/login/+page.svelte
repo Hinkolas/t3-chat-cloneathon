@@ -77,10 +77,6 @@
 			<h1>Kamino Chat</h1>
 			<h2>Sign in to your account</h2>
 
-			{#if $notificationState.show}
-				<Notification />
-			{/if}
-
 			<div class="form-group">
 				<label for="username">Username</label>
 				<input

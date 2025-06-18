@@ -28,7 +28,6 @@
 		);
 		color: var(--notification-success-text);
 		box-shadow: 0 4px 12px var(--notification-shadow);
-		animation: slideIn 0.3s ease-out;
 		transition: all 0.3s ease;
 	}
 
@@ -118,29 +117,6 @@
 
 	.notification.error .close-btn:hover {
 		background: var(--notification-error-close-hover);
-	}
-
-	/* Animations */
-	@keyframes slideIn {
-		from {
-			opacity: 0;
-			transform: translateY(-10px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes slideOut {
-		from {
-			opacity: 1;
-			transform: translateY(0);
-		}
-		to {
-			opacity: 0;
-			transform: translateY(-10px);
-		}
 	}
 
 	/* Responsive Design */
