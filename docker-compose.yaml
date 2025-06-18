@@ -59,6 +59,8 @@ services:
       - caddy_config:/config
     networks:
       - t3_network
+    environment:
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
     # Ensures Caddy starts after the services it proxies to
     depends_on:
       - service
