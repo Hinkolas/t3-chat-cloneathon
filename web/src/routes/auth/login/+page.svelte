@@ -23,7 +23,7 @@
 	$effect(() => {
 		if ($notificationState.show) {
 			const timer = setTimeout(() => {
-			hideNotification();
+				hideNotification();
 			}, 5000);
 			return () => clearTimeout(timer);
 		}
@@ -162,7 +162,6 @@
 		padding: 32px;
 		border: 1px solid var(--primary-border);
 		border-radius: 8px;
-
 	}
 
 	@media (max-width: 768px) {

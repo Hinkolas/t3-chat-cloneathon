@@ -207,13 +207,12 @@
 	</div>
 </div>
 
-<!-- Keep the same styles as before -->
 <style>
 	.container {
 		display: flex;
 		flex-direction: column;
 		gap: 20px;
-		width: 100%;
+		flex: 1;
 		height: 100%;
 		padding-bottom: 0;
 	}
@@ -227,7 +226,7 @@
 	.description {
 		font-size: 14px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.error-message {
@@ -261,7 +260,7 @@
 		letter-spacing: 0.24px;
 		padding: 4px 16px;
 		border-radius: 5px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		border: 1px solid #302029;
 		background-color: #21141e;
 		cursor: pointer;
@@ -310,6 +309,7 @@
 	}
 
 	.attachment {
+		width: 100%;
 		display: flex;
 		align-items: center;
 		gap: 16px;
@@ -334,10 +334,12 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.attachment .infos {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
@@ -352,7 +354,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -365,7 +367,7 @@
 
 	.attachment .infos .type {
 		font-size: 12px;
-		color: #888888;
+		color: var(--placeholder);
 	}
 
 	.attachment .buttons {
@@ -413,6 +415,6 @@
 
 	.empty-description {
 		font-size: 14px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 </style>

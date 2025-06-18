@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
+	import { hideNotification, notificationState, showNotification } from '$lib/store';
 	import type { ProfileResponse } from '$lib/types.js';
 
 	interface Props {
@@ -25,12 +26,28 @@
 		});
 
 		if (!res.ok) {
+			showNotification({
+				is_error: true,
+				title: 'Error Saving Preferences',
+				description: 'There was an error saving your preferences. Please try again.'
+			});
+			setTimeout(() => {
+				hideNotification();
+			}, 2000);
 			console.error(`Failed to save preferences: ${res.status} ${res.statusText}`);
 			return;
 		}
 
 		const updatedProfile = await res.json();
 		profile = { ...profile, ...updatedProfile };
+		showNotification({
+			is_error: false,
+			title: 'Preferences Saved',
+			description: ''
+		});
+		setTimeout(() => {
+			hideNotification();
+		}, 2000);
 	}
 </script>
 
@@ -102,7 +119,7 @@
 		width: max-content;
 		font-size: 14px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		padding: 8px 16px;
 		cursor: pointer;
 		border-radius: 8px;
@@ -152,17 +169,17 @@
 		border-radius: 8px;
 		box-shadow: 0 0 2px #483039;
 		width: 100%;
-		color: hsl(var(--secondary-foreground) / 0.8);
+		color: var(--text);
 		outline: none;
 	}
 
 	.form-group .input-container input:focus {
-		color: hsl(var(--secondary-foreground));
-		box-shadow: 0 0 2px hsl(var(--primary));
+		color: var(--text);
+		box-shadow: 0 0 2px var(--primary-background);
 	}
 
 	.form-group .input-container input::placeholder {
-		color: hsl(var(--secondary-foreground) / 0.6);
+		color: var(--placeholder);
 	}
 
 	.form-group .input-container .chars {
@@ -170,7 +187,7 @@
 		bottom: 0;
 		right: 6px;
 		font-size: 11px;
-		color: hsl(var(--secondary-foreground) / 0.6);
+		color: var(--placeholder);
 	}
 
 	.form-group .input-container textarea {
@@ -182,7 +199,7 @@
 		border-radius: 8px;
 		box-shadow: 0 0 2px #483039;
 		width: 100%;
-		color: hsl(var(--secondary-foreground) / 0.8);
+		color: var(--primary-border);
 		outline: none;
 		min-height: 120px;
 		max-height: 500px;
@@ -190,11 +207,11 @@
 	}
 
 	.form-group .input-container textarea:focus {
-		color: hsl(var(--secondary-foreground));
-		box-shadow: 0 0 2px hsl(var(--primary));
+		color: var(--text);
+		box-shadow: 0 0 2px var(--primary-background);
 	}
 
 	.form-group .input-container textarea::placeholder {
-		color: hsl(var(--secondary-foreground) / 0.6);
+		color: var(--placeholder);
 	}
 </style>

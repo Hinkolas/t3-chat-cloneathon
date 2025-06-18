@@ -48,7 +48,7 @@
 				deleteChat(id);
 			},
 			onConfirmTitle: 'Delete Thread successfull',
-			onConfirmDescription: '',
+			onConfirmDescription: ''
 		});
 	}
 

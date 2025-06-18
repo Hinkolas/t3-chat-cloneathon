@@ -23,7 +23,7 @@
 	.description {
 		font-size: 14px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	button {

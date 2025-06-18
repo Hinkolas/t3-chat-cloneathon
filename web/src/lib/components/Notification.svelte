@@ -1,6 +1,6 @@
 <script>
 	import { notificationState, hideNotification } from '$lib/store';
-    import { X } from '@lucide/svelte';
+	import { X } from '@lucide/svelte';
 </script>
 
 <div class="notification" class:error={$notificationState.is_error}>
@@ -9,7 +9,7 @@
 			<h3>{$notificationState.title}</h3>
 			<p>{$notificationState.description}</p>
 		</div>
-		<button type="button" class="close-btn" onclick={hideNotification}><X size=14/></button>
+		<button type="button" class="close-btn" onclick={hideNotification}><X size="14" /></button>
 	</div>
 </div>
 

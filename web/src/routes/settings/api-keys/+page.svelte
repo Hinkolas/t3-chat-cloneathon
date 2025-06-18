@@ -351,7 +351,7 @@
 	.description {
 		font-size: 14px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.api-keys {
@@ -389,7 +389,7 @@
 	.delete-button {
 		all: unset;
 		cursor: pointer;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		display: flex;
 		align-items: center;
 		gap: 4px;
@@ -407,7 +407,7 @@
 
 	.body .description {
 		font-size: 14px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.models {
@@ -423,7 +423,7 @@
 		border: 1px solid hsl(var(--primary) / 0.2);
 		font-size: 12px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.tail {
@@ -454,12 +454,12 @@
 
 	.input-group input:focus {
 		border-color: hsl(var(--primary) / 0.8);
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.input-group .label {
 		font-size: 12px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.save-button {

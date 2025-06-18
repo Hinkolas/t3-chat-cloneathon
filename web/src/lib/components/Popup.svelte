@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	import { popup, hidePopup, notificationState, showNotification, hideNotification } from '$lib/store';
+	import {
+		popup,
+		hidePopup,
+		notificationState,
+		showNotification,
+		hideNotification
+	} from '$lib/store';
 
 	function cancelPopup() {
 		if ($popup.secondaryButtonFunction) {

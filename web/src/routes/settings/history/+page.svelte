@@ -201,7 +201,7 @@
 	.description {
 		font-size: 14px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.history-container {
@@ -231,7 +231,7 @@
 		font-weight: 500;
 		padding: 4px 16px;
 		border-radius: 5px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		border: 1px solid #302029;
 		background-color: #21141e;
 		cursor: pointer;
@@ -343,7 +343,7 @@
 
 	.history .tail .date {
 		font-size: 12px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.main-delete-button {

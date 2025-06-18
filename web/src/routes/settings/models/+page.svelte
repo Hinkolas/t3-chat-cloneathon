@@ -251,7 +251,7 @@
 	.description {
 		font-size: 14px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.header {
@@ -276,7 +276,7 @@
 		letter-spacing: 0.24px;
 		padding: 4px 16px;
 		border-radius: 5px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		border: 1px solid #302029;
 		background-color: #21141e;
 		cursor: pointer;
@@ -303,7 +303,7 @@
 	.header button.clear-button:hover:not(:disabled) {
 		background-color: #2a232b;
 		border: 1px solid #2a232b;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.filter-count {
@@ -337,7 +337,7 @@
 		max-width: 40px;
 		min-height: 24px;
 		max-height: 40px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.model .details {
@@ -473,7 +473,7 @@
 
 	.empty-description {
 		font-size: 14px;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.checkmark {

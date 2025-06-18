@@ -54,7 +54,10 @@
 		}
 		showConfirmationPopup({
 			title: chat.shared_at > 0 ? 'Unshare Thread' : 'Share Thread',
-			description: chat.shared_at > 0 ? 'Are you sure you want to remove sharing?' : `Are you sure you want to share this chat? It will be publicly accessible.`,
+			description:
+				chat.shared_at > 0
+					? 'Are you sure you want to remove sharing?'
+					: `Are you sure you want to share this chat? It will be publicly accessible.`,
 			primaryButtonName: 'Confirm',
 			primaryButtonFunction: () => {
 				shareChat();
@@ -62,13 +65,13 @@
 				navigator.clipboard.writeText(`${env.PUBLIC_HOST_URL}/share/${chat.id}/`);
 			},
 			onConfirmTitle: chat.shared_at > 0 ? 'Chat Unshared' : 'Chat Shared',
-			onConfirmDescription: chat.shared_at > 0 ? '' : 'The share link has been copied to your clipboard!',
+			onConfirmDescription:
+				chat.shared_at > 0 ? '' : 'The share link has been copied to your clipboard!'
 		});
 		onContextMenuOpen(null);
 	}
 
 	async function shareChat() {
-		
 		try {
 			const now = new Date();
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${chat.id}/`, {
