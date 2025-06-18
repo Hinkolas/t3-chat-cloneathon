@@ -9,7 +9,7 @@
 
 	let { data }: Props = $props();
 
-	import { ChevronDown, FileText } from '@lucide/svelte';
+	import { ChevronDown, CircleX, FileText } from '@lucide/svelte';
 	import MarkdownIt from 'markdown-it';
 	import texmath from 'markdown-it-texmath';
 	import katex from 'katex';
@@ -168,7 +168,7 @@
 									{/if}
 								</div>
 							{/if}
-							{#if message.status === 'done'}
+							{#if message.status === 'done' || message.status === 'error'}
 								{@html renderMarkdown(message.content)}
 								{#if message.attachments && message.attachments.length > 0}
 									<div class="attachments">
@@ -187,6 +187,12 @@
 												{/if}
 											</a>
 										{/each}
+									</div>
+								{/if}
+								{#if message.status === 'error'}
+									<div class="error-message">
+										<span class="error-icon"><CircleX size="16" /></span>
+										<span class="error-text">An error occurred while processing this message.</span>
 									</div>
 								{/if}
 							{:else if message.status === 'streaming'}

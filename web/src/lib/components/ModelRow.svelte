@@ -4,7 +4,6 @@
 	import FeatureTag from '$lib/components/FeatureTag.svelte';
 	import ModelIcon from '$lib/components/ModelIcon.svelte';
 	import { Gem, Key, Sparkles } from '@lucide/svelte';
-	console.log(model);
 </script>
 
 <button
@@ -28,7 +27,7 @@
 				<Key size="16" />
 			{/if}
 			{#if flag === 'is_new'}
-				<Sparkles size="16" />
+				<Sparkles size="16" color="#F3DF9F"/>
 			{/if}
 		{/each}
 	</div>

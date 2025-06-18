@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { ChatData, ModelsResponse, ModelData, MessageData } from '$lib/types';
-	import 'katex/dist/katex.min.css';
 
 	interface Props {
 		data: {
@@ -12,13 +11,23 @@
 
 	let { data }: Props = $props();
 
-	import { ArrowUp, Brain, ChevronDown, FileText, Globe, Paperclip, X } from '@lucide/svelte';
+	import {
+		ArrowUp,
+		Brain,
+		ChevronDown,
+		CircleX,
+		FileText,
+		Globe,
+		Paperclip,
+		X
+	} from '@lucide/svelte';
 	import { onMount, tick } from 'svelte';
 	import ModelRow from '$lib/components/ModelRow.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 
 	import MarkdownIt from 'markdown-it';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
+	import 'katex/dist/katex.min.css';
 	import texmath from 'markdown-it-texmath';
 	import katex from 'katex';
 	import 'highlight.js/styles/github-dark.css';
@@ -43,6 +52,7 @@
 	let reasoningEnabled = $state(false);
 	let webSearchEnabled = $state(false);
 	let isStreaming = $derived(() => messages.some((m) => m.status === 'streaming'));
+	let isWaitingForResponse = $state(false);
 
 	let activeStreams = new Set<string>();
 	let eventSources = new Map<string, EventSource>();
@@ -107,7 +117,7 @@
 		.use(markdownItHighlightjs)
 		.use(texmath, {
 			engine: katex,
-			delimiters: 'dollars',
+			delimiters: ['dollars', 'brackets'],
 			katexOptions: { macros: { '\\RR': '\\mathbb{R}' } }
 		});
 
@@ -547,6 +557,9 @@
 		await tick();
 		autoResize();
 
+		isWaitingForResponse = true;
+		console.log('Waiting for Streaming response...');
+
 		const userChat: MessageData = {
 			id: '', //TODO: add id
 			chat_id: data.chat.id,
@@ -615,6 +628,8 @@
 		let accumulatedContent = '';
 		let accumulatedReasoning = '';
 
+		isWaitingForResponse = true;
+
 		// Check if EventSource already exists
 		if (eventSources.has(stream_id)) {
 			console.warn(`EventSource already exists for stream ${stream_id}`);
@@ -628,6 +643,7 @@
 
 		eventSource.onopen = () => {
 			addChatId(data.chat.id);
+			console.log('Stream stared');
 		};
 
 		eventSource.addEventListener('message_delta', (event) => {
@@ -635,13 +651,16 @@
 				const data = JSON.parse(event.data);
 
 				if (data.content) {
+					isWaitingForResponse = false;
 					accumulatedContent += data.content;
 				}
 				if (data.reasoning) {
+					isWaitingForResponse = false;
 					accumulatedReasoning += data.reasoning;
 				}
 
 				// Create a new messages array to trigger reactivity
+
 				const newMessages = [...messages];
 				newMessages[messageIndex] = {
 					...newMessages[messageIndex],
@@ -806,7 +825,7 @@
 									{/if}
 								</div>
 							{/if}
-							{#if message.status === 'done'}
+							{#if message.status === 'done' || message.status === 'error'}
 								{@html renderMarkdown(message.content)}
 								{#if message.attachments && message.attachments.length > 0}
 									<div class="attachments">
@@ -827,12 +846,32 @@
 										{/each}
 									</div>
 								{/if}
+								{#if message.status === 'error'}
+									<div class="error-message">
+										<span class="error-icon"><CircleX size="16" /></span>
+										<span class="error-text">An error occurred while processing this message.</span>
+									</div>
+								{/if}
 							{:else if message.status === 'streaming'}
 								{@html renderMarkdown(message.content)}
 							{/if}
 						</div>
 					</div>
 				{/each}
+
+				{#if isWaitingForResponse}
+					<div class="single-chat-container">
+						<div class="single-chat assistant">
+							<div class="dots-indicator">
+								<div class="dots">
+									<span></span>
+									<span></span>
+									<span></span>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
 			{/if}
 			<div class="chat-spacer"></div>
 		</div>
@@ -885,7 +924,7 @@
 		{#if uploadError}
 			<div class="upload-container">
 				<div class="upload-error">
-					<span class="error-icon">⚠️</span>
+					<span class="error-icon"><CircleX size="16" /></span>
 					<span class="error-message">{uploadError}</span>
 					<button class="dismiss-error" onclick={() => (uploadError = null)}>×</button>
 				</div>
@@ -1014,12 +1053,106 @@
 </div>
 
 <style>
+	/* Error cancel message */
+	.error-message {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background-color: rgba(255, 107, 107, 0.1);
+		border: 1px solid rgba(255, 107, 107, 0.3);
+		border-radius: 8px;
+		padding: 12px 16px;
+		margin-top: 12px;
+		font-size: 14px;
+		color: #ff6b6b;
+		line-height: 1.4;
+	}
+
+	.error-icon {
+		font-size: 18px;
+		min-width: 18px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.error-text {
+		flex: 1;
+	}
+
+	/* Add a subtle animation */
+	@keyframes error-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.9;
+		}
+	}
+
+	.single-chat .error-message {
+		animation: error-pulse 3s ease-in-out infinite;
+		box-shadow: 0 0 4px rgba(255, 107, 107, 0.2);
+	}
+	/* Dots loader */
+	.dots-indicator {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		padding: 8px 12px;
+		color: var(--text-disabled);
+		font-size: 14px;
+	}
+
+	.dots {
+		display: flex;
+		gap: 2px;
+	}
+
+	.dots span {
+		width: 4px;
+		height: 4px;
+		background-color: var(--text-disabled);
+		border-radius: 50%;
+		animation: dot-blink 1.4s infinite both;
+	}
+
+	.dots span:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+
+	.dots span:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+
+	@keyframes dot-blink {
+		0%,
+		80%,
+		100% {
+			opacity: 0.3;
+		}
+		40% {
+			opacity: 1;
+		}
+	}
+
+	/* Chat body */
 	.chat-wrapper {
 		width: 100%;
 		height: 100%;
 		display: flex;
 		justify-content: center;
 		overflow-y: auto;
+	}
+	.chat-wrapper::-webkit-scrollbar {
+		background-color: transparent;
+		width: 8px;
+	}
+
+	.chat-wrapper::-webkit-scrollbar-thumb {
+		background-color: var(--text-disabled);
+		border-radius: 10px;
 	}
 
 	.chat {
@@ -1266,6 +1399,7 @@
 	}
 
 	.single-chat :global(.code-block-wrapper pre) {
+		position: relative;
 		background-color: transparent;
 		border-radius: 0;
 		padding: 16px;
@@ -1300,6 +1434,17 @@
 		background-color: transparent;
 		padding: 0;
 		word-break: normal;
+	}
+
+	/* Webkit browsers */
+	.single-chat :global(pre code)::-webkit-scrollbar {
+		background: transparent;
+		height: 6px;
+	}
+
+	.single-chat :global(pre code)::-webkit-scrollbar-thumb {
+		background-color: var(--text-disabled);
+		border-radius: 10px;
 	}
 
 	.single-chat :global(.code-block-wrapper pre code) {

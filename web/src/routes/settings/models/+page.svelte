@@ -9,7 +9,7 @@
 
 	let { data }: Props = $props();
 
-	import { Check, Link } from '@lucide/svelte';
+	import { Check, FlaskConical, Gem, Key, Link, PackageOpen, Sparkles } from '@lucide/svelte';
 	import FeatureTag from '$lib/components/FeatureTag.svelte';
 	import ModelIcon from '$lib/components/ModelIcon.svelte';
 	import { fade } from 'svelte/transition';
@@ -209,10 +209,30 @@
 						<ModelIcon {model} />
 					</div>
 					<div class="details">
-						<div class="name">{model.title}</div>
+						<div class="name">
+							{model.title}
+							{#each Object.entries(model.flags || {}) as [flag]}
+								{#if flag === 'is_premium'}
+									<Gem size="18" />
+								{/if}
+								{#if flag === 'is_key_required'}
+									<Key size="18" />
+								{/if}
+								{#if flag === 'is_new'}
+									<Sparkles size="18" color="#F3DF9F"/>
+								{/if}
+								{#if flag === 'is_experimental'}
+									<FlaskConical size="18" />
+								{/if}
+								{#if flag === 'is_open_source'}
+									<PackageOpen size="18" />
+								{/if}
+							{/each}
+						</div>
 						<div class="description">
 							{model.description}
 						</div>
+
 						<div class="tail">
 							<div class="features">
 								{#each Object.entries(model.features || {}) as [feature]}
@@ -290,7 +310,7 @@
 	}
 
 	.header button:disabled {
-		color: hsl(var(--secondary-foreground) / 0.6);
+		color: var(--text-disabled);
 		cursor: not-allowed;
 	}
 
@@ -319,6 +339,16 @@
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
+	}
+
+	.models::-webkit-scrollbar {
+		background-color: transparent;
+		width: 6px ;
+	}
+
+	.models::-webkit-scrollbar-thumb {
+		background-color: var(--text-disabled);
+		border-radius: 10px;
 	}
 
 	.model {
@@ -352,6 +382,11 @@
 		font-size: 15px;
 		font-weight: 600;
 		letter-spacing: 0.24px;
+		color: var(--text);
+		white-space: nowrap;
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 
 	.model .description {

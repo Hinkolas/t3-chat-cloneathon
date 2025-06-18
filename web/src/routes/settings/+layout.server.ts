@@ -13,7 +13,7 @@ export const load: LayoutServerLoad = async ({ cookies, params, fetch }) => {
 			}
 		});
 		if (!profileResponse.ok) {
-			throw error(500, 'Failed to fetch models');
+			throw error(500, 'Failed to fetch profile data');
 		}
 		const profile: ProfileResponse = await profileResponse.json();
 
