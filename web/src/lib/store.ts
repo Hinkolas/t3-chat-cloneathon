@@ -120,3 +120,30 @@ export const openSidebar = () => {
 export const refreshChatHistory = () => {
 	sidebarState.update((state) => ({ ...state, refresh: true }));
 };
+
+// Handling Notification State
+export interface NotificationData {
+	show: boolean;
+	is_error: boolean;
+	title: string;
+	description: string;
+}
+const initialNotificationState: NotificationData = {
+	show: false,
+	is_error: false,
+	title: 'Test Notification',
+	description: 'This is a test notification message.This is a test notification message.'
+};
+
+export let notificationState = writable<NotificationData>(initialNotificationState);
+
+export const showNotification = (data: Omit<NotificationData, 'show'>) => {
+	notificationState.set({
+		...data,
+		show: true
+	});
+};
+
+export const hideNotification = () => {
+	notificationState.update((state) => ({ ...state, show: false }));
+};

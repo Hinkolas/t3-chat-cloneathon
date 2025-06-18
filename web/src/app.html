@@ -1,16 +1,18 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-		<meta name="theme-color" content="#211c25" />
-		%sveltekit.head%
-	</head>
 
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<meta name="theme-color" content="#211c25" />
+	%sveltekit.head%
+</head>
+
+<body data-sveltekit-preload-data="hover">
+	<div style="display: contents">%sveltekit.body%</div>
+</body>
+
 </html>
 
 <style>
@@ -61,7 +63,8 @@
 		--black: #000000;
 		--placeholder: #888888;
 
-		--text: #d3c7e1; /* text color */
+		--text: #d3c7e1;
+		/* text color */
 		--text-light: #c4bdc8;
 		--border: #333333;
 
@@ -118,7 +121,44 @@
 		--button-background-danger: #341113;
 		--button-border-danger: #4a1215;
 		--button-hover-danger: #991b1b;
+
+		/* Notification Colors */
+		/* Success Notification Colors */
+		--notification-success-bg: #d1f2eb;
+		--notification-success-bg-secondary: #e8f8f5;
+		--notification-success-border: #7dcea0;
+		--notification-success-text: #0e5233;
+		--notification-success-accent: #27ae60;
+
+		/* Error Notification Colors */
+		--notification-error-bg: #fadbd8;
+		--notification-error-bg-secondary: #fdeaea;
+		--notification-error-border: #f1948a;
+		--notification-error-text: #922b21;
+		--notification-error-accent: #e74c3c;
+		--notification-error-close-hover: rgba(231, 76, 60, 0.1);
+
+		/* Warning Notification Colors (optional for future use) */
+		--notification-warning-bg: #fef9e7;
+		--notification-warning-bg-secondary: #fefcf0;
+		--notification-warning-border: #f7dc6f;
+		--notification-warning-text: #7d6608;
+		--notification-warning-accent: #f39c12;
+		--notification-warning-close-hover: rgba(243, 156, 18, 0.1);
+
+		/* Info Notification Colors (optional for future use) */
+		--notification-info-bg: #d6eaf8;
+		--notification-info-bg-secondary: #ebf5fb;
+		--notification-info-border: #85c1e9;
+		--notification-info-text: #1b4f72;
+		--notification-info-accent: #3498db;
+		--notification-info-close-hover: rgba(52, 152, 219, 0.1);
+
+		/* Shadow Colors */
+		--notification-shadow: rgba(0, 0, 0, 0.08);
+		--notification-error-shadow: rgba(231, 76, 60, 0.15);
 	}
+
 
 	button {
 		user-select: none !important;
