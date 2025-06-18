@@ -88,6 +88,10 @@ export type ProfileResponse = ProfileData;
 
 export interface ProfileData {
 	user_id: string;
+	limit_standard: number;
+	limit_premium: number;
+	usage_standard: number;
+	usage_premium: number;
 	anthropic_api_key: string;
 	openai_api_key: string;
 	gemini_api_key: string;

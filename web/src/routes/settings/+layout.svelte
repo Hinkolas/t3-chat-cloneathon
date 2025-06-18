@@ -1,7 +1,17 @@
-<script>
+<script lang="ts">
 	import { ArrowLeft } from '@lucide/svelte';
 	import SettingsSidebar from './SettingsSidebar.svelte';
 	import TopBar from './TopBar.svelte';
+	import type { ProfileResponse } from '$lib/types';
+
+	interface Props {
+		data: {
+			profile: ProfileResponse;
+		};
+	}
+	let { data } = $props();
+
+	let profile = $derived(data.profile);
 </script>
 
 <div class="background-overlay">
@@ -13,11 +23,11 @@
 			</a>
 
 			<div class="buttons">
-				<a href="/logout">Sign out</a>
+				<a href="/auth/logout">Sign out</a>
 			</div>
 		</div>
 		<div class="body">
-			<SettingsSidebar />
+			<SettingsSidebar {profile} />
 			<div class="content">
 				<TopBar />
 				<slot />
@@ -86,10 +96,10 @@
 	}
 
 	.content {
-		width: 100%;
-		height: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
+		flex: 1;
+		min-width: 0;
 	}
 </style>

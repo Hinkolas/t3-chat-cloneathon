@@ -1,4 +1,7 @@
 <script>
+	import { Gem } from "@lucide/svelte";
+
+	let { profile } = $props();
 </script>
 
 <div class="container">
@@ -7,27 +10,39 @@
 			<img src="https://placehold.co/120" alt="Profile" />
 		</div>
 		<div class="infos">
-			<div class="username">Ertu K.</div>
+			<div class="username">{profile.custom_user_name}</div>
 			<div class="email">ertugul.kilic@icloud.com</div>
-			<div class="subscription">Free Plan</div>
+			<div class="subscription">Premium Plan<Gem size=14/></div>
 		</div>
 	</div>
 	<div class="card">
 		<div class="head">
 			<div class="title">Message usage</div>
-			<div class="content">Resets tomorrow at 2:00 AM</div>
 		</div>
 		<div class="standart">
 			<div class="head">
 				<div class="title">Standart</div>
-				<div class="value">1/20</div>
+				<div class="value">{profile.usage_standard}/{profile.limit_standard}</div>
 			</div>
 			<div class="body">
 				<!-- loader width percentage -->
-				<div class="slider"></div>
+				<div class="slider" style="width: {(profile.usage_standard/profile.limit_standard) * 100}%"></div>
 			</div>
 			<div class="tail">
-				<div class="info">19 messages remaining</div>
+				<div class="info">{profile.limit_standard - profile.usage_standard} messages remaining</div>
+			</div>
+		</div>
+		<div class="standart">
+			<div class="head">
+				<div class="title">Premium <Gem size=14 /></div>
+				<div class="value">{profile.usage_premium}/{profile.limit_premium}</div>
+			</div>
+			<div class="body">
+				<!-- loader width percentage -->
+				<div class="slider" style="width: {(profile.usage_premium/profile.limit_premium) * 100}%"></div>
+			</div>
+			<div class="tail">
+				<div class="info">{profile.limit_premium - profile.usage_premium} messages remaining</div>
 			</div>
 		</div>
 	</div>
@@ -35,8 +50,7 @@
 
 <style>
 	.container {
-		width: 100%;
-		max-width: 270px;
+		flex: 0 0 270px;
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
@@ -84,16 +98,19 @@
 	.account .infos .email {
 		font-size: 14px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.account .infos .subscription {
 		font-size: 12px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 		padding: 2px 14px;
 		border-radius: 9999px;
 		background-color: #88888833;
+		display: flex;
+		align-items: center;
+		gap: 6px;
 	}
 
 	.card {
@@ -112,6 +129,9 @@
 	}
 
 	.card .head .title {
+		display: flex;
+		align-items: center;
+		gap: 4px;
 		font-size: 12px;
 		font-weight: 700;
 	}
@@ -119,7 +139,7 @@
 	.card .head .content {
 		font-size: 12px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.card .standart {
@@ -141,10 +161,11 @@
 	.card .standart .head .value {
 		font-size: 12px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 
 	.card .standart .body {
+		overflow: hidden;
 		position: relative;
 		width: 100%;
 		height: 8px;
@@ -156,13 +177,12 @@
 		position: relative;
 		width: 5%;
 		height: 8px;
-		border-radius: 9999px;
 		background-color: hsl(var(--primary));
 	}
 
 	.card .standart .tail .info {
 		font-size: 12px;
 		font-weight: 500;
-		color: hsl(var(--secondary-foreground));
+		color: var(--text);
 	}
 </style>
