@@ -28,6 +28,8 @@ CREATE TABLE
     IF NOT EXISTS user_profile (
         user_id TEXT PRIMARY KEY,
         -- rate_limit
+        limit_standard INTEGER NOT NULL DEFAULT 1500,
+        limit_premium INTEGER NOT NULL DEFAULT 100,
         usage_standard INTEGER NOT NULL DEFAULT 0,
         usage_premium INTEGER NOT NULL DEFAULT 0,
         -- customization
@@ -101,6 +103,7 @@ CREATE INDEX IF NOT EXISTS idx_attachments_message_id ON attachments (message_id
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id_created_at ON messages (chat_id, created_at);
 
 -- Create triggers for automatic updates
+
 CREATE TRIGGER update_chat_on_message_create AFTER INSERT ON messages FOR EACH ROW BEGIN
 UPDATE chats
 SET
@@ -119,6 +122,15 @@ SET
 WHERE
     id = NEW.chat_id;
 
+END;
+
+-- Trigger to automatically create user_profile when user is added
+CREATE TRIGGER IF NOT EXISTS create_user_profile_trigger
+    AFTER INSERT ON users
+    FOR EACH ROW
+BEGIN
+    INSERT INTO user_profile (user_id)
+    VALUES (NEW.id);
 END;
 
 -- INSERT INTO
