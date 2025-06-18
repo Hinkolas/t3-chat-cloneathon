@@ -89,7 +89,7 @@ func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", attachment.Type)
 
-	http.ServeFile(w, r, fmt.Sprintf("data/files/%s", attachment.ID))
+	http.ServeFile(w, r, fmt.Sprintf("data/users/%s/attachments/%s", userID, attachment.ID))
 
 }
 
@@ -138,10 +138,10 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create attachments directory if it doesn't exist
-	os.MkdirAll("data/files", 0755)
+	os.MkdirAll(fmt.Sprintf("data/users/%s/attachments", userID), 0755)
 
 	// Save file to disk
-	dst, err := os.Create(fmt.Sprintf("data/files/att_%d", now.UnixNano()))
+	dst, err := os.Create(fmt.Sprintf("data/users/%s/attachments/%s", userID, attachment.ID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
