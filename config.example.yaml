@@ -1,3 +1,4 @@
+# Models that shoud be initialized on startup
 models:
   # Anthropic models
   claude-4-sonnet:
@@ -13,7 +14,7 @@ models:
       has_effort_control: true
     flags:
       is_premium: true
-      is_recommended: true
+      is_recommended: true # NOT SUPPORTED YET
 
   claude-4-opus:
     title: "Claude 4 Opus"
@@ -25,9 +26,9 @@ models:
       has_vision: true
       has_pdf: true
       has_reasoning: true
-      has_effort_control: true
+      # has_effort_control: true # NOT SUPPORTED YET
     flags:
-      is_premium: true
+      is_key_required: true
 
   claude-3-5-haiku:
     title: "Claude 3.5 Haiku"
@@ -48,9 +49,10 @@ models:
     provider: "ollama"
     features:
       has_reasoning: true
+      # has_effort_control: true # NOT SUPPORTED YET
     flags:
-      is_open_source: true
       is_free: true
+      is_open_source: true
 
   devstral-24b:
     title: "Devstral 24B"
@@ -59,8 +61,8 @@ models:
     name: "devstral:24b"
     provider: "ollama"
     flags:
-      is_open_source: true
       is_free: true
+      is_open_source: true
 
   gemma3-27b:
     title: "Gemma 3 27B"
@@ -71,10 +73,27 @@ models:
     features:
       has_vision: true
     flags:
-      is_open_source: true
       is_free: true
+      is_open_source: true
 
   # Google Gemini models
+  gemini-2.5-flash-lite:
+    title: "Gemini 2.5 Flash Lite"
+    description: "A cost-effective, lightweight variant of Gemini 2.5 Flash offering fast responses with a reduced feature set."
+    icon: "gemini"
+    name: "gemini-2.5-flash-lite-preview-06-17"
+    provider: "gemini"
+    features:
+      has_fast: true
+      has_vision: true
+      has_pdf: true
+      has_reasoning: true
+      # has_effort_control: true # NOT SUPPORTED YET
+      # has_search: true # NOT SUPPORTED YET
+    flags:
+      is_experimental: true
+      is_free: true # NOT SUPPORTED YET
+      is_new: true
 
   gemini-2.5-flash:
     title: "Gemini 2.5 Flash"
@@ -83,14 +102,15 @@ models:
     name: "gemini-2.5-flash-preview-05-20"
     provider: "gemini"
     features:
+      has_fast: true
       has_vision: true
       has_pdf: true
-      has_search: true
       has_reasoning: true
+      # has_effort_control: true # NOT SUPPORTED YET
+      # has_search: true # NOT SUPPORTED YET
     flags:
-      is_free: true
       is_experimental: true
-      is_recommended: true
+      is_recommended: true # NOT SUPPORTED YET
 
   gemini-2.5-pro:
     title: "Gemini 2.5 Pro"
@@ -99,22 +119,12 @@ models:
     name: "gemini-2.5-pro-preview-06-05"
     provider: "gemini"
     features:
-      has_pdf: true
-      has_vision: true
-      has_search: true
-      has_reasoning: true
-    flags:
-      is_experimental: true
-
-  gemini-2.0-flash-lite:
-    title: "Gemini 2.0 Flash Lite"
-    description: "A cost-effective, lightweight variant of Gemini 2.0 Flash offering fast responses with a reduced feature set."
-    icon: "gemini"
-    name: "gemini-2.0-flash-lite"
-    provider: "gemini"
-    features:
-      has_vision: true
-      has_pdf: true
       has_fast: true
+      has_vision: true
+      has_pdf: true
+      has_reasoning: true
+      # has_effort_control: true # NOT SUPPORTED YET
+      # has_search: true # NOT SUPPORTED YET
     flags:
-      is_free: true
+      is_premium: true
+      is_experimental: true

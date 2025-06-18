@@ -29,12 +29,12 @@ func (p *ModelProvider) UnmarshalText(text []byte) error {
 }
 
 type ModelFeatures struct {
+	HasFast            bool `json:"has_fast,omitempty" mapstructure:"has_fast"`
 	HasVision          bool `json:"has_vision,omitempty" mapstructure:"has_vision"`
 	HasPDF             bool `json:"has_pdf,omitempty" mapstructure:"has_pdf"`
+	HasWebSearch       bool `json:"has_web_search,omitempty" mapstructure:"has_search"`
 	HasReasoning       bool `json:"has_reasoning,omitempty" mapstructure:"has_reasoning"`
 	HasEffortControl   bool `json:"has_effort_control,omitempty" mapstructure:"has_effort_control"`
-	HasWebSearch       bool `json:"has_web_search,omitempty" mapstructure:"has_search"`
-	HasFast            bool `json:"has_fast,omitempty" mapstructure:"has_fast"`
 	HasImageGeneration bool `json:"has_image_generation,omitempty" mapstructure:"has_image_generation"`
 }
 
