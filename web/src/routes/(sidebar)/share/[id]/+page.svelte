@@ -11,6 +11,8 @@
 
 	import { ChevronDown, FileText } from '@lucide/svelte';
 	import MarkdownIt from 'markdown-it';
+	import texmath from 'markdown-it-texmath';
+	import katex from 'katex';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
 	import 'highlight.js/styles/github-dark.css';
 	import { fade } from 'svelte/transition';
@@ -29,7 +31,13 @@
 		breaks: true,
 		linkify: true,
 		typographer: true
-	}).use(markdownItHighlightjs);
+	})
+		.use(markdownItHighlightjs)
+		.use(texmath, {
+			engine: katex,
+			delimiters: 'dollars',
+			katexOptions: { macros: { '\\RR': '\\mathbb{R}' } }
+		});
 
 	// Custom render for code topbar
 	const defaultFenceRenderer =

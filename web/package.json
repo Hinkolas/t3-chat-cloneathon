@@ -36,7 +36,9 @@
 	"dependencies": {
 		"@lucide/svelte": "^0.514.0",
 		"highlight.js": "^11.11.1",
+		"katex": "^0.16.22",
 		"markdown-it": "^14.1.0",
-		"markdown-it-highlightjs": "^4.2.0"
+		"markdown-it-highlightjs": "^4.2.0",
+		"markdown-it-texmath": "^1.0.0"
 	}
 }

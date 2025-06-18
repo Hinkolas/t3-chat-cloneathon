@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ChatData, ModelsResponse, ModelData, MessageData } from '$lib/types';
+	import 'katex/dist/katex.min.css';
 
 	interface Props {
 		data: {
@@ -18,6 +19,8 @@
 
 	import MarkdownIt from 'markdown-it';
 	import markdownItHighlightjs from 'markdown-it-highlightjs';
+	import texmath from 'markdown-it-texmath';
+	import katex from 'katex';
 	import 'highlight.js/styles/github-dark.css';
 	import { fade } from 'svelte/transition';
 	import { addChatId, removeChatId } from '$lib/store';
@@ -100,7 +103,13 @@
 		breaks: true,
 		linkify: true,
 		typographer: true
-	}).use(markdownItHighlightjs);
+	})
+		.use(markdownItHighlightjs)
+		.use(texmath, {
+			engine: katex,
+			delimiters: 'dollars',
+			katexOptions: { macros: { '\\RR': '\\mathbb{R}' } }
+		});
 
 	// Custom render for code topbar
 	const defaultFenceRenderer =
