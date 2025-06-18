@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
-	import type { ModelsResponse, ModelData, MessageData } from '$lib/types';
+	import type { ModelsResponse, ModelData, MessageData, ProfileResponse } from '$lib/types';
 
 	interface Props {
 		data: {
 			models: ModelsResponse;
 			SESSION_TOKEN: string;
+			profile: ProfileResponse;
 		};
 	}
 
@@ -82,10 +83,11 @@
 	let modelSelectionOpen = $state(false);
 	let modelSearchTerm: string = $state('');
 	let filteredModels: ModelsResponse = $state(data.models || {});
+	let profile = $state(data.profile || {});
 
 	let activeTab: string = $state('create');
 	let currentSuggestions: string[] = $derived(buttonData[activeTab]?.suggestions || []);
-	let selectedModelKey: string = $state(Object.keys(data.models)[0] || 'Empty');
+	let selectedModelKey: string = $state(Object.keys(data.models).at(-1) || 'Empty');
 	let showPlaceholder: boolean = $state(true);
 
 	let reasoningOn: boolean = $state(false);
@@ -452,6 +454,15 @@
 	}
 
 	function isModelCompatibleWithFiles(model: ModelData, files: UploadedFileWithId[]): boolean {
+		if (model.provider == 'anthropic' && model.flags.is_key_required && profile.anthropic_api_key === '') {
+			return false;
+		}
+		if (model.provider == 'gemini' && model.flags.is_key_required && profile.gemini_api_key === '') {
+			return false;
+		}
+		if (model.provider == 'ollama' && model.flags.is_key_required && profile.ollama_base_url === '') {
+			return false;
+		}
 		if (files.length === 0) return true;
 
 		for (const uploadedFile of files) {
@@ -637,7 +648,7 @@
 							placeholder="Search Models..."
 						/>
 						<div class="model-container">
-							{#each Object.entries(filteredModels) as [modelId, model]}
+							{#each Object.entries(filteredModels).reverse() as [modelId, model]}
 								<ModelRow
 									{model}
 									{changeModel}

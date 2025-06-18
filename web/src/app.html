@@ -1,16 +1,18 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-		<meta name="theme-color" content="#211c25" />
-		%sveltekit.head%
-	</head>
 
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<meta name="theme-color" content="#211c25" />
+	%sveltekit.head%
+</head>
+
+<body data-sveltekit-preload-data="hover">
+	<div style="display: contents">%sveltekit.body%</div>
+</body>
+
 </html>
 
 <style>
@@ -27,6 +29,13 @@
 
 	body {
 		background-color: var(--chat-background);
+	}
+
+	html ::selection,
+	body ::selection,
+	* ::selection {
+		background-color: #8C1047;
+		color: white;
 	}
 
 	:root {

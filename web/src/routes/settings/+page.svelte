@@ -2,6 +2,16 @@
 </script>
 
 <div class="container">
+	<h2>Welcome to Kamino Chat</h2>
+
+	<p>
+		This is our take on T3 Chat, built for the official Cloneathon. We're Nicholas and Ertu, two
+		student developers from Germany who took on the challenge.
+	</p>
+
+	<p>The name is a nod to the Star Wars clone origin planet -- seemed fitting.</p>
+	<p>All props to @theo and his team for the original application. Keep up the great work!</p>
+	<br>
 	<div class="title">Danger Zone</div>
 	<div class="description">Permanently delete your account and all associated data.</div>
 	<button> Delete Account </button>

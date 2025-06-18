@@ -190,52 +190,6 @@
 			</div>
 		</div>
 
-		<!-- OpenAI -->
-		<div class="api-key-container">
-			<div class="head">
-				<div class="title">
-					<Key size="16" />
-					OpenAI API Key
-				</div>
-				{#if profile.openai_api_key}
-					<button class="delete-button" onclick={() => deleteKey('openai')}>
-						<Trash size="16" />
-					</button>
-				{/if}
-			</div>
-			<div class="body">
-				<div class="description">Used for the following models:</div>
-				<div class="models">
-					<div class="model">GPT-4.5</div>
-					<div class="model">o3</div>
-				</div>
-			</div>
-			<div class="tail">
-				<div class="input-group">
-					<input
-						type="text"
-						bind:value={profile.openai_api_key}
-						placeholder="Enter your API key here"
-					/>
-					<div class="label">Get your API key from OpenAI's Dashboard</div>
-				</div>
-				{#if hasChanged('openai')}
-					<button
-						class="save-button"
-						class:saved={saveStates.openai}
-						onclick={() => saveKey('openai', profile.openai_api_key)}
-					>
-						{#if saveStates.openai}
-							<Check size="16" />
-							Saved!
-						{:else}
-							Save
-						{/if}
-					</button>
-				{/if}
-			</div>
-		</div>
-
 		<!-- Google -->
 		<div class="api-key-container">
 			<div class="head">

@@ -22,7 +22,10 @@
 		align-items: center;
 		gap: 8px;
 		color: var(--sidebar-search-icon);
-		padding-inline: 14px;
+		padding-inline: 4px;
+		padding-block: 2px;
+		border-bottom: 1px solid var(--primary-border);
+		margin-inline: 12px;
 	}
 
 	.search-container input {
