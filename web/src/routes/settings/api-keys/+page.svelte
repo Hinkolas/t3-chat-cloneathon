@@ -363,6 +363,16 @@
 		overflow-y: auto;
 	}
 
+	.api-keys::-webkit-scrollbar {
+		background-color: transparent;
+		width: 6px ;
+	}
+
+	.api-keys::-webkit-scrollbar-thumb {
+		background-color: var(--text-disabled);
+		border-radius: 10px;
+	}
+
 	.api-key-container {
 		display: flex;
 		flex-direction: column;

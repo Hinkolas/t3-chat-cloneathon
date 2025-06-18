@@ -281,6 +281,16 @@
 		overflow-y: auto;
 	}
 
+	.histories::-webkit-scrollbar {
+		background-color: transparent;
+		width: 6px ;
+	}
+
+	.histories::-webkit-scrollbar-thumb {
+		background-color: var(--text-disabled);
+		border-radius: 10px;
+	}
+
 	.history {
 		all: unset;
 		display: flex;

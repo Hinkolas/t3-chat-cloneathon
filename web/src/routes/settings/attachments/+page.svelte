@@ -308,6 +308,16 @@
 		overflow-y: auto;
 	}
 
+	.attachments::-webkit-scrollbar {
+		background-color: transparent;
+		width: 6px ;
+	}
+
+	.attachments::-webkit-scrollbar-thumb {
+		background-color: var(--text-disabled);
+		border-radius: 10px;
+	}
+
 	.attachment {
 		width: 100%;
 		display: flex;
