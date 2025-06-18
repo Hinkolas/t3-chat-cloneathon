@@ -452,12 +452,12 @@
 	}
 
 	function isModelCompatibleWithFiles(model: ModelData, files: UploadedFileWithId[]): boolean {
-		if (files.length === 0) return true; 
+		if (files.length === 0) return true;
 
 		for (const uploadedFile of files) {
 			const validation = validateFileType(uploadedFile.file, model);
 			if (!validation.isValid) {
-				return false; 
+				return false;
 			}
 		}
 		return true;
@@ -652,10 +652,10 @@
 						class="selection-button non-selectable {modelSelectionOpen ? 'active' : ''}"
 					>
 						{#if Object.keys(data.models).length > 0}
-							<span>{data.models[selectedModelKey].title}</span>
+							<span class="model-button">{data.models[selectedModelKey].title}</span>
 							<ChevronDown size={iconSize} />
 						{:else}
-							<span>No Models</span>
+							<span class="model-button">No Models</span>
 						{/if}
 					</button>
 				</div>
@@ -669,7 +669,7 @@
 							}}
 						>
 							<Brain size={iconSize} />
-							Reasoning
+							<span>Reasoning</span>
 						</button>
 					{/if}
 					{#if data.models[selectedModelKey].features.has_web_search}
@@ -681,7 +681,7 @@
 							}}
 						>
 							<Globe size={iconSize} />
-							Search
+							<span>Search</span>
 						</button>
 					{/if}
 					<button
@@ -690,11 +690,13 @@
 						disabled={!!uploadingFile}
 					>
 						<Paperclip size={iconSize} />
-						{#if uploadedFiles.length > 0}
-							Attach ({uploadedFiles.length})
-						{:else}
-							Attach
-						{/if}
+						<span>
+							{#if uploadedFiles.length > 0}
+								Attach ({uploadedFiles.length})
+							{:else}
+								Attach
+							{/if}
+						</span>
 						{#if uploadingFile}
 							<div class="button-spinner"></div>
 						{/if}
@@ -919,6 +921,16 @@
 
 	.reasoning-button-feature.active {
 		background-color: var(--primary-background-light);
+	}
+
+	@media (max-width: 768px) {
+		button span {
+			display: none;
+		}
+
+		.model-button {
+			display: block;
+		}
 	}
 
 	.selection-container {

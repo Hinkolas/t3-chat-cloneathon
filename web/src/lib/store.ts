@@ -9,6 +9,8 @@ export interface BasePopup {
 	description: string;
 	primaryButtonName: string;
 	primaryButtonFunction: () => void;
+	onConfirmTitle: string;
+	onConfirmDescription: string;
 	secondaryButtonName?: string;
 	secondaryButtonFunction?: () => void;
 	inputValue?: string;
@@ -40,7 +42,9 @@ const initialState: PopupData = {
 	description: '',
 	primaryButtonName: '',
 	primaryButtonFunction: () => {},
-	inputValue: ''
+	inputValue: '',
+	onConfirmTitle: '',
+	onConfirmDescription: ''
 };
 
 export const popup = writable<PopupData>(initialState);

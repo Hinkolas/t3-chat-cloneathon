@@ -13,8 +13,8 @@
 		$popup.primaryButtonFunction();
 		showNotification({
 			is_error: false,
-			title: $popup.primaryButtonName,
-			description: $popup.description || 'Action completed successfully.'
+			title: $popup.onConfirmTitle,
+			description: $popup.onConfirmDescription
 		});
 		setTimeout(() => {
 			hideNotification();
@@ -44,7 +44,6 @@
 	<div
 		class="popup-overlay"
 		transition:fade={{ duration: 100 }}
-		on:click={cancelPopup}
 		on:keydown={handleKeydown}
 		role="dialog"
 		aria-modal="true"
@@ -115,8 +114,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
+		width: 100%;
 		max-width: 512px;
-		min-width: 320px;
 		padding: 24px;
 		border: 1px solid var(--border);
 		border-radius: 12px;

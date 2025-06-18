@@ -46,7 +46,9 @@
 			primaryButtonName: 'Delete',
 			primaryButtonFunction: () => {
 				deleteChat(id);
-			}
+			},
+			onConfirmTitle: 'Delete Thread successfull',
+			onConfirmDescription: '',
 		});
 	}
 
@@ -77,7 +79,9 @@
 						}
 					}
 				}
-			}
+			},
+			onConfirmTitle: 'Chat Renamed',
+			onConfirmDescription: ''
 		});
 	}
 
@@ -101,14 +105,6 @@
 			await ChatApiService.updateChatPinStatus(chat.id, pin, SESSION_TOKEN);
 			chat.is_pinned = pin;
 		} catch (error) {
-			showConfirmationPopup({
-				title: `Ups! Something ain't right..`,
-				description: 'Some error happened while we tried to sync your data. Try again later.',
-				primaryButtonName: 'Confirm',
-				primaryButtonFunction: () => {
-					// No additional action needed - popup will close automatically
-				}
-			});
 			throw new Error(`${error}`);
 		}
 	}

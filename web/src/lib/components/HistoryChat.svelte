@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { closeSidebar, sidebarState } from '$lib/store';
-	import { X, PinOff, Pin, TextCursor, Share2 } from '@lucide/svelte';
+	import { X, PinOff, Pin, TextCursor, Share2, Globe } from '@lucide/svelte';
 	import { scale } from 'svelte/transition';
 	import { showConfirmationPopup } from '$lib/store';
 	import { env } from '$env/dynamic/public';
@@ -53,19 +53,22 @@
 			return;
 		}
 		showConfirmationPopup({
-			title: 'Share Thread',
-			description: `Are you sure you want to share this chat? It will be publicly accessible.`,
+			title: chat.shared_at > 0 ? 'Unshare Thread' : 'Share Thread',
+			description: chat.shared_at > 0 ? 'Are you sure you want to remove sharing?' : `Are you sure you want to share this chat? It will be publicly accessible.`,
 			primaryButtonName: 'Confirm',
 			primaryButtonFunction: () => {
 				shareChat();
 				onContextMenuOpen(null);
 				navigator.clipboard.writeText(`${env.PUBLIC_HOST_URL}/share/${chat.id}/`);
-			}
+			},
+			onConfirmTitle: chat.shared_at > 0 ? 'Chat Unshared' : 'Chat Shared',
+			onConfirmDescription: chat.shared_at > 0 ? '' : 'The share link has been copied to your clipboard!',
 		});
 		onContextMenuOpen(null);
 	}
 
 	async function shareChat() {
+		
 		try {
 			const now = new Date();
 			const response = await fetch(`${env.PUBLIC_API_URL}/v1/chats/${chat.id}/`, {
@@ -74,12 +77,14 @@
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${SESSION_TOKEN}`
 				},
-				body: JSON.stringify({ shared_at: now.getTime() })
+				body: JSON.stringify({ shared_at: chat.shared_at > 0 ? 0 : now.getTime() })
 			});
 
 			if (!response.ok) {
 				throw new Error('Failed to share chat');
 			}
+
+			$sidebarState.refresh = true;
 		} catch (error) {
 			console.error('Error sharing chat:', error);
 		}
@@ -110,7 +115,7 @@
 
 <a
 	href="/chat/{chat.id}"
-	class="chat"
+	class="chat non-selectable"
 	onclick={() => {
 		if (innerWidth <= 1024) {
 			closeSidebar();
@@ -119,6 +124,9 @@
 	oncontextmenu={handleContextMenu}
 	class:active={isCurrent}
 >
+	{#if chat.shared_at > 0}
+		<Globe size="15" />
+	{/if}
 	<span>{chat.title}</span>
 	<div class="loading" class:active={isStreaming}></div>
 	<div class="buttons">
@@ -166,7 +174,11 @@
 		</button>
 		<button class="context-menu-item" onclick={handleShare}>
 			<Share2 size="16" />
-			Share
+			{#if chat.shared_at > 0}
+				Unshare
+			{:else}
+				Share
+			{/if}
 		</button>
 		<button class="context-menu-item" onclick={handleDelete}>
 			<X size="16" />
@@ -182,12 +194,14 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
+		gap: 4px;
 		padding: 8px 8px;
 		border-radius: 8px;
 		cursor: pointer;
 		transition: background-color 0.15s ease-out;
 		overflow: hidden;
 		min-width: 0;
+		color: var(--text);
 	}
 
 	.chat span {
