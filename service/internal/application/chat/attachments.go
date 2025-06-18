@@ -65,19 +65,11 @@ func (s *Service) ListAttachments(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
-	// Get userID from auth middleware, ok if authenticated
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
-	if !ok {
-		s.log.Debug("User is not authenticated")
-		http.Error(w, "not_authenticated", http.StatusUnauthorized)
-		return
-	}
-
 	id := mux.Vars(r)["id"]
 
 	var attachment Attachment
-	err := s.db.QueryRow("SELECT id, message_id, name, type, src, created_at FROM attachments WHERE id = ? AND user_id = ?", id, userID).Scan(
-		&attachment.ID, &attachment.MessageID, &attachment.Name, &attachment.Type, &attachment.Src, &attachment.CreatedAt)
+	err := s.db.QueryRow("SELECT id, user_id, message_id, name, type, src, created_at FROM attachments WHERE id = ?", id).Scan(
+		&attachment.ID, &attachment.UserId, &attachment.MessageID, &attachment.Name, &attachment.Type, &attachment.Src, &attachment.CreatedAt)
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			http.Error(w, "Attachment not found", http.StatusNotFound)
@@ -89,7 +81,7 @@ func (s *Service) GetAttachment(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", attachment.Type)
 
-	http.ServeFile(w, r, fmt.Sprintf("data/users/%s/attachments/%s", userID, attachment.ID))
+	http.ServeFile(w, r, fmt.Sprintf("data/users/%s/attachments/%s", attachment.UserId, attachment.ID))
 
 }
 
@@ -120,14 +112,14 @@ func (s *Service) UploadAttachment(w http.ResponseWriter, r *http.Request) {
 	// Create attachment record
 	now := time.Now()
 	attachment := Attachment{
-		// ID:        fmt.Sprintf("att_%d", now.UnixNano()),
 		ID:        uuid.New(),
 		UserId:    userID,
 		Name:      header.Filename,
 		Type:      header.Header.Get("Content-Type"),
-		Src:       fmt.Sprintf("http://127.0.0.1:3141/v1/attachments/att_%d/", now.UnixNano()), // TODO: Replace with proper location
 		CreatedAt: now.UnixMilli(),
 	}
+
+	attachment.Src = fmt.Sprintf("%s/v1/attachments/%s/", os.Getenv("PUBLIC_API_URL"), attachment.ID) // TODO: Replace with proper location
 
 	// Save to database
 	_, err = s.db.Exec("INSERT INTO attachments (id, user_id, message_id, name, type, src, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
