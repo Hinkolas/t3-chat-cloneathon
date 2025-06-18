@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -53,6 +55,14 @@ var startCmd = &cobra.Command{
 		authService, err := auth.NewService(app)
 		if err != nil {
 			fmt.Printf("Error initializing auth service: %v\n", err)
+		}
+
+		for _, cfgUser := range cfg.Users {
+			// create the user
+			_, err := authService.CreateUser(context.Background(), cfgUser.Email, cfgUser.Username, cfgUser.Password)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error creating user: %v\n", err)
+			}
 		}
 
 		authService.Handle(app.Router)

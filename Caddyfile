@@ -1,4 +1,4 @@
-# /Caddyfile
+# Global options
 {
     email {$CERTBOT_EMAIL}
 }

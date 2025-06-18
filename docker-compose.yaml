@@ -61,6 +61,8 @@ services:
       - t3_network
     environment:
       - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+      - WEB_HOSTNAME=${WEB_HOSTNAME}
+      - API_HOSTNAME=${API_HOSTNAME}
     # Ensures Caddy starts after the services it proxies to
     depends_on:
       - service

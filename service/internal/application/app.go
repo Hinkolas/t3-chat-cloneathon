@@ -120,16 +120,9 @@ func (app *App) Start() error {
 	// Setup CORS middleware
 	// TODO: use proper cors settings in production
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{
-			"http://localhost:3000", // React dev server
-			"http://localhost:5173", // Vite dev server
-			"http://127.0.0.1:3000", // Alternative localhost
-			"http://127.0.0.1:5173", // Alternative localhost
-			"t3.hinkolas.de",
-		},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders: []string{"*"},
 	})
 
 	handler := c.Handler(app.Router)
