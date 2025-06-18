@@ -251,6 +251,7 @@
 			}
 		}
 	}
+
 	// Updated file select handler - handles multiple files
 	async function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -334,15 +335,6 @@
 		uploadError = null;
 	}
 
-	// Helper function to format file size
-	function formatFileSize(bytes: number): string {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-	}
-
 	// Helper function to get file type icon
 	function getFileIcon(file: File): string {
 		const type = file.type;
@@ -380,6 +372,11 @@
 	}
 
 	function changeModel(model: ModelData) {
+		// Check if model is compatible with uploaded files
+		if (!isModelCompatibleWithFiles(model, uploadedFiles)) {
+			return; // Don't switch to incompatible model
+		}
+
 		// Find the key by comparing model properties instead of object reference
 		const modelKey = Object.entries(data.models).find(
 			([key, modelData]) => modelData.name === model.name && modelData.title === model.title
@@ -452,6 +449,18 @@
 			console.error('Error sending a Message:', error);
 			showPlaceholder = true;
 		}
+	}
+
+	function isModelCompatibleWithFiles(model: ModelData, files: UploadedFileWithId[]): boolean {
+		if (files.length === 0) return true;
+
+		for (const uploadedFile of files) {
+			const validation = validateFileType(uploadedFile.file, model);
+			if (!validation.isValid) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	function getAcceptAttribute(): string {
@@ -629,7 +638,11 @@
 						/>
 						<div class="model-container">
 							{#each Object.entries(filteredModels) as [modelId, model]}
-								<ModelRow {model} {changeModel} />
+								<ModelRow
+									{model}
+									{changeModel}
+									disabled={!isModelCompatibleWithFiles(model, uploadedFiles)}
+								/>
 							{/each}
 						</div>
 					</div>
@@ -639,10 +652,10 @@
 						class="selection-button non-selectable {modelSelectionOpen ? 'active' : ''}"
 					>
 						{#if Object.keys(data.models).length > 0}
-							<span>{data.models[selectedModelKey].title}</span>
+							<span class="model-button">{data.models[selectedModelKey].title}</span>
 							<ChevronDown size={iconSize} />
 						{:else}
-							<span>No Models</span>
+							<span class="model-button">No Models</span>
 						{/if}
 					</button>
 				</div>
@@ -656,7 +669,7 @@
 							}}
 						>
 							<Brain size={iconSize} />
-							Reasoning
+							<span>Reasoning</span>
 						</button>
 					{/if}
 					{#if data.models[selectedModelKey].features.has_web_search}
@@ -668,7 +681,7 @@
 							}}
 						>
 							<Globe size={iconSize} />
-							Search
+							<span>Search</span>
 						</button>
 					{/if}
 					<button
@@ -677,11 +690,13 @@
 						disabled={!!uploadingFile}
 					>
 						<Paperclip size={iconSize} />
-						{#if uploadedFiles.length > 0}
-							Attach ({uploadedFiles.length})
-						{:else}
-							Attach
-						{/if}
+						<span>
+							{#if uploadedFiles.length > 0}
+								Attach ({uploadedFiles.length})
+							{:else}
+								Attach
+							{/if}
+						</span>
 						{#if uploadingFile}
 							<div class="button-spinner"></div>
 						{/if}
@@ -906,6 +921,16 @@
 
 	.reasoning-button-feature.active {
 		background-color: var(--primary-background-light);
+	}
+
+	@media (max-width: 768px) {
+		button span {
+			display: none;
+		}
+
+		.model-button {
+			display: block;
+		}
 	}
 
 	.selection-container {

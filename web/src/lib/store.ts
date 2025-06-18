@@ -9,6 +9,8 @@ export interface BasePopup {
 	description: string;
 	primaryButtonName: string;
 	primaryButtonFunction: () => void;
+	onConfirmTitle: string;
+	onConfirmDescription: string;
 	secondaryButtonName?: string;
 	secondaryButtonFunction?: () => void;
 	inputValue?: string;
@@ -40,7 +42,9 @@ const initialState: PopupData = {
 	description: '',
 	primaryButtonName: '',
 	primaryButtonFunction: () => {},
-	inputValue: ''
+	inputValue: '',
+	onConfirmTitle: '',
+	onConfirmDescription: ''
 };
 
 export const popup = writable<PopupData>(initialState);
@@ -119,4 +123,31 @@ export const openSidebar = () => {
 
 export const refreshChatHistory = () => {
 	sidebarState.update((state) => ({ ...state, refresh: true }));
+};
+
+// Handling Notification State
+export interface NotificationData {
+	show: boolean;
+	is_error: boolean;
+	title: string;
+	description: string;
+}
+const initialNotificationState: NotificationData = {
+	show: false,
+	is_error: false,
+	title: 'Test Notification',
+	description: 'This is a test notification message.This is a test notification message.'
+};
+
+export let notificationState = writable<NotificationData>(initialNotificationState);
+
+export const showNotification = (data: Omit<NotificationData, 'show'>) => {
+	notificationState.set({
+		...data,
+		show: true
+	});
+};
+
+export const hideNotification = () => {
+	notificationState.update((state) => ({ ...state, show: false }));
 };
